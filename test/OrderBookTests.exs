@@ -8,6 +8,7 @@
 #    -- get_book :: [[2tuple], [2tuple]] # gets both the bid and ask lists
     
 # - all test functions will return :empty if the respective book side is empty
+# - all test functions behave in respect to an orderbook Agent (require first arg to be agent pid)
 
 
 defmodule OrderBookTests do
