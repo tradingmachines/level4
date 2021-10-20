@@ -1,6 +1,6 @@
 defmodule OrderBook do
   @moduledoc """
-  OrderBook implements a limit order book.
+  OrderBook implements a limit orderbook.
 
   Bid and ask sides are represented in memory using balanced binary trees
   via [Erlang's gb_trees](https://erlang.org/doc/man/gb_trees.html). An
