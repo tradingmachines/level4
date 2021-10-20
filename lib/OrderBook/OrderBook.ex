@@ -32,6 +32,7 @@ defmodule OrderBook do
   Starts and links a new agent with an initial state {bids side, asks side}
   where a side is a balanced binary tree mapping prices to their liquidity.
   """
+  @spec start_link() :: pid()
   def start_link() do
     Agent.start_link(fn -> {:gb_trees.empty(), :gb_trees.empty()} end)
   end
