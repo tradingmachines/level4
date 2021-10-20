@@ -70,7 +70,7 @@ defmodule OrderBook do
   """
   @spec book(OrderBook) :: snapshot
   def book(book) do
-    {bids(book), asks(book)}
+    {OrderBook.bids(book), OrderBook.asks(book)}
   end
 
   @doc """
