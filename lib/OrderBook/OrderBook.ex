@@ -2,7 +2,7 @@ defmodule OrderBook do
   @moduledoc """
   OrderBook implements a limit orderbook.
 
-  Bid and ask sides are represented in memory using balanced binary trees
+  Bid and ask sides are represented in memory using general balanced trees
   via [Erlang's gb_trees](https://erlang.org/doc/man/gb_trees.html). An
   orderbook is a tuple {bids side, asks side} maintained by an agent
   process.
@@ -30,7 +30,7 @@ defmodule OrderBook do
 
   @doc """
   Starts and links a new agent with an initial state {bids side, asks side}
-  where a side is a balanced binary tree mapping prices to their liquidity.
+  where a side is a general balanced tree mapping prices to their liquidity.
   """
   @spec start_link() :: pid()
   def start_link() do
@@ -48,7 +48,12 @@ defmodule OrderBook do
   """
   @spec bids(OrderBook) :: price_levels
   def bids(book) do
-    Agent.get(book, fn {bids, _} -> bids.to_list() |> Enum.reverse() end)
+    Agent.get(book, fn {bids, _} ->
+      :gb_trees.to_list(bids)
+      |> Enum.sort(fn {price1, _}, {price2, _} ->
+        price1 > price2
+      end)
+    end)
   end
 
   @doc """
@@ -62,7 +67,12 @@ defmodule OrderBook do
   """
   @spec asks(OrderBook) :: price_levels
   def asks(book) do
-    Agent.get(book, fn {_, asks} -> asks.to_list() end)
+    Agent.get(book, fn {_, asks} ->
+      :gb_trees.to_list(asks)
+      |> Enum.sort(fn {price1, _}, {price2, _} ->
+        price1 < price2
+      end)
+    end)
   end
 
   @doc """
@@ -150,22 +160,28 @@ defmodule OrderBook do
 
   @doc """
   Replaces both side of the orderbook with new bids and new asks.
-  Both bid and ask trees are cleared and reinitialised, then balanced.
-  Does not assume new bids and asks are already ordered.
+  Both bid and ask trees are reinitialised from lists of price levels
+  ordered by price. This function does not assume new bids and asks are
+  already ordered, and will prevent price levels that have no liquidity
+  from being added to the book.
   """
   @spec apply_snapshot(OrderBook, snapshot) :: :ok
   def apply_snapshot(book, {bids, asks}) do
-    Agent.update(book, fn ->
+    Agent.update(book, fn _ ->
       {
+        # price levels with liquidity <= 0 should never be added to the
+        # book so filter them out before sorting.
         # from_ordict constructs a new tree for both sides but expects
         # the list of {key, value} tuples to be sorted (by price in
         # this context).
         :gb_trees.from_orddict(
           bids
+          |> Enum.reject(fn {_, liquidity} -> liquidity <= 0 end)
           |> Enum.sort_by(fn {price, _} -> price end)
         ),
         :gb_trees.from_orddict(
           asks
+          |> Enum.reject(fn {_, liquidity} -> liquidity <= 0 end)
           |> Enum.sort_by(fn {price, _} -> price end)
         )
       }
