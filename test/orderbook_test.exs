@@ -51,6 +51,10 @@ defmodule OrderBookTest do
     assert OrderBook.best_ask(state[:book]) == :side_empty
   end
 
+  # maybe: have separate "data"s for bids and asks, such that bid prices are
+  # in 0..999 and ask prices are in 1001..2000 (a £2 spread). the volume can
+  # stay the same. more representative. the intersection of the bid prices and
+  # the ask prices is always empty.
   test "apply delta to bids side", state do
     [level | _] = state[:data]
     OrderBook.apply_delta(state[:book], :bid, level)
