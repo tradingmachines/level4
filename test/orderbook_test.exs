@@ -51,19 +51,6 @@ defmodule OrderBookTest do
     assert OrderBook.best_ask(state[:book]) == :side_empty
   end
 
-  # !!!
-  # these will add the same price level to both sides since you do not replace
-  # "data" with its tail after popping a level from it. is this expected?
-  # not sure if it is possible to mutate data returned by setup_all.
-  #
-  # possible solution: have separate "data"s for bids and asks, such that
-  # bid prices are in 0..999 and ask prices are in 1001..2000 (representing
-  # say, a £2 spread). the volume can stay the same. this solves the above
-  # peculiarity by making the test data more representative of a real-world
-  # orderbook: if B and A are sets of current Bid and Ask prices, then by
-  # definition their intersection would be empty and every element in B would
-  # be less than every element in A,
-  # !!!
   test "apply delta to bids side", state do
     [level | _] = state[:data]
     OrderBook.apply_delta(state[:book], :bid, level)
