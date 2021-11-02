@@ -1,7 +1,0 @@
-defmodule Market.WebSocket do
-  @moduledoc """
-  ...
-  """
-
-  # ...
-end
