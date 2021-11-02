@@ -1,20 +1,25 @@
 defmodule Level4.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+  @moduledoc """
+  ...
+  """
 
   use Application
 
+  @doc """
+  ...
+  """
   @impl true
   def start(_type, _args) do
-    children = [
-      # Starts a worker by calling: Level4.Worker.start_link(arg)
-      # {Level4.Worker, arg}
-    ]
+    IO.puts("starting application")
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Level4.Supervisor]
-    Supervisor.start_link(children, opts)
+    Supervisor.start_link(
+      [
+        {
+          DynamicSupervisor,
+          strategy: :one_for_one, name: Level4.DynamicSupervisor
+        }
+      ],
+      strategy: :one_for_one
+    )
   end
 end

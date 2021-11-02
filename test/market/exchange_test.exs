@@ -7,7 +7,7 @@ defmodule ExchangeTest do
   """
 
   use ExUnit.Case
-  doctest Exchange
+  doctest Market.Exchange
 
   # ...
 end

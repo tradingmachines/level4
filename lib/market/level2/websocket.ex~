@@ -1,4 +1,4 @@
-defmodule WebSocket do
+defmodule Market.WebSocket do
   @moduledoc """
   ...
   """

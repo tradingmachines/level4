@@ -1,4 +1,4 @@
-defmodule Market.Exchange do
+defmodule Market.Level2.Mediator do
   @moduledoc """
   ...
   """

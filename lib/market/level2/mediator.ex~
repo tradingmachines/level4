@@ -1,4 +1,4 @@
-defmodule Market.Exchange do
+defmodule Market.Level2.Mediator do
   @moduledoc """
   ...
   """
@@ -16,13 +16,6 @@ defmodule Market.Exchange do
   ...
   """
   def handle_cast(request, state) do
-    nil
-  end
-
-  @doc """
-  ...
-  """
-  def handle_info(msg, state) do
     nil
   end
 

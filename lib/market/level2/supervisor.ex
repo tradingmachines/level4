@@ -1,4 +1,4 @@
-defmodule Market.Supervisor do
+defmodule Market.Level2.Supervisor do
   @moduledoc """
   ...
   """
@@ -19,10 +19,11 @@ defmodule Market.Supervisor do
   def init(:ok) do
     Supervisor.init(
       [
-        Market.Exchange,
-        Market.Level2.Supervisor
+        Market.Level2.Mediator,
+        Market.Level2.Orderbook,
+        Market.Level2.Websocket
       ],
-      strategy: :one_for_all
+      strategy: :rest_for_one
     )
   end
 end

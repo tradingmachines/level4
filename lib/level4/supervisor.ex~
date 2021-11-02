@@ -1,4 +1,4 @@
-defmodule Market.Supervisor do
+defmodule Level4.Supervisor do
   @moduledoc """
   ...
   """
@@ -17,12 +17,13 @@ defmodule Market.Supervisor do
   """
   @impl true
   def init(:ok) do
+    IO.puts("starting root supervisor")
+
     Supervisor.init(
       [
-        Market.Exchange,
-        Market.Level2.Supervisor
+        ControlRoom.Registry
       ],
-      strategy: :one_for_all
+      strategy: :one_for_one
     )
   end
 end
