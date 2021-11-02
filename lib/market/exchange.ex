@@ -3,33 +3,19 @@ defmodule Market.Exchange do
   ...
   """
 
-  use GenServer
+  use Task
 
   @doc """
   ...
   """
-  def handle_call(request, from, state) do
-    nil
+  def start_link(arg) do
+    Task.start_link(__MODULE__, :run, [arg])
   end
 
   @doc """
   ...
   """
-  def handle_cast(request, state) do
-    nil
-  end
-
-  @doc """
-  ...
-  """
-  def handle_info(msg, state) do
-    nil
-  end
-
-  @doc """
-  ...
-  """
-  def terminate(reason, state) do
+  def run(arg) do
     nil
   end
 end
