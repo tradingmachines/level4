@@ -1,6 +1,6 @@
 defmodule OrderbookTest do
   @moduledoc """
-  Unit tests for the Orderbook module
+  Unit tests for the Orderbook module.
 
   ## Testing
   - best_bid       :: float                  # return best (highest) bid
