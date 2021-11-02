@@ -1,13 +1,13 @@
-defmodule OrderBook do
+defmodule Orderbook do
   @moduledoc """
-  OrderBook implements a limit orderbook.
+  Orderbook implements a limit orderbook.
 
   Bid and ask sides are represented in memory using general balanced trees
   via [Erlang's gb_trees](https://erlang.org/doc/man/gb_trees.html). An
   orderbook is a tuple {bids side, asks side} maintained by an agent
   process.
 
-  OrderBook supports the following operations:
+  Orderbook supports the following operations:
   - bids(): list of bids in the book;
   - asks(): list of asks in the book;
   - book(): both sides of the book;
@@ -46,7 +46,7 @@ defmodule OrderBook do
   L is the total liquidity at that price, and h is the height of the
   bids side. P1 is the highest price somebody is willing to pay.
   """
-  @spec bids(OrderBook) :: price_levels
+  @spec bids(Orderbook) :: price_levels
   def bids(book) do
     Agent.get(book, fn {bids, _} ->
       :gb_trees.to_list(bids)
@@ -65,7 +65,7 @@ defmodule OrderBook do
   L is the total liquidity at that price, and h is the height of the
   asks side. P1 is the lowest somebody is willing to sell.
   """
-  @spec asks(OrderBook) :: price_levels
+  @spec asks(Orderbook) :: price_levels
   def asks(book) do
     Agent.get(book, fn {_, asks} ->
       :gb_trees.to_list(asks)
@@ -79,9 +79,9 @@ defmodule OrderBook do
   Returns a snapshot of both sides of the book. Simply a tuple using bids()
   and asks() defined above, therefore the ordering of both sides is the same.
   """
-  @spec book(OrderBook) :: snapshot
+  @spec book(Orderbook) :: snapshot
   def book(book) do
-    {OrderBook.bids(book), OrderBook.asks(book)}
+    {Orderbook.bids(book), Orderbook.asks(book)}
   end
 
   @doc """
@@ -89,8 +89,8 @@ defmodule OrderBook do
   Evaluates to {price, liquidity} if the bids side is not empty,
   otherwise :side_empty.
   """
-  @spec best_bid(OrderBook) :: price_level
-  @spec best_bid(OrderBook) :: :side_empty
+  @spec best_bid(Orderbook) :: price_level
+  @spec best_bid(Orderbook) :: :side_empty
   def best_bid(book) do
     bids = Agent.get(book, fn {bids, _} -> bids end)
 
@@ -108,8 +108,8 @@ defmodule OrderBook do
   Evaluates to {price, liquidity} if the asks side is not empty,
   otherwise :side_empty.
   """
-  @spec best_ask(OrderBook) :: price_level
-  @spec best_ask(OrderBook) :: :side_empty
+  @spec best_ask(Orderbook) :: price_level
+  @spec best_ask(Orderbook) :: :side_empty
   def best_ask(book) do
     asks = Agent.get(book, fn {_, asks} -> asks end)
 
@@ -128,7 +128,7 @@ defmodule OrderBook do
   overwrites the price's liquidity if it does. If liquidity <= 0 the price
   level is removed from the book.
   """
-  @spec apply_delta(OrderBook, :bid, price_level) :: :ok
+  @spec apply_delta(Orderbook, :bid, price_level) :: :ok
   def apply_delta(book, :bid, {price, liquidity}) do
     if liquidity <= 0 do
       # remove price level from bids side if liquidity <= 0.
@@ -143,7 +143,7 @@ defmodule OrderBook do
     end
   end
 
-  @spec apply_delta(OrderBook, :ask, price_level) :: :ok
+  @spec apply_delta(Orderbook, :ask, price_level) :: :ok
   def apply_delta(book, :ask, {price, liquidity}) do
     if liquidity <= 0 do
       # remove price level from asks side if liquidity <= 0.
@@ -165,7 +165,7 @@ defmodule OrderBook do
   already ordered, and will prevent price levels that have no liquidity
   from being added to the book.
   """
-  @spec apply_snapshot(OrderBook, snapshot) :: :ok
+  @spec apply_snapshot(Orderbook, snapshot) :: :ok
   def apply_snapshot(book, {bids, asks}) do
     Agent.update(book, fn _ ->
       {
