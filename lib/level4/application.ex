@@ -14,10 +14,7 @@ defmodule Level4.Application do
 
     Supervisor.start_link(
       [
-        {
-          DynamicSupervisor,
-          strategy: :one_for_one, name: Level4.DynamicSupervisor
-        }
+        Level4.DynamicSupervisor
       ],
       strategy: :one_for_one
     )

@@ -22,18 +22,10 @@ defmodule Market.Level2.Mediator do
     Market.Level2.Orderbook.apply_snapshot(orderbook, {bids, asks})
   end
 
-  @doc """
-  ...
-  """
-  @impl true
   def handle_call({:delta, {:bid, price, liquidity}}, from, orderbook) do
     Market.Level2.Orderbook.apply_delta(orderbook, :bid, {price, liquidity})
   end
 
-  @doc """
-  ...
-  """
-  @impl true
   def handle_call({:delta, {:ask, price, liquidity}}, from, orderbook) do
     Market.Level2.Orderbook.apply_delta(orderbook, :ask, {price, liquidity})
   end
@@ -61,9 +53,6 @@ defmodule Market.Level2.Mediator do
     GenServer.call(mediator, {:delta, {:bid, price, liquidity}})
   end
 
-  @doc """
-  ...
-  """
   def delta(mediator, {:ask, price, liquidity}) do
     GenServer.call(mediator, {:delta, {:ask, price, liquidity}})
   end
