@@ -8,10 +8,17 @@ defmodule Market.Level2.Mediator do
   @doc """
   ...
   """
+  def start_link(init_arg) do
+    GenServer.start_link(__MODULE__, init_arg)
+  end
+
+  @doc """
+  ...
+  """
   @impl true
-  def init(args) do
-    {:ok, orderbook} = Market.Level2.Orderbook.start_link()
-    {:ok, orderbook}
+  def init(init_arg) do
+    IO.puts("\t\tstarting mediator for #{init_arg[:market_id]}")
+    {:ok, %{}}
   end
 
   @doc """
