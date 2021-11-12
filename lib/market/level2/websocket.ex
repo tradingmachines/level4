@@ -17,7 +17,7 @@ defmodule Market.Level2.WebSocket do
   """
   @impl true
   def init(init_arg) do
-    IO.puts("\t\tstarting websocket for #{init_arg[:market_id]}")
+    IO.puts("\t\tstarting websocket for #{Level4.Market.id(init_arg[:market])}")
     {:ok, %{}}
   end
 

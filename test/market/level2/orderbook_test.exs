@@ -1,6 +1,6 @@
-defmodule OrderbookTest do
+defmodule OrderBookTest do
   @moduledoc """
-  Unit tests for the Orderbook module.
+  Unit tests for the OrderBook module.
 
   ## Testing
   - best_bid       :: float                  # return best (highest) bid
@@ -15,7 +15,7 @@ defmodule OrderbookTest do
   """
 
   use ExUnit.Case
-  doctest Market.Level2.Orderbook
+  doctest Market.Level2.OrderBook
 
   @num_price_levels 100
   @ask_range 1001..2000
@@ -36,7 +36,7 @@ defmodule OrderbookTest do
   # is more representative. the intersection of the bid and ask prices is
   # always empty.
   setup do
-    {:ok, book} = Market.Level2.Orderbook.start_link()
+    {:ok, book} = Market.Level2.OrderBook.start_link()
 
     [
       book: book,
@@ -54,25 +54,25 @@ defmodule OrderbookTest do
   end
 
   test "bids side is empty to begin with", state do
-    assert Market.Level2.Orderbook.bids(state[:book]) == []
-    assert Market.Level2.Orderbook.best_bid(state[:book]) == :side_empty
+    assert Market.Level2.OrderBook.bids(state[:book]) == []
+    assert Market.Level2.OrderBook.best_bid(state[:book]) == :side_empty
   end
 
   test "asks side is empty to begin with", state do
-    assert Market.Level2.Orderbook.asks(state[:book]) == []
-    assert Market.Level2.Orderbook.best_ask(state[:book]) == :side_empty
+    assert Market.Level2.OrderBook.asks(state[:book]) == []
+    assert Market.Level2.OrderBook.best_ask(state[:book]) == :side_empty
   end
 
   test "apply delta to bids side", state do
     [level | _] = state[:bids]
-    Market.Level2.Orderbook.apply_delta(state[:book], :bid, level)
-    assert Market.Level2.Orderbook.best_bid(state[:book]) == level
+    Market.Level2.OrderBook.apply_delta(state[:book], :bid, level)
+    assert Market.Level2.OrderBook.best_bid(state[:book]) == level
   end
 
   test "apply delta to ask side", state do
     [level | _] = state[:asks]
-    Market.Level2.Orderbook.apply_delta(state[:book], :ask, level)
-    assert Market.Level2.Orderbook.best_ask(state[:book]) == level
+    Market.Level2.OrderBook.apply_delta(state[:book], :ask, level)
+    assert Market.Level2.OrderBook.best_ask(state[:book]) == level
   end
 
   test "apply snapshot (asks and bids)", state do
@@ -83,26 +83,26 @@ defmodule OrderbookTest do
     max_bid = Enum.max_by(bids, fn {x, _} -> x end)
     min_ask = Enum.min_by(asks, fn {x, _} -> x end)
 
-    Market.Level2.Orderbook.apply_snapshot(book, {bids, asks})
+    Market.Level2.OrderBook.apply_snapshot(book, {bids, asks})
 
-    assert Market.Level2.Orderbook.best_ask(book) == min_ask and
-             Market.Level2.Orderbook.best_bid(book) == max_bid
+    assert Market.Level2.OrderBook.best_ask(book) == min_ask and
+             Market.Level2.OrderBook.best_bid(book) == max_bid
   end
 
   test "bids returns bid list in correct order", state do
     book = state[:book]
     bids = Enum.sort_by(state[:bids], fn {x, _} -> -x end)
 
-    Market.Level2.Orderbook.apply_snapshot(book, {bids, []})
-    assert bids == Market.Level2.Orderbook.bids(book)
+    Market.Level2.OrderBook.apply_snapshot(book, {bids, []})
+    assert bids == Market.Level2.OrderBook.bids(book)
   end
 
   test "asks returns ask list in correct order", state do
     book = state[:book]
     asks = Enum.sort_by(state[:asks], fn {x, _} -> x end)
 
-    Market.Level2.Orderbook.apply_snapshot(book, {[], asks})
-    assert asks == Market.Level2.Orderbook.asks(book)
+    Market.Level2.OrderBook.apply_snapshot(book, {[], asks})
+    assert asks == Market.Level2.OrderBook.asks(book)
   end
 
   test "book returns bid and ask sides, both correctly ordered", state do
@@ -110,7 +110,7 @@ defmodule OrderbookTest do
     bids = Enum.sort_by(state[:bids], fn {x, _} -> -x end)
     asks = Enum.sort_by(state[:asks], fn {x, _} -> x end)
 
-    Market.Level2.Orderbook.apply_snapshot(book, {bids, asks})
-    assert {^bids, ^asks} = Market.Level2.Orderbook.book(book)
+    Market.Level2.OrderBook.apply_snapshot(book, {bids, asks})
+    assert {^bids, ^asks} = Market.Level2.OrderBook.book(book)
   end
 end

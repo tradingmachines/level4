@@ -1,13 +1,13 @@
-defmodule Market.Level2.Orderbook do
+defmodule Market.Level2.OrderBook do
   @moduledoc """
-  Orderbook implements a limit orderbook.
+  OrderBook implements a limit orderbook.
 
   Bid and ask sides are represented in memory using general balanced trees
   via [Erlang's gb_trees](https://erlang.org/doc/man/gb_trees.html). An
   orderbook is a tuple {bids side, asks side} maintained by an agent
   process.
 
-  Orderbook supports the following operations:
+  OrderBook supports the following operations:
   - bids(): list of bids in the book;
   - asks(): list of asks in the book;
   - book(): both sides of the book;
@@ -32,9 +32,8 @@ defmodule Market.Level2.Orderbook do
   Starts and links a new agent with an initial state {bids side, asks side}
   where a side is a general balanced tree mapping prices to their liquidity.
   """
-  @spec start_link(list()) :: pid()
   def start_link(init_arg) do
-    IO.puts("\t\tstarting orderbook for #{init_arg[:market_id]}")
+    IO.puts("\t\tstarting orderbook for #{Level4.Market.id(init_arg[:market])}")
 
     Agent.start_link(fn -> {:gb_trees.empty(), :gb_trees.empty()} end)
   end
@@ -48,7 +47,7 @@ defmodule Market.Level2.Orderbook do
   L is the total liquidity at that price, and h is the height of the
   bids side. P1 is the highest price somebody is willing to pay.
   """
-  @spec bids(Market.Level2.Orderbook) :: price_levels
+  @spec bids(Market.Level2.OrderBook) :: price_levels
   def bids(book) do
     Agent.get(book, fn {bids, _} ->
       :gb_trees.to_list(bids)
@@ -67,7 +66,7 @@ defmodule Market.Level2.Orderbook do
   L is the total liquidity at that price, and h is the height of the
   asks side. P1 is the lowest somebody is willing to sell.
   """
-  @spec asks(Market.Level2.Orderbook) :: price_levels
+  @spec asks(Market.Level2.OrderBook) :: price_levels
   def asks(book) do
     Agent.get(book, fn {_, asks} ->
       :gb_trees.to_list(asks)
@@ -81,9 +80,9 @@ defmodule Market.Level2.Orderbook do
   Returns a snapshot of both sides of the book. Simply a tuple using bids()
   and asks() defined above, therefore the ordering of both sides is the same.
   """
-  @spec book(Market.Level2.Orderbook) :: snapshot
+  @spec book(Market.Level2.OrderBook) :: snapshot
   def book(book) do
-    {Market.Level2.Orderbook.bids(book), Market.Level2.Orderbook.asks(book)}
+    {Market.Level2.OrderBook.bids(book), Market.Level2.OrderBook.asks(book)}
   end
 
   @doc """
@@ -91,8 +90,7 @@ defmodule Market.Level2.Orderbook do
   Evaluates to {price, liquidity} if the bids side is not empty,
   otherwise :side_empty.
   """
-  @spec best_bid(Market.Level2.Orderbook) :: price_level
-  @spec best_bid(Market.Level2.Orderbook) :: :side_empty
+  @spec best_bid(Market.Level2.OrderBook) :: price_level | :side_empty
   def best_bid(book) do
     bids = Agent.get(book, fn {bids, _} -> bids end)
 
@@ -110,8 +108,7 @@ defmodule Market.Level2.Orderbook do
   Evaluates to {price, liquidity} if the asks side is not empty,
   otherwise :side_empty.
   """
-  @spec best_ask(Market.Level2.Orderbook) :: price_level
-  @spec best_ask(Market.Level2.Orderbook) :: :side_empty
+  @spec best_ask(Market.Level2.OrderBook) :: price_level | :side_empty
   def best_ask(book) do
     asks = Agent.get(book, fn {_, asks} -> asks end)
 
@@ -130,7 +127,7 @@ defmodule Market.Level2.Orderbook do
   overwrites the price's liquidity if it does. If liquidity <= 0 the price
   level is removed from the book.
   """
-  @spec apply_delta(Market.Level2.Orderbook, :bid, price_level) :: :ok
+  @spec apply_delta(Market.Level2.OrderBook, :bid, price_level) :: :ok
   def apply_delta(book, :bid, {price, liquidity}) do
     if liquidity <= 0 do
       # remove price level from bids side if liquidity <= 0.
@@ -145,7 +142,7 @@ defmodule Market.Level2.Orderbook do
     end
   end
 
-  @spec apply_delta(Market.Level2.Orderbook, :ask, price_level) :: :ok
+  @spec apply_delta(Market.Level2.OrderBook, :ask, price_level) :: :ok
   def apply_delta(book, :ask, {price, liquidity}) do
     if liquidity <= 0 do
       # remove price level from asks side if liquidity <= 0.
@@ -167,7 +164,7 @@ defmodule Market.Level2.Orderbook do
   already ordered, and will prevent price levels that have no liquidity
   from being added to the book.
   """
-  @spec apply_snapshot(Market.Level2.Orderbook, snapshot) :: :ok
+  @spec apply_snapshot(Market.Level2.OrderBook, snapshot) :: :ok
   def apply_snapshot(book, {bids, asks}) do
     Agent.update(book, fn _ ->
       {

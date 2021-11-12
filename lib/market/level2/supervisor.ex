@@ -17,7 +17,7 @@ defmodule Market.Level2.Supervisor do
   """
   @impl true
   def init(init_arg) do
-    IO.puts("\tstarting level2 supervisor for #{init_arg[:market_id]}")
+    IO.puts("\tstarting level2 supervisor for #{Level4.Market.id(init_arg[:market])}")
 
     Supervisor.init(
       [
@@ -28,11 +28,11 @@ defmodule Market.Level2.Supervisor do
         },
         %{
           id: Market.Level2.Orderbook,
-          start: {Market.Level2.Orderbook, :start_link, [init_arg]},
+          start: {Market.Level2.OrderBook, :start_link, [init_arg]},
           type: :worker
         },
         %{
-          id: Market.Level2.Websocket,
+          id: Market.Level2.WebSocket,
           start: {Market.Level2.WebSocket, :start_link, [init_arg]},
           type: :worker
         }

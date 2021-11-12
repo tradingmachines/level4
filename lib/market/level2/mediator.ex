@@ -17,7 +17,7 @@ defmodule Market.Level2.Mediator do
   """
   @impl true
   def init(init_arg) do
-    IO.puts("\t\tstarting mediator for #{init_arg[:market_id]}")
+    IO.puts("\t\tstarting mediator for #{Level4.Market.id(init_arg[:market])}")
     {:ok, %{}}
   end
 
