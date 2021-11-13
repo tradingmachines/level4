@@ -1,6 +1,6 @@
-defmodule Exchanges.Coinbase do
+defmodule Exchanges.FTX do
   @moduledoc """
-  Contains translation scheme for the Coinbase Pro websocket API.
+  Contains translation scheme for the FTX websocket API.
   """
 
   @behaviour Level4.TranslationScheme
@@ -28,10 +28,6 @@ defmodule Exchanges.Coinbase do
           {:ok, String.t()}
           | {:error, String.t()}
   def make_subscribe_message(major_symbol, quote_symbol) do
-    Jason.encode(%{
-      "type" => "subscribe",
-      "product_ids" => ["#{major_symbol}-#{quote_symbol}"],
-      "channels" => ["heartbeat", "level2", "matches"]
-    })
+    nil
   end
 end

@@ -22,4 +22,12 @@ defmodule Exchanges.Poloniex do
   def decode_delta(json) do
     nil
   end
+
+  @impl Level4.TranslationScheme
+  @spec make_subscribe_message(String.t(), String.t()) ::
+          {:ok, String.t()}
+          | {:error, String.t()}
+  def make_subscribe_message(major_symbol, quote_symbol) do
+    nil
+  end
 end

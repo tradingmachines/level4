@@ -9,8 +9,20 @@ defmodule Level4.Market do
   # a market has an exchange name, major and quote currency symbols,
   # and an exchange-specific translation scheme for communication with
   # the exchange's websocket API.
-  @enforce_keys [:exchange_name, :major_symbol, :quote_symbol, :translation_scheme]
-  defstruct [:exchange_name, :major_symbol, :quote_symbol, :translation_scheme]
+  @enforce_keys [
+    :exchange_name,
+    :exchange_ws_url,
+    :major_symbol,
+    :quote_symbol,
+    :translation_scheme
+  ]
+  defstruct [
+    :exchange_name,
+    :exchange_ws_url,
+    :major_symbol,
+    :quote_symbol,
+    :translation_scheme
+  ]
 
   @doc """
   A market's identifier is of the form <exchange name>:<major>-<quote>,

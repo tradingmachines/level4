@@ -24,4 +24,12 @@ defmodule Level4.TranslationScheme do
   @callback decode_delta(String.t()) ::
               {:ok, String.t()}
               | {:error, String.t()}
+
+  @doc """
+  Makes and returns the subscribe message sent to the websocket API
+  after successfully connecting.
+  """
+  @callback make_subscribe_message(String.t(), String.t()) ::
+              {:ok, String.t()}
+              | {:error, String.t()}
 end
