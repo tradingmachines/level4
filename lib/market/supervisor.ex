@@ -10,22 +10,21 @@ defmodule Market.Supervisor do
 
   use Supervisor
 
-  # helper function: returns the name of the process in the market
-  # supervisor registry.
-  defp process_name(init_arg) do
-    {:via, Registry,
-     {
-       Market.Supervisor.Registry,
-       Level4.Market.id(init_arg[:market])
-     }}
-  end
-
   @doc """
   Starts and links a new Supervisor with the name returned from the
   process_name function above.
   """
   def start_link(a, init_arg) do
-    Supervisor.start_link(__MODULE__, init_arg, name: process_name(init_arg))
+    Supervisor.start_link(
+      __MODULE__,
+      init_arg,
+      name:
+        {:via, Registry,
+         {
+           Market.Supervisor.Registry,
+           Level4.Market.id(init_arg[:market])
+         }}
+    )
   end
 
   @doc """

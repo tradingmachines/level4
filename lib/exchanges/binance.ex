@@ -1,6 +1,6 @@
-defmodule Exchanges.FTX do
+defmodule Exchanges.Binance do
   @moduledoc """
-  Contains translation scheme for the FTX websocket API.
+  Contains translation scheme for the Binance websocket API.
   """
 
   @behaviour Level4.TranslationScheme

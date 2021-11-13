@@ -1,6 +1,6 @@
-defmodule Exchanges.FTX do
+defmodule Exchanges.Bitmex do
   @moduledoc """
-  Contains translation scheme for the FTX websocket API.
+  Contains translation scheme for the Bitmex websocket API.
   """
 
   @behaviour Level4.TranslationScheme

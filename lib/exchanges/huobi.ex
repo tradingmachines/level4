@@ -1,6 +1,6 @@
-defmodule Exchanges.FTX do
+defmodule Exchanges.Huobi do
   @moduledoc """
-  Contains translation scheme for the FTX websocket API.
+  Contains translation scheme for the Huobi websocket API.
   """
 
   @behaviour Level4.TranslationScheme

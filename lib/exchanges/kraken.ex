@@ -6,20 +6,20 @@ defmodule Exchanges.Kraken do
   @behaviour Level4.TranslationScheme
 
   @impl Level4.TranslationScheme
-  @spec decode_message_type(String.t()) :: {:ok, String.t()} | {:error, String.t()}
-  def decode_message_type(json) do
+  @spec message_type(String.t()) :: {:ok, String.t()} | {:error, String.t()}
+  def message_type(json) do
     nil
   end
 
   @impl Level4.TranslationScheme
-  @spec decode_snapshot(String.t()) :: {:ok, String.t()} | {:error, String.t()}
-  def decode_snapshot(json) do
+  @spec snapshot(String.t()) :: {:ok, String.t()} | {:error, String.t()}
+  def snapshot(json) do
     nil
   end
 
   @impl Level4.TranslationScheme
-  @spec decode_delta(String.t()) :: {:ok, String.t()} | {:error, String.t()}
-  def decode_delta(json) do
+  @spec delta(String.t()) :: {:ok, String.t()} | {:error, String.t()}
+  def delta(json) do
     nil
   end
 

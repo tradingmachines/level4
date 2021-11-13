@@ -1,6 +1,6 @@
-defmodule Exchanges.FTX do
+defmodule Exchanges.CexIO do
   @moduledoc """
-  Contains translation scheme for the FTX websocket API.
+  Contains translation scheme for the CexIO websocket API.
   """
 
   @behaviour Level4.TranslationScheme

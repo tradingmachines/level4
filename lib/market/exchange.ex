@@ -9,22 +9,21 @@ defmodule Market.Exchange do
 
   use GenServer
 
-  # helper function: returns the name of the process in the market
-  # exchange registry.
-  defp process_name(init_arg) do
-    {:via, Registry,
-     {
-       Market.Exchange.Registry,
-       Level4.Market.id(init_arg[:market])
-     }}
-  end
-
   @doc """
   Starts and links a new GenServer with the name returned from the
   process_name function above.
   """
   def start_link(init_arg) do
-    GenServer.start_link(__MODULE__, init_arg, name: process_name(init_arg))
+    GenServer.start_link(
+      __MODULE__,
+      init_arg,
+      name:
+        {:via, Registry,
+         {
+           Market.Exchange.Registry,
+           Level4.Market.id(market)
+         }}
+    )
   end
 
   @doc """

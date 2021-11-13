@@ -7,21 +7,21 @@ defmodule Level4.TranslationScheme do
   @doc """
   Returns the type of JSON message - either a snapshot or a delta.
   """
-  @callback decode_message_type(String.t()) ::
+  @callback message_type(String.t()) ::
               {:ok, String.t()}
               | {:error, String.t()}
 
   @doc """
   Decodes and returns the JSON snapshot payload.
   """
-  @callback decode_snapshot(String.t()) ::
+  @callback snapshot(String.t()) ::
               {:ok, String.t()}
               | {:error, String.t()}
 
   @doc """
   Decodes and returns the JSON delta payload.
   """
-  @callback decode_delta(String.t()) ::
+  @callback delta(String.t()) ::
               {:ok, String.t()}
               | {:error, String.t()}
 
