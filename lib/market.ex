@@ -1,4 +1,4 @@
-defmodule Level4.Market do
+defmodule Market do
   @moduledoc """
   Level4.Market encapsulates configuration for a particular market.
   Recall: a "market" is a tradeable currency pair on a specific exchange
@@ -11,14 +11,16 @@ defmodule Level4.Market do
   # the exchange's websocket API.
   @enforce_keys [
     :exchange_name,
-    :exchange_ws_url,
+    :ws_url,
+    :ws_port,
     :major_symbol,
     :quote_symbol,
     :translation_scheme
   ]
   defstruct [
     :exchange_name,
-    :exchange_ws_url,
+    :ws_url,
+    :ws_port,
     :major_symbol,
     :quote_symbol,
     :translation_scheme
@@ -26,10 +28,14 @@ defmodule Level4.Market do
 
   @doc """
   A market's identifier is of the form <exchange name>:<major>-<quote>,
-  inspired by Cryptowatch's URL scheme.
+  inspired by Cryptowatch's URL scheme - the whole string is uppercase.
   """
-  @spec id(Level4.Market) :: String.t()
+  @spec id(Market) :: String.t()
   def id(market) do
-    "#{market.exchange_name}:#{market.major_symbol}-#{market.quote_symbol}"
+    exchange_name = String.upcase(market.exchange_name)
+    major_symbol = String.upcase(market.major_symbol)
+    quote_symbol = String.upcase(market.quote_symbol)
+
+    "#{exchange_name}:#{major_symbol}-#{quote_symbol}"
   end
 end

@@ -1,3 +1,5 @@
+require Logger
+
 defmodule Market.Level2.OrderBook do
   @moduledoc """
   OrderBook implements a limit orderbook.
@@ -33,9 +35,20 @@ defmodule Market.Level2.OrderBook do
   where a side is a general balanced tree mapping prices to their liquidity.
   """
   def start_link(init_arg) do
-    IO.puts("\t\tstarting orderbook for #{Level4.Market.id(init_arg[:market])}")
+    Logger.info(
+      "#{Market.id(init_arg[:market])} " <>
+        "starting orderbook"
+    )
 
-    Agent.start_link(fn -> {:gb_trees.empty(), :gb_trees.empty()} end)
+    Agent.start_link(
+      fn -> {:gb_trees.empty(), :gb_trees.empty()} end,
+      name:
+        {:via, Registry,
+         {
+           Market.Level2.OrderBook.Registry,
+           Market.id(init_arg[:market])
+         }}
+    )
   end
 
   @doc """

@@ -1,4 +1,6 @@
-defmodule Level4.Application do
+require Logger
+
+defmodule Level4 do
   @moduledoc """
   Elixir application. Spawns a root supervisor that supervises
   multiple registries and one main dynamic supervisor.
@@ -21,7 +23,7 @@ defmodule Level4.Application do
   """
   @impl true
   def start(_type, _args) do
-    IO.puts("starting level4 application")
+    Logger.info("starting level4")
 
     Supervisor.start_link(
       [
@@ -41,7 +43,7 @@ defmodule Level4.Application do
           Registry,
           keys: :unique, name: Market.Level2.OrderBook.Registry
         },
-        Level4.DynamicSupervisor
+        MarketSupervisor
       ],
       strategy: :one_for_one
     )

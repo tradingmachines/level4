@@ -1,3 +1,5 @@
+require Logger
+
 defmodule Market.Level2.Mediator do
   @moduledoc """
   ...
@@ -9,7 +11,16 @@ defmodule Market.Level2.Mediator do
   ...
   """
   def start_link(init_arg) do
-    GenServer.start_link(__MODULE__, init_arg)
+    GenServer.start_link(
+      __MODULE__,
+      init_arg,
+      name:
+        {:via, Registry,
+         {
+           Market.Level2.Mediator.Registry,
+           Market.id(init_arg[:market])
+         }}
+    )
   end
 
   @doc """
@@ -17,33 +28,54 @@ defmodule Market.Level2.Mediator do
   """
   @impl true
   def init(init_arg) do
-    IO.puts("\t\tstarting mediator for #{Level4.Market.id(init_arg[:market])}")
-    {:ok, %{}}
+    Logger.info(
+      "#{Market.id(init_arg[:market])} " <>
+        "starting mediator"
+    )
+
+    {:ok, init_arg[:market]}
   end
 
   @doc """
   ...
   """
   @impl true
-  def handle_call({:snapshot, {bids, asks}}, from, orderbook) do
-    Market.Level2.Orderbook.apply_snapshot(orderbook, {bids, asks})
+  def handle_call({:snapshot, {bids, asks}}, _, market) do
+    Market.Level2.OrderBook.apply_snapshot(
+      {:via, Registry,
+       {
+         Market.Level2.OrderBook.Registry,
+         Market.id(market)
+       }},
+      {bids, asks}
+    )
+
+    {:reply, %{}, market}
   end
 
-  def handle_call({:bid_delta, {price, liquidity}}, from, orderbook) do
-    Market.Level2.Orderbook.apply_delta(orderbook, :bid, {price, liquidity})
-  end
+  def handle_call({:delta, {side, price, liquidity}}, _, market) do
+    Market.Level2.OrderBook.apply_delta(
+      {:via, Registry,
+       {
+         Market.Level2.OrderBook.Registry,
+         Market.id(market)
+       }},
+      side,
+      {price, liquidity}
+    )
 
-  def handle_call({:ask_delta, {price, liquidity}}, from, orderbook) do
-    Market.Level2.Orderbook.apply_delta(orderbook, :ask, {price, liquidity})
+    {:reply, %{}, market}
   end
 
   @doc """
   ...
   """
   @impl true
-  def terminate(reason, orderbook) do
-    # handle termination
-    # ...
+  def terminate(reason, market) do
+    Logger.info(
+      "#{Market.id(market)} shutdown " <>
+        "mediator: #{reason}"
+    )
   end
 
   @doc """
@@ -56,11 +88,9 @@ defmodule Market.Level2.Mediator do
   @doc """
   ...
   """
-  def delta(mediator, :bid, {price, liquidity}) do
-    GenServer.call(mediator, {:bid_delta, {price, liquidity}})
-  end
-
-  def delta(mediator, :ask, {price, liquidity}) do
-    GenServer.call(mediator, {:ask_delta, {price, liquidity}})
+  def deltas(mediator, deltas) do
+    for delta <- deltas do
+      GenServer.call(mediator, {:delta, delta})
+    end
   end
 end

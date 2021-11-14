@@ -14,7 +14,7 @@ defmodule Level4.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Level4.Application, []}
+      mod: {Level4, []}
     ]
   end
 

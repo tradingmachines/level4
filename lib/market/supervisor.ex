@@ -1,3 +1,5 @@
+require Logger
+
 defmodule Market.Supervisor do
   @moduledoc """
   A Market.Supervisor supervises a static tree consisting of a
@@ -22,7 +24,7 @@ defmodule Market.Supervisor do
         {:via, Registry,
          {
            Market.Supervisor.Registry,
-           Level4.Market.id(init_arg[:market])
+           Market.id(init_arg[:market])
          }}
     )
   end
@@ -33,7 +35,10 @@ defmodule Market.Supervisor do
   """
   @impl true
   def init(init_arg) do
-    IO.puts("starting market supervisor for #{Level4.Market.id(init_arg[:market])}")
+    Logger.info(
+      "#{Market.id(init_arg[:market])} " <>
+        "starting market supervisor"
+    )
 
     Supervisor.init(
       [

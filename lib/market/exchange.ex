@@ -1,3 +1,5 @@
+require Logger
+
 defmodule Market.Exchange do
   @moduledoc """
   A Market.Exchange receives and handles messages from a
@@ -21,7 +23,7 @@ defmodule Market.Exchange do
         {:via, Registry,
          {
            Market.Exchange.Registry,
-           Level4.Market.id(market)
+           Market.id(init_arg[:market])
          }}
     )
   end
@@ -32,7 +34,10 @@ defmodule Market.Exchange do
   """
   @impl true
   def init(init_arg) do
-    IO.puts("\tstarting exchange for #{Level4.Market.id(init_arg[:market])}")
+    Logger.info(
+      "#{Market.id(init_arg[:market])} " <>
+        "starting exchange"
+    )
 
     # TODO
 

@@ -1,4 +1,4 @@
-defmodule Level4.DynamicSupervisor do
+defmodule MarketSupervisor do
   @moduledoc """
   Spanws and destroys market sub-trees using Market.Supervisor, which
   is responsible for building and maintaining processes in its tree.

@@ -1,3 +1,5 @@
+require Logger
+
 defmodule Market.Level2.Supervisor do
   @moduledoc """
   ...
@@ -17,7 +19,10 @@ defmodule Market.Level2.Supervisor do
   """
   @impl true
   def init(init_arg) do
-    IO.puts("\tstarting level2 supervisor for #{Level4.Market.id(init_arg[:market])}")
+    Logger.info(
+      "#{Market.id(init_arg[:market])} " <>
+        "starting level2 supervisor"
+    )
 
     Supervisor.init(
       [

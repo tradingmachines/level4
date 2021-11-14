@@ -3,35 +3,78 @@ defmodule Exchanges.Coinbase do
   Contains translation scheme for the Coinbase Pro websocket API.
   """
 
-  @behaviour Level4.TranslationScheme
+  @behaviour TranslationScheme
 
-  @impl Level4.TranslationScheme
-  @spec message_type(String.t()) :: {:ok, String.t()} | {:error, String.t()}
-  def message_type(json) do
-    nil
+  @impl TranslationScheme
+  def init_sync_state() do
+    %{"previous_sequence_number" => 0}
   end
 
-  @impl Level4.TranslationScheme
-  @spec snapshot(String.t()) :: {:ok, String.t()} | {:error, String.t()}
-  def snapshot(json) do
-    nil
-  end
-
-  @impl Level4.TranslationScheme
-  @spec delta(String.t()) :: {:ok, String.t()} | {:error, String.t()}
-  def delta(json) do
-    nil
-  end
-
-  @impl Level4.TranslationScheme
-  @spec make_subscribe_message(String.t(), String.t()) ::
-          {:ok, String.t()}
-          | {:error, String.t()}
+  @impl TranslationScheme
   def make_subscribe_message(major_symbol, quote_symbol) do
     Jason.encode(%{
       "type" => "subscribe",
       "product_ids" => ["#{major_symbol}-#{quote_symbol}"],
       "channels" => ["heartbeat", "level2", "matches"]
     })
+  end
+
+  @impl TranslationScheme
+  def translate(json, sync_state) do
+    # all coinbase messages have a "type" field.
+    case json["type"] do
+      # ...
+      "subscriptions" ->
+        {:noop, sync_state}
+
+      # ...
+      "snapshot" ->
+        bids =
+          for [price, size] <- json["bids"] do
+            {String.to_float(price), String.to_float(size)}
+          end
+
+        asks =
+          for [price, size] <- json["asks"] do
+            {String.to_float(price), String.to_float(size)}
+          end
+
+        {:snapshot, bids, asks, sync_state}
+
+      # ...
+      "heartbeat" ->
+        {:noop, sync_state}
+
+      # ...
+      "error" ->
+        {:noop, sync_state}
+
+      # ...
+      "last_match" ->
+        {:noop, sync_state}
+
+      # ...
+      "match" ->
+        {:noop, sync_state}
+
+      # ...
+      "l2update" ->
+        deltas =
+          for [side, price, size] <- json["changes"] do
+            case side do
+              "buy" ->
+                {:bid, String.to_float(price), String.to_float(size)}
+
+              "sell" ->
+                {:ask, String.to_float(price), String.to_float(size)}
+            end
+          end
+
+        {:deltas, deltas, sync_state}
+
+      # ...
+      _ ->
+        :unknown
+    end
   end
 end
