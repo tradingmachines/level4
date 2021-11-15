@@ -31,12 +31,12 @@ defmodule Exchanges.Coinbase do
       "snapshot" ->
         bids =
           for [price, size] <- json["bids"] do
-            {String.to_float(price), String.to_float(size)}
+            {Float.parse(price), Float.parse(size)}
           end
 
         asks =
           for [price, size] <- json["asks"] do
-            {String.to_float(price), String.to_float(size)}
+            {Float.parse(price), Float.parse(size)}
           end
 
         {:snapshot, bids, asks, sync_state}
@@ -63,10 +63,10 @@ defmodule Exchanges.Coinbase do
           for [side, price, size] <- json["changes"] do
             case side do
               "buy" ->
-                {:bid, String.to_float(price), String.to_float(size)}
+                {:bid, Float.parse(price), Float.parse(size)}
 
               "sell" ->
-                {:ask, String.to_float(price), String.to_float(size)}
+                {:ask, Float.parse(price), Float.parse(size)}
             end
           end
 

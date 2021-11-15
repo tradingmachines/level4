@@ -64,10 +64,10 @@ defmodule Market.Exchange do
         {:best_bid_change, {new_price, new_size}},
         {market, store}
       ) do
-    Logger.debug(
-      "#{Market.id(market)} " <>
-        "best bid change: #{new_price}"
-    )
+    #    Logger.debug(
+    #      "#{Market.id(market)} " <>
+    #        "best bid change: #{new_price}"
+    #    )
 
     # TODO
 
@@ -78,10 +78,10 @@ defmodule Market.Exchange do
         {:best_ask_change, {new_price, new_size}},
         {market, store}
       ) do
-    Logger.debug(
-      "#{Market.id(market)} " <>
-        "best ask change: #{new_price}"
-    )
+    #    Logger.debug(
+    #      "#{Market.id(market)} " <>
+    #        "best ask change: #{new_price}"
+    #    )
 
     # TODO
 
