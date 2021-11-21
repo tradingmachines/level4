@@ -61,13 +61,14 @@ defmodule Market.Exchange do
   """
   @impl true
   def handle_cast(
-        {:best_bid_change, {new_price, new_size}},
+        {:best_bid_change, {new_price, new_size, timestamp}},
         {market, store}
       ) do
-    #    Logger.debug(
-    #      "#{Market.id(market)} " <>
-    #        "best bid change: #{new_price}"
-    #    )
+    Logger.debug(
+      "#{Market.id(market)} " <>
+        "best bid change: #{new_price}" <>
+        "at time #{timestamp}"
+    )
 
     # TODO
 
@@ -75,13 +76,14 @@ defmodule Market.Exchange do
   end
 
   def handle_cast(
-        {:best_ask_change, {new_price, new_size}},
+        {:best_ask_change, {new_price, new_size, timestamp}},
         {market, store}
       ) do
-    #    Logger.debug(
-    #      "#{Market.id(market)} " <>
-    #        "best ask change: #{new_price}"
-    #    )
+    Logger.debug(
+      "#{Market.id(market)} " <>
+        "best ask change: #{new_price}" <>
+        "at time #{timestamp}"
+    )
 
     # TODO
 
@@ -92,15 +94,15 @@ defmodule Market.Exchange do
   Market.Exchange API: a helper function that sends a :best_bid_change to
   the GenServer. Note: casts are asynchronous requests.
   """
-  def best_bid_change(exchange, {new_price, new_size}) do
-    GenServer.cast(exchange, {:best_bid_change, {new_price, new_size}})
+  def best_bid_change(exchange, {new_price, new_size, timestamp}) do
+    GenServer.cast(exchange, {:best_bid_change, {new_price, new_size, timestamp}})
   end
 
   @doc """
   Market.Exchange API: a helper function that sends a :best_ask_change to
   the GenServer. Note: casts are asynchronous requests.
   """
-  def best_ask_change(exchange, {new_price, new_size}) do
-    GenServer.cast(exchange, {:best_ask_change, {new_price, new_size}})
+  def best_ask_change(exchange, {new_price, new_size, timestamp}) do
+    GenServer.cast(exchange, {:best_ask_change, {new_price, new_size, timestamp}})
   end
 end

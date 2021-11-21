@@ -22,59 +22,66 @@ defmodule Exchanges.Coinbase do
   @impl TranslationScheme
   def translate(json, sync_state) do
     # all coinbase messages have a "type" field.
-    case json["type"] do
-      # ...
-      "subscriptions" ->
-        {:noop, sync_state}
-
-      # ...
-      "snapshot" ->
-        bids =
-          for [price, size] <- json["bids"] do
-            {Float.parse(price), Float.parse(size)}
-          end
-
-        asks =
-          for [price, size] <- json["asks"] do
-            {Float.parse(price), Float.parse(size)}
-          end
-
-        {:snapshot, bids, asks, sync_state}
-
-      # ...
-      "heartbeat" ->
-        {:noop, sync_state}
-
-      # ...
-      "error" ->
-        {:noop, sync_state}
-
-      # ...
-      "last_match" ->
-        {:noop, sync_state}
-
-      # ...
-      "match" ->
-        {:noop, sync_state}
-
-      # ...
-      "l2update" ->
-        deltas =
-          for [side, price, size] <- json["changes"] do
-            case side do
-              "buy" ->
-                {:bid, Float.parse(price), Float.parse(size)}
-
-              "sell" ->
-                {:ask, Float.parse(price), Float.parse(size)}
+    instruction =
+      case json["type"] do
+        # ...
+        "snapshot" ->
+          bids =
+            for [price_str, size_str] <- json["bids"] do
+              {price, _} = Float.parse(price_str)
+              {size, _} = Float.parse(size_str)
+              {price, size}
             end
-          end
 
-        {:deltas, deltas, sync_state}
+          asks =
+            for [price_str, size_str] <- json["asks"] do
+              {price, _} = Float.parse(price_str)
+              {size, _} = Float.parse(size_str)
+              {price, size}
+            end
 
-      # ...
-      _ ->
-        :unknown
-    end
+          {:snapshot, bids, asks}
+
+        # ...
+        "l2update" ->
+          deltas =
+            for [side, price_str, size_str] <- json["changes"] do
+              {price, _} = Float.parse(price_str)
+              {size, _} = Float.parse(size_str)
+
+              case side do
+                "buy" -> {:bid, price, size}
+                "sell" -> {:ask, price, size}
+              end
+            end
+
+          {:deltas, deltas}
+
+        # ...
+        "subscriptions" ->
+          :noop
+
+        # ...
+        "heartbeat" ->
+          :noop
+
+        # ...
+        "error" ->
+          :noop
+
+        # ...
+        "last_match" ->
+          :noop
+
+        # ...
+        "match" ->
+          :noop
+
+        # ...
+        _ ->
+          :unknown
+      end
+
+    {[instruction], sync_state}
   end
 end

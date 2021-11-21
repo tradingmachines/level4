@@ -77,7 +77,7 @@ defmodule Market.Level2.WebSocket do
 
     Logger.info(
       "#{Market.id(market)} shutdown " <>
-        "connection: #{reason}"
+        "connection: #{inspect(reason)}"
     )
   end
 
@@ -135,61 +135,62 @@ defmodule Market.Level2.WebSocket do
     # decode the message and always assume it is JSON.
     case Jason.decode(binary) do
       {:ok, json} ->
-        case market.translation_scheme.translate(
-               json,
-               sync_state
-             ) do
-          # the message is a snapshot
-          {:snapshot, bids, asks, new_sync_state} ->
-            Market.Level2.Mediator.snapshot(
-              {:via, Registry,
-               {
-                 Market.Level2.Mediator.Registry,
-                 Market.id(market)
-               }},
-              bids,
-              asks
-            )
+        {instructions, new_sync_state} =
+          market.translation_scheme.translate(
+            json,
+            sync_state
+          )
 
-            {:noreply, {conn_pid, market, new_sync_state}}
+        for instruction <- instructions do
+          case instruction do
+            # the message is a snapshot
+            {:snapshot, bids, asks} ->
+              Market.Level2.Mediator.snapshot(
+                {:via, Registry,
+                 {
+                   Market.Level2.Mediator.Registry,
+                   Market.id(market)
+                 }},
+                bids,
+                asks
+              )
 
-          # the message is a delta
-          {:deltas, deltas, new_sync_state} ->
-            Market.Level2.Mediator.deltas(
-              {:via, Registry,
-               {
-                 Market.Level2.Mediator.Registry,
-                 Market.id(market)
-               }},
-              deltas
-            )
+            # the message is a delta
+            {:deltas, deltas} ->
+              Market.Level2.Mediator.deltas(
+                {:via, Registry,
+                 {
+                   Market.Level2.Mediator.Registry,
+                   Market.id(market)
+                 }},
+                deltas
+              )
 
-            {:noreply, {conn_pid, market, new_sync_state}}
+            # messages are out of sync
+            :out_of_sync ->
+              Logger.error("#{Market.id(market)} out of sync")
 
-          # do nothing
-          {:noop, new_sync_state} ->
-            {:noreply, {conn_pid, market, new_sync_state}}
+              # stop the GenServer and reconnect later.
+              {
+                :stop,
+                "out of sync",
+                {conn_pid, market, sync_state}
+              }
 
-          # messages are out of sync
-          :out_of_sync ->
-            Logger.error("#{Market.id(market)} out of sync")
+            # unknown message type
+            :unknown ->
+              Logger.warn(
+                "#{Market.id(market)} don't know what to " <>
+                  "do with message: #{inspect(json)}"
+              )
 
-            # stop the GenServer and reconnect later.
-            {
-              :stop,
-              "out of sync",
-              {conn_pid, market, sync_state}
-            }
-
-          # unknown message type
-          :unknown ->
-            Logger.warn(
-              "#{Market.id(market)} don't know what to " <>
-                "do with message: #{inspect(json)}"
-            )
-
-            {:noreply, {conn_pid, market, sync_state}}
+            # do nothing
+            :noop ->
+              :noop
+          end
         end
+
+        {:noreply, {conn_pid, market, new_sync_state}}
 
       {:error, decode_error} ->
         Logger.error(

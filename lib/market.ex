@@ -11,6 +11,7 @@ defmodule Market do
   # the exchange's websocket API.
   @enforce_keys [
     :exchange_name,
+    :market_type,
     :ws_url,
     :ws_port,
     :major_symbol,
@@ -19,6 +20,7 @@ defmodule Market do
   ]
   defstruct [
     :exchange_name,
+    :market_type,
     :ws_url,
     :ws_port,
     :major_symbol,
@@ -27,15 +29,22 @@ defmodule Market do
   ]
 
   @doc """
-  A market's identifier is of the form <exchange name>:<major>-<quote>,
-  inspired by Cryptowatch's URL scheme - the whole string is uppercase.
+  A market's identifier is of the form:
+  ```text
+  <exchange name>.<market type>:<major>-<quote>,
+  e.g.
+  COINBASE-PRO.SPOT:BTC-USDT
+  POLONIEX.SPOT:BTC-USDT
+  POLONIEX.PERP:BTC-USDT
+  ```
   """
   @spec id(Market) :: String.t()
   def id(market) do
     exchange_name = String.upcase(market.exchange_name)
+    market_type = String.upcase(market.market_type)
     major_symbol = String.upcase(market.major_symbol)
     quote_symbol = String.upcase(market.quote_symbol)
 
-    "#{exchange_name}:#{major_symbol}-#{quote_symbol}"
+    "#{exchange_name}.#{market_type}:#{major_symbol}-#{quote_symbol}"
   end
 end

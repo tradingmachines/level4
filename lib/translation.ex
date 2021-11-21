@@ -21,10 +21,5 @@ defmodule TranslationScheme do
   @doc """
   ...
   """
-  @callback translate(String.t(), any()) ::
-              {:snapshot, [{float(), float()}], [{float(), float()}], any()}
-              | {:deltas, [{atom(), {float(), float()}}], any()}
-              | {:noop, any()}
-              | :out_of_sync
-              | :unknown
+  @callback translate(String.t(), any()) :: {any(), any}
 end

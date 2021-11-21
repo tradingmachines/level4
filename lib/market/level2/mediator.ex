@@ -80,13 +80,15 @@ defmodule Market.Level2.Mediator do
       # check if the best bid price changed
       {new_best_bid_price, new_best_bid_size} ->
         if best_bid_price != new_best_bid_price do
+          timestamp = DateTime.utc_now()
+
           Market.Exchange.best_bid_change(
             {:via, Registry,
              {
                Market.Exchange.Registry,
                Market.id(market)
              }},
-            {new_best_bid_price, new_best_bid_size}
+            {new_best_bid_price, new_best_bid_size, timestamp}
           )
 
           {
@@ -148,13 +150,15 @@ defmodule Market.Level2.Mediator do
       # check if the best ask price changed
       {new_best_ask_price, new_best_ask_size} ->
         if best_ask_price != new_best_ask_price do
+          timestamp = DateTime.utc_now()
+
           Market.Exchange.best_ask_change(
             {:via, Registry,
              {
                Market.Exchange.Registry,
                Market.id(market)
              }},
-            {new_best_ask_price, new_best_ask_size}
+            {new_best_ask_price, new_best_ask_size, timestamp}
           )
 
           {
@@ -196,7 +200,7 @@ defmodule Market.Level2.Mediator do
   def terminate(reason, {market, _}) do
     Logger.info(
       "#{Market.id(market)} shutdown " <>
-        "mediator: #{reason}"
+        "mediator: #{inspect(reason)}"
     )
   end
 
