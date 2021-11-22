@@ -219,4 +219,11 @@ defmodule Market.Level2.Mediator do
       GenServer.call(mediator, {:delta, delta})
     end
   end
+
+  @doc """
+  ...
+  """
+  def delta(mediator, delta) do
+    GenServer.call(mediator, {:delta, delta})
+  end
 end

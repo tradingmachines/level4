@@ -155,7 +155,7 @@ defmodule Market.Level2.WebSocket do
                 asks
               )
 
-            # the message is a delta
+            # the message contains multiple deltas
             {:deltas, deltas} ->
               Market.Level2.Mediator.deltas(
                 {:via, Registry,
@@ -164,6 +164,17 @@ defmodule Market.Level2.WebSocket do
                    Market.id(market)
                  }},
                 deltas
+              )
+
+            # the message contains a single delta
+            {:delta, delta} ->
+              Market.Level2.Mediator.delta(
+                {:via, Registry,
+                 {
+                   Market.Level2.Mediator.Registry,
+                   Market.id(market)
+                 }},
+                delta
               )
 
             # messages are out of sync

@@ -14,48 +14,62 @@ defmodule Exchanges.Poloniex do
   def make_subscribe_message(major_symbol, quote_symbol) do
     Jason.encode(%{
       "command" => "subscribe",
-      "channel" => "#{major_symbol}_#{quote_symbol}"
+      "channel" => "#{quote_symbol}_#{major_symbol}"
     })
   end
 
   @impl TranslationScheme
-  def translate({channel_id, sequence_num, messages}, sync_state) do
+  def translate(json, sync_state) do
     instructions =
-      for message <- messages do
-        case message do
-          ["i", snapshot, epoch_ms] ->
-            [asks, bids] = snapshot["orderBook"]
+      case json do
+        [1010] ->
+          [:noop]
 
-            bid_levels =
-              for {price_str, size_str} <- bids do
+        [1002] ->
+          [:noop]
+
+        [1003] ->
+          [:noop]
+
+        [channel_id, sequence_num, messages] ->
+          for message <- messages do
+            case message do
+              ["i", snapshot, epoch_ms] ->
+                [asks, bids] = snapshot["orderBook"]
+
+                bid_levels =
+                  for {price_str, size_str} <- bids do
+                    {price, _} = Float.parse(price_str)
+                    {size, _} = Float.parse(size_str)
+                    {price, size}
+                  end
+
+                ask_levels =
+                  for {price_str, size_str} <- asks do
+                    {price, _} = Float.parse(price_str)
+                    {size, _} = Float.parse(size_str)
+                    {price, size}
+                  end
+
+                {:snapshot, bid_levels, ask_levels}
+
+              ["o", 1, price_str, size_str, epoch_ms] ->
                 {price, _} = Float.parse(price_str)
                 {size, _} = Float.parse(size_str)
+                {:delta, {:bid, price, size}}
 
-                {price, size}
-              end
-
-            ask_levels =
-              for {price_str, size_str} <- asks do
+              ["o", 0, price_str, size_str, epoch_ms] ->
                 {price, _} = Float.parse(price_str)
                 {size, _} = Float.parse(size_str)
+                {:delta, {:ask, price, size}}
 
-                {price, size}
-              end
+              ["t", trade_id, 1, price_Str, size_str, timestamp, epoch_ms] ->
+                :noop
 
-            {:snapshot, bid_levels, ask_levels}
-
-          ["o", 1, price, size, epoch_ms] ->
-            {:bid, Float.parse(price), Float.parse(size)}
-
-          ["o", 0, price, size, epoch_ms] ->
-            {:ask, Float.parse(price), Float.parse(size)}
-
-          ["t", trade_id, 1, price, size, timestamp, epoch_ms] ->
-            :noop
-
-          ["t", trade_id, 0, price, size, timestamp, epoch_ms] ->
-            :noop
-        end
+              ["t", trade_id, 0, price_str, size_str, timestamp, epoch_ms] ->
+                :noop
+            end
+          end
       end
 
     {instructions, sync_state}
