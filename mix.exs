@@ -21,7 +21,9 @@ defmodule Level4.MixProject do
   defp deps do
     [
       {:gun, github: "ninenines/gun"},
-      {:jason, "~> 1.2"}
+      {:jason, "~> 1.2"},
+      {:ecto_sql, "~> 3.0"},
+      {:postgrex, ">= 0.0.0"}
     ]
   end
 end

@@ -5,6 +5,33 @@ defmodule StorageMedium do
   """
 
   @doc """
+  Tries to write a symbol string to the storage backend. If successful
+  or symbol already exists then returns the symbol's unique Id.
+  """
+  @callback save_symbol(Storage.Model.Symbol) ::
+              {:created, any()}
+              | {:already_exists, any({})}
+              | {:error, any()}
+
+  @doc """
+  Tries to write an exchange tuple to the storage backend. If successful
+  or exchange already exists then returns the exchange's unique Id.
+  """
+  @callback save_exchange(Storage.Model.Exchange) ::
+              {:created, any()}
+              | {:already_exists, any({})}
+              | {:error, any()}
+
+  @doc """
+  Tries to write a market tuple to the storage backend. If successful
+  or market already exists then returns the market's unique Id.
+  """
+  @callback save_market(Storage.Model.Market) ::
+              {:created, any()}
+              | {:already_exists, any({})}
+              | {:error, any()}
+
+  @doc """
   Writes a spread change event to the storage backend.
   """
   @callback save_spread_change(SpreadChange) ::

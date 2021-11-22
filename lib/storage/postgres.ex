@@ -1,3 +1,0 @@
-defmodule Storage.Postgres do
-  # ...
-end
