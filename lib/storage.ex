@@ -10,7 +10,7 @@ defmodule StorageMedium do
   """
   @callback save_symbol(Storage.Model.Symbol) ::
               {:created, any()}
-              | {:already_exists, any({})}
+              | {:already_exists, any()}
               | {:error, any()}
 
   @doc """
@@ -19,7 +19,7 @@ defmodule StorageMedium do
   """
   @callback save_exchange(Storage.Model.Exchange) ::
               {:created, any()}
-              | {:already_exists, any({})}
+              | {:already_exists, any()}
               | {:error, any()}
 
   @doc """
@@ -28,7 +28,7 @@ defmodule StorageMedium do
   """
   @callback save_market(Storage.Model.Market) ::
               {:created, any()}
-              | {:already_exists, any({})}
+              | {:already_exists, any()}
               | {:error, any()}
 
   @doc """
