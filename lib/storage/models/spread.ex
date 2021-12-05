@@ -1,7 +1,7 @@
 defmodule Storage.Model.SpreadChange do
   use Ecto.Schema
 
-  schema "spread_change" do
+  schema "spread_changes" do
     belongs_to(:market, Storage.Model.Market)
     field(:best_bid_price, :float)
     field(:best_ask_price, :float)

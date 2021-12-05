@@ -39,6 +39,8 @@ defmodule Market.Exchange do
         "starting exchange"
     )
 
+    Storage.Repo.start_link()
+
     # TODO setup storage medium
     # ...
     store = nil

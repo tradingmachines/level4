@@ -1,8 +1,7 @@
 defmodule Storage.Model.Symbol do
   use Ecto.Schema
 
-  schema "currency_symbol" do
-    has_many(:markets, Storage.Model.Market)
+  schema "symbols" do
     field(:symbol, :string)
   end
 end

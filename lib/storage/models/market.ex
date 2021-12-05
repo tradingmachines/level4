@@ -1,7 +1,7 @@
 defmodule Storage.Model.Market do
   use Ecto.Schema
 
-  schema "market" do
+  schema "markets" do
     belongs_to(:major_symbol, Storage.Model.Symbol)
     belongs_to(:quote_symbol, Storage.Model.Symbol)
     belongs_to(:exchange, Storage.Model.Exchange)
