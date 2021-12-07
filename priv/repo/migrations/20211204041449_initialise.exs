@@ -17,10 +17,17 @@ defmodule Storage.Repo.Migrations.Initialise do
       add(:market_type, :string)
     end
 
-    create table(:spread_changes) do
+    create table(:best_bid_prices) do
       add(:market_id, references(:markets))
-      add(:best_bid_price, :float)
-      add(:best_ask_price, :float)
+      add(:price, :float)
+      add(:size, :float)
+      add(:timestamp, :utc_datetime_usec)
+    end
+
+    create table(:best_ask_prices) do
+      add(:market_id, references(:markets))
+      add(:price, :float)
+      add(:size, :float)
       add(:timestamp, :utc_datetime_usec)
     end
 

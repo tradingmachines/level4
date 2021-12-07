@@ -43,6 +43,7 @@ defmodule Level4 do
           Registry,
           keys: :unique, name: Market.Level2.OrderBook.Registry
         },
+        Storage.Repo,
         MarketSupervisor
       ],
       strategy: :one_for_one

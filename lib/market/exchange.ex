@@ -39,20 +39,82 @@ defmodule Market.Exchange do
         "starting exchange"
     )
 
-    Storage.Repo.start_link()
+    exchange =
+      case Storage.Model.Exchange
+           |> Storage.Repo.get_by(name: init_arg[:market].exchange_name) do
+        nil ->
+          {:ok, struct} =
+            Storage.Repo.insert(%Storage.Model.Exchange{
+              name: init_arg[:market].exchange_name
+            })
 
-    # TODO setup storage medium
-    # ...
-    store = nil
+          struct
 
-    {:ok, {init_arg[:market], store}}
+        struct ->
+          struct
+      end
+
+    major_symbol =
+      case Storage.Model.Symbol
+           |> Storage.Repo.get_by(symbol: init_arg[:market].major_symbol) do
+        nil ->
+          {:ok, struct} =
+            Storage.Repo.insert(%Storage.Model.Symbol{
+              symbol: init_arg[:market].major_symbol
+            })
+
+          struct
+
+        struct ->
+          struct
+      end
+
+    quote_symbol =
+      case Storage.Model.Symbol
+           |> Storage.Repo.get_by(symbol: init_arg[:market].quote_symbol) do
+        nil ->
+          {:ok, struct} =
+            Storage.Repo.insert(%Storage.Model.Symbol{
+              symbol: init_arg[:market].quote_symbol
+            })
+
+          struct
+
+        struct ->
+          struct
+      end
+
+    market =
+      case Storage.Model.Market
+           |> Storage.Repo.get_by(
+             major_symbol_id: major_symbol.id,
+             quote_symbol_id: quote_symbol.id,
+             exchange_id: exchange.id,
+             market_type: init_arg[:market].market_type
+           ) do
+        nil ->
+          {:ok, struct} =
+            Storage.Repo.insert(%Storage.Model.Market{
+              major_symbol_id: major_symbol.id,
+              quote_symbol_id: quote_symbol.id,
+              exchange_id: exchange.id,
+              market_type: init_arg[:market].market_type
+            })
+
+          struct
+
+        struct ->
+          struct
+      end
+
+    {:ok, market}
   end
 
   @doc """
   Terminate function for the GenServer. Handles tear-down of the storage medium.
   """
   @impl true
-  def terminate(reason, {market, _}) do
+  def terminate(reason, market) do
     # handle termination
     # ...
   end
@@ -62,34 +124,26 @@ defmodule Market.Exchange do
   received from the mediator process.
   """
   @impl true
-  def handle_cast(
-        {:best_bid_change, {new_price, new_size, timestamp}},
-        {market, store}
-      ) do
-    #    Logger.debug(
-    #      "#{Market.id(market)} " <>
-    #        "best bid change: #{new_price}" <>
-    #        " at time #{timestamp}"
-    #    )
+  def handle_cast({:best_bid_change, {new_price, new_size, timestamp}}, market) do
+    Storage.Repo.insert(%Storage.Model.BestBidPrice{
+      market_id: market.id,
+      price: new_price,
+      size: new_size,
+      timestamp: timestamp
+    })
 
-    # TODO
-
-    {:noreply, {market, store}}
+    {:noreply, market}
   end
 
-  def handle_cast(
-        {:best_ask_change, {new_price, new_size, timestamp}},
-        {market, store}
-      ) do
-    #    Logger.debug(
-    #      "#{Market.id(market)} " <>
-    #        "best ask change: #{new_price}" <>
-    #        "at time #{timestamp}"
-    #    )
+  def handle_cast({:best_ask_change, {new_price, new_size, timestamp}}, market) do
+    Storage.Repo.insert(%Storage.Model.BestAskPrice{
+      market_id: market.id,
+      price: new_price,
+      size: new_size,
+      timestamp: timestamp
+    })
 
-    # TODO
-
-    {:noreply, {market, store}}
+    {:noreply, market}
   end
 
   @doc """
