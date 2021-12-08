@@ -3,32 +3,32 @@ defmodule Storage.Repo.Migrations.Initialise do
 
   def change do
     create table(:symbols) do
-      add(:symbol, :string)
+      add(:symbol, :string, null: false)
     end
 
     create table(:exchanges) do
-      add(:name, :string)
+      add(:name, :string, null: false)
     end
 
     create table(:markets) do
-      add(:major_symbol_id, references(:symbols))
-      add(:quote_symbol_id, references(:symbols))
-      add(:exchange_id, references(:exchanges))
-      add(:market_type, :string)
+      add(:major_symbol_id, references(:symbols), null: false)
+      add(:quote_symbol_id, references(:symbols), null: false)
+      add(:exchange_id, references(:exchanges), null: false)
+      add(:market_type, :string, null: false)
     end
 
-    create table(:best_bid_prices) do
-      add(:market_id, references(:markets))
-      add(:price, :float)
-      add(:size, :float)
-      add(:timestamp, :utc_datetime_usec)
+    create table(:best_bid_prices, primary_key: false) do
+      add(:market_id, references(:markets), null: false)
+      add(:price, :float, null: false)
+      add(:size, :float, null: false)
+      add(:timestamp, :utc_datetime_usec, null: false)
     end
 
-    create table(:best_ask_prices) do
-      add(:market_id, references(:markets))
-      add(:price, :float)
-      add(:size, :float)
-      add(:timestamp, :utc_datetime_usec)
+    create table(:best_ask_prices, primary_key: false) do
+      add(:market_id, references(:markets), null: false)
+      add(:price, :float, null: false)
+      add(:size, :float, null: false)
+      add(:timestamp, :utc_datetime_usec, null: false)
     end
 
     create(unique_index(:symbols, [:symbol]))
