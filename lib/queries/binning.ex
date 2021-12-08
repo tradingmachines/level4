@@ -1,0 +1,3 @@
+defmodule Query.Binning do
+  # ...
+end

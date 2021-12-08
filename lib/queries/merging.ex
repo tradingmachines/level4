@@ -1,0 +1,3 @@
+defmodule Query.Merging do
+  # ...
+end
