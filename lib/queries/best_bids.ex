@@ -1,7 +1,7 @@
 require Ecto.Query
 
 defmodule Query.BestBids do
-  def for_market_id(market_id, start_time, end_time) do
+  def for_market_id(market_id, start_time, end_time, preload \\ []) do
     query =
       Ecto.Query.from(bid in Storage.Model.BestBidPrice,
         where:
@@ -12,5 +12,6 @@ defmodule Query.BestBids do
       )
 
     Storage.Repo.all(query)
+    |> Storage.Repo.preload(preload)
   end
 end
