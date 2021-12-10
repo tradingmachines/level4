@@ -16,17 +16,7 @@ defmodule Query.Merging.SpreadChanges do
       Stream.transform(
         bids_and_asks,
         {nil, nil},
-        fn {side, price}, {previous_bid, previous_ask} ->
-          case side do
-            :bid ->
-              spread_change = {:bid_change, price.timestamp, {price, previous_ask}}
-              {[spread_change], {price, previous_ask}}
-
-            :ask ->
-              spread_change = {:ask_change, price.timestamp, {previous_bid, price}}
-              {[spread_change], {previous_bid, price}}
-          end
-        end
+        fn spread_change, previous -> snapshot(spread_change, previous) end
       )
 
     spreads_without_nil_prices =
@@ -38,62 +28,129 @@ defmodule Query.Merging.SpreadChanges do
     spreads_without_nil_prices
   end
 
+  defp snapshot({side, price}, {previous_bid, previous_ask}) do
+    case side do
+      :bid ->
+        spread_change = {:bid_change, price.timestamp, {price, previous_ask}}
+        {[spread_change], {price, previous_ask}}
+
+      :ask ->
+        spread_change = {:ask_change, price.timestamp, {previous_bid, price}}
+        {[spread_change], {previous_bid, price}}
+    end
+  end
+end
+
+defmodule Query.Mergeing.AggregatedSpreadChanges do
   def for_market_ids(market_ids, start_time, end_time) do
     tasks =
       for market_id <- market_ids do
         Task.async(fn ->
-          for_market_id(market_id, start_time, end_time)
-          |> Stream.map(fn change -> {market_id, change} end)
+          spread_changes =
+            Query.Merging.SpreadChanges.for_market_id(
+              market_id,
+              start_time,
+              end_time
+            )
+            |> Enum.to_list()
+
+          {market_id, spread_changes}
         end)
       end
 
-    market_streams =
+    market_spread_changes =
       Task.yield_many(tasks)
-      |> Enum.map(fn {_, stream} -> {:ok, stream} end)
+      |> Enum.map(fn {_, {:ok, spread_changes}} -> spread_changes end)
       |> Enum.into(%{})
 
-    initial_cursor =
+    initial_market_cursors =
       for market_id <- market_ids,
           into: %{},
           do:
             {market_id,
              %{
-               :stream => market_streams[market_id],
+               :spread_changes => market_spread_changes[market_id],
                :current => nil,
                :previous => nil
              }}
 
-    all_market_spreads =
+    all_aggregated =
       Stream.unfold(
-        initial_cursor,
-        fn cursor ->
-          new_cursor =
-            for market_id <- market_ids do
-              cond do
-                cursor[market_id].stream == :halt ->
-                  {market_id, cursor[market_id].previous}
-
-                cursor[market_id].current != nil ->
-                  {market_id, cursor[market_id]}
-
-                cursor[market_id].current == nil ->
-                  {current, new_stream} = consume_one(cursor[market_id].stream)
-
-                  {
-                    market_id,
-                    %{cursor[market_id] | :stream => new_stream, :current => current}
-                  }
-              end
-            end
-            |> Enum.filter(fn {_, cursor} -> cursor.stream != :halt end)
-            |> Enum.into(%{})
-
-          next_value = snapshot(new_cursor)
-
-          {next_value, new_cursor}
-        end
+        initial_market_cursors,
+        fn market_cursors -> snapshot(market_ids, market_cursors) end
       )
 
-    all_market_spreads
+    aggregated_without_nil_spread_changes =
+      all_aggregated
+      |> Stream.filter(fn market_spreads ->
+        for {_, spread} <- market_spreads do
+          spread != nil
+        end
+        |> Enum.all?()
+      end)
+
+    aggregated_without_nil_spread_changes
+  end
+
+  defp snapshot(market_ids, market_cursors) do
+    candidates =
+      for market_id <- market_ids do
+        cursor = market_cursors[market_id]
+
+        cond do
+          cursor.spread_changes == [] ->
+            {market_id, cursor}
+
+          cursor.current != nil ->
+            {market_id, cursor}
+
+          cursor.current == nil ->
+            [head | tail] = cursor.spread_changes
+
+            {
+              market_id,
+              %{cursor | :current => head, :spread_changes => tail}
+            }
+        end
+      end
+
+    oldest =
+      candidates
+      |> Enum.filter(fn {_, cursor} -> cursor.current != nil end)
+      |> Enum.min_by(
+        fn {_, cursor} ->
+          {_, timestamp, _} = cursor.current
+          timestamp
+        end,
+        DateTime,
+        fn -> nil end
+      )
+
+    if oldest != nil do
+      {oldest_market_id, oldest_cursor} = oldest
+
+      snapshot =
+        candidates
+        |> Enum.map(fn {market_id, cursor} ->
+          if market_id == oldest_market_id do
+            {market_id, oldest_cursor.current}
+          else
+            {market_id, cursor.previous}
+          end
+        end)
+
+      new_market_cursors =
+        candidates
+        |> Enum.into(%{})
+        |> Map.put(oldest_market_id, %{
+          oldest_cursor
+          | :current => nil,
+            :previous => oldest_cursor.current
+        })
+
+      {snapshot, new_market_cursors}
+    else
+      nil
+    end
   end
 end
