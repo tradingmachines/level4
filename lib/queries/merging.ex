@@ -42,6 +42,27 @@ defmodule Query.Merging.SpreadChanges do
 end
 
 defmodule Query.Mergeing.AggregatedSpreadChanges do
+  def to_csv(stream, file_path) do
+    file = File.stream!(file_path)
+
+    stream
+    |> Stream.map(fn changes ->
+      chunks =
+        for {_, change} <- changes do
+          {_, timestamp, {bid, ask}} = change
+          "#{timestamp},#{bid.price},#{ask.price}"
+        end
+
+      line =
+        chunks
+        |> Enum.join(",")
+
+      line <> "\n"
+    end)
+    |> Stream.into(file)
+    |> Stream.run()
+  end
+
   def for_market_ids(market_ids, start_time, end_time) do
     tasks =
       for market_id <- market_ids do
@@ -59,7 +80,7 @@ defmodule Query.Mergeing.AggregatedSpreadChanges do
       end
 
     market_spread_changes =
-      Task.yield_many(tasks)
+      Task.yield_many(tasks, :infinity)
       |> Enum.map(fn {_, {:ok, spread_changes}} -> spread_changes end)
       |> Enum.into(%{})
 
