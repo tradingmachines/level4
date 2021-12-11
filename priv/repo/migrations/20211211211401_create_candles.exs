@@ -12,5 +12,7 @@ defmodule Storage.Repo.Migrations.CreateCandles do
       add(:timeframe_in_seconds, :integer, null: false)
       add(:start_timestamp, :utc_datetime_usec, null: false)
     end
+
+    execute("SELECT create_hypertable('candles', 'start_timestamp')")
   end
 end

@@ -11,5 +11,7 @@ defmodule Storage.Repo.Migrations.CreatePairwiseCointegrationTests do
       add(:timeframe_in_seconds, :integer, null: false)
       add(:start_timestamp, :utc_datetime_usec, null: false)
     end
+
+    execute("SELECT create_hypertable('pairwise_cointegration_tests', 'start_timestamp')")
   end
 end

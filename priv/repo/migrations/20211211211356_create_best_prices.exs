@@ -15,5 +15,8 @@ defmodule Storage.Repo.Migrations.CreateBestPrices do
       add(:size, :float, null: false)
       add(:timestamp, :utc_datetime_usec, null: false)
     end
+
+    execute("SELECT create_hypertable('best_bid_prices', 'timestamp')")
+    execute("SELECT create_hypertable('best_ask_prices', 'timestamp')")
   end
 end
