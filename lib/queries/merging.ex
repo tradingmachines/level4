@@ -49,8 +49,8 @@ defmodule Query.Mergeing.AggregatedSpreadChanges do
     |> Stream.map(fn changes ->
       chunks =
         for {_, change} <- changes do
-          {_, timestamp, {bid, ask}} = change
-          "#{timestamp},#{bid.price},#{ask.price}"
+          {_, _, {bid, ask}} = change
+          "#{bid.price},#{ask.price}"
         end
 
       line =
