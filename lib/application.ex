@@ -44,11 +44,26 @@ defmodule Level4 do
           keys: :unique, name: Market.Level2.OrderBook.Registry
         },
         Storage.Repo,
+        SchedulePairwiseCointegrationTests,
+        ScheduleBuySellCandles,
+        ScheduleSpreadCandles,
         MarketSupervisor
       ],
       strategy: :one_for_one
     )
   end
+end
+
+defmodule SchedulePairwiseCointegrationTests do
+  use Quantum, otp_app: :level4
+end
+
+defmodule ScheduleBuySellCandles do
+  use Quantum, otp_app: :level4
+end
+
+defmodule ScheduleSpreadCandles do
+  use Quantum, otp_app: :level4
 end
 
 defmodule MarketSupervisor do
@@ -80,6 +95,33 @@ defmodule MarketSupervisor do
       strategy: :one_for_one,
       extra_arguments: [init_arg]
     )
+  end
+
+  @doc """
+  ...
+  """
+  # ...
+  def tell_all_markets_to(:do_pairwise_cointegration_tests, timeframe_in_seconds) do
+    start_time = 0
+    end_time = 0
+
+    nil
+  end
+
+  # ...
+  def tell_all_markets_to(:make_time_sale_candle, timeframe_in_seconds) do
+    start_time = 0
+    end_time = 0
+
+    nil
+  end
+
+  # ...
+  def tell_all_markets_to(:make_spread_candles, timeframe_in_seconds) do
+    start_time = 0
+    end_time = 0
+
+    nil
   end
 
   @doc """

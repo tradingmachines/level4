@@ -16,7 +16,7 @@ defmodule Market.Supervisor do
   Starts and links a new Supervisor with the name returned from the
   process_name function above.
   """
-  def start_link(a, init_arg) do
+  def start_link(_, init_arg) do
     Supervisor.start_link(
       __MODULE__,
       init_arg,

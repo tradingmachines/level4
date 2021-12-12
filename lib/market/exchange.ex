@@ -146,6 +146,33 @@ defmodule Market.Exchange do
     {:noreply, market}
   end
 
+  def handle_cast(
+        {:do_pairwise_cointegration_tests, {timeframe_in_seconds, {start_time, end_time}}},
+        market
+      ) do
+    IO.puts("#{inspect(market)} :do_pairwise_cointegration_tests")
+
+    nil
+  end
+
+  def handle_cast(
+        {:make_time_sale_candle, {timeframe_in_seconds, {start_time, end_time}}},
+        market
+      ) do
+    IO.puts("#{inspect(market)} :make_time_sale_candle")
+
+    nil
+  end
+
+  def handle_cast(
+        {:make_spread_candles, {timeframe_in_seconds, {start_time, end_time}}},
+        market
+      ) do
+    IO.puts("#{inspect(market)} :make_spread_candles")
+
+    nil
+  end
+
   @doc """
   Market.Exchange API: a helper function that sends a :best_bid_change to
   the GenServer. Note: casts are asynchronous requests.
@@ -160,5 +187,45 @@ defmodule Market.Exchange do
   """
   def best_ask_change(exchange, {new_price, new_size, timestamp}) do
     GenServer.cast(exchange, {:best_ask_change, {new_price, new_size, timestamp}})
+  end
+
+  @doc """
+  ...
+  ...
+  """
+  def do_pairwise_cointergration_tests(
+        exchange,
+        {timeframe_in_seconds, {start_time, end_time}}
+      ) do
+    GenServer.cast(exchange, {
+      :do_pairwise_cointergration_tests,
+      {timeframe_in_seconds, {start_time, end_time}}
+    })
+  end
+
+  @doc """
+  ...
+  """
+  def make_buy_sell_candle(
+        exchange,
+        {timeframe_in_seconds, {start_time, end_time}}
+      ) do
+    GenServer.cast(exchange, {
+      :make_buy_sell_candle,
+      {timeframe_in_seconds, {start_time, end_time}}
+    })
+  end
+
+  @doc """
+  ...
+  """
+  def make_spread_candle(
+        exchange,
+        {timeframe_in_seconds, {start_time, end_time}}
+      ) do
+    GenServer.cast(exchange, {
+      :make_spread_candle,
+      {timeframe_in_seconds, {start_time, end_time}}
+    })
   end
 end
