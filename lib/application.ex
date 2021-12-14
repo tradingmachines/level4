@@ -47,7 +47,7 @@ defmodule Level4 do
         SchedulePairwiseCointegrationTests,
         ScheduleBuySellCandles,
         ScheduleSpreadCandles,
-        MarketSupervisor
+        Markets
       ],
       strategy: :one_for_one
     )
@@ -66,7 +66,7 @@ defmodule ScheduleSpreadCandles do
   use Quantum, otp_app: :level4
 end
 
-defmodule MarketSupervisor do
+defmodule Markets do
   @moduledoc """
   Spanws and destroys market sub-trees using Market.Supervisor, which
   is responsible for building and maintaining processes in its tree.
@@ -102,26 +102,44 @@ defmodule MarketSupervisor do
   """
   # ...
   def tell_all_markets_to(:do_pairwise_cointegration_tests, timeframe_in_seconds) do
-    start_time = 0
-    end_time = 0
+    start_time = DateTime.utc_now()
+    end_time = DateTime.add(start_time, timeframe_in_seconds, :second)
+    time_info = {timeframe_in_seconds, {start_time, end_time}}
 
-    nil
+    market_ids = []
+
+    for market_id <- market_ids do
+      market = {:via, Registry, {Market.Exchange.Registry, market_id}}
+      Market.Exchange.do_pairwise_cointergration_tests(market, time_info)
+    end
   end
 
   # ...
   def tell_all_markets_to(:make_time_sale_candle, timeframe_in_seconds) do
-    start_time = 0
-    end_time = 0
+    start_time = DateTime.utc_now()
+    end_time = DateTime.add(start_time, timeframe_in_seconds, :second)
+    time_info = {timeframe_in_seconds, {start_time, end_time}}
 
-    nil
+    market_ids = []
+
+    for market_id <- market_ids do
+      market = {:via, Registry, {Market.Exchange.Registry, market_id}}
+      Market.Exchange.make_buy_sell_candle(market, time_info)
+    end
   end
 
   # ...
   def tell_all_markets_to(:make_spread_candles, timeframe_in_seconds) do
-    start_time = 0
-    end_time = 0
+    start_time = DateTime.utc_now()
+    end_time = DateTime.add(start_time, timeframe_in_seconds, :second)
+    time_info = {timeframe_in_seconds, {start_time, end_time}}
 
-    nil
+    market_ids = []
+
+    for market_id <- market_ids do
+      market = {:via, Registry, {Market.Exchange.Registry, market_id}}
+      Market.Exchange.make_spread_candle(market, time_info)
+    end
   end
 
   @doc """

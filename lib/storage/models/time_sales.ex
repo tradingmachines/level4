@@ -1,23 +1,23 @@
-defmodule Storage.Model.BestBidPrice do
+defmodule Storage.Model.Buy do
   use Ecto.Schema
 
   @primary_key false
-  schema "best_bid_prices" do
+  schema "buys" do
     belongs_to(:market, Storage.Model.Market)
     field(:price, :float)
-    field(:mid_market_price, :float, virtual: true)
+    field(:size, :float)
     field(:timestamp, :utc_datetime_usec)
   end
 end
 
-defmodule Storage.Model.BestAskPrice do
+defmodule Storage.Model.Sell do
   use Ecto.Schema
 
   @primary_key false
-  schema "best_ask_prices" do
+  schema "sells" do
     belongs_to(:market, Storage.Model.Market)
     field(:price, :float)
-    field(:mid_market_price, :float, virtual: true)
+    field(:size, :float)
     field(:timestamp, :utc_datetime_usec)
   end
 end

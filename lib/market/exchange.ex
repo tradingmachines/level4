@@ -124,22 +124,20 @@ defmodule Market.Exchange do
   received from the mediator process.
   """
   @impl true
-  def handle_cast({:best_bid_change, {new_price, new_size, timestamp}}, market) do
+  def handle_cast({:best_bid_change, {new_price, _, timestamp}}, market) do
     Storage.Repo.insert(%Storage.Model.BestBidPrice{
       market_id: market.id,
       price: new_price,
-      size: new_size,
       timestamp: timestamp
     })
 
     {:noreply, market}
   end
 
-  def handle_cast({:best_ask_change, {new_price, new_size, timestamp}}, market) do
+  def handle_cast({:best_ask_change, {new_price, _, timestamp}}, market) do
     Storage.Repo.insert(%Storage.Model.BestAskPrice{
       market_id: market.id,
       price: new_price,
-      size: new_size,
       timestamp: timestamp
     })
 
@@ -150,27 +148,42 @@ defmodule Market.Exchange do
         {:do_pairwise_cointegration_tests, {timeframe_in_seconds, {start_time, end_time}}},
         market
       ) do
-    IO.puts("#{inspect(market)} :do_pairwise_cointegration_tests")
+    Task.async(fn ->
+      IO.puts("#{inspect(market)} :do_pairwise_cointegration_tests")
 
-    nil
+      # do work
+      # ...
+
+      nil
+    end)
   end
 
   def handle_cast(
         {:make_time_sale_candle, {timeframe_in_seconds, {start_time, end_time}}},
         market
       ) do
-    IO.puts("#{inspect(market)} :make_time_sale_candle")
+    Task.async(fn ->
+      IO.puts("#{inspect(market)} :make_time_sale_candle")
 
-    nil
+      # do work
+      # ...
+
+      nil
+    end)
   end
 
   def handle_cast(
         {:make_spread_candles, {timeframe_in_seconds, {start_time, end_time}}},
         market
       ) do
-    IO.puts("#{inspect(market)} :make_spread_candles")
+    Task.async(fn ->
+      IO.puts("#{inspect(market)} :make_spread_candles")
 
-    nil
+      # do work
+      # ...
+
+      nil
+    end)
   end
 
   @doc """
