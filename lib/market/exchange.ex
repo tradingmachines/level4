@@ -98,7 +98,8 @@ defmodule Market.Exchange do
               major_symbol_id: major_symbol.id,
               quote_symbol_id: quote_symbol.id,
               exchange_id: exchange.id,
-              market_type: init_arg[:market].market_type
+              market_type: init_arg[:market].market_type,
+              level4_feed_enabled: true
             })
 
           struct

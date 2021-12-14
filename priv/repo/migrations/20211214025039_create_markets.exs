@@ -7,6 +7,7 @@ defmodule Storage.Repo.Migrations.CreateMarkets do
       add(:quote_symbol_id, references(:symbols), null: false)
       add(:exchange_id, references(:exchanges), null: false)
       add(:market_type, :string, null: false)
+      add(:level4_feed_enabled, :boolean, null: false)
     end
 
     create(
