@@ -102,43 +102,43 @@ defmodule Markets do
   """
   # ...
   def tell_all_markets_to(:do_pairwise_cointegration_tests, timeframe_in_seconds) do
-    start_time = DateTime.utc_now()
-    end_time = DateTime.add(start_time, timeframe_in_seconds, :second)
-    time_info = {timeframe_in_seconds, {start_time, end_time}}
+    end_time = DateTime.utc_now()
+    start_time = DateTime.add(end_time, -timeframe_in_seconds, :second)
+    timings = {timeframe_in_seconds, {start_time, end_time}}
 
     market_ids = []
 
     for market_id <- market_ids do
       market = {:via, Registry, {Market.Exchange.Registry, market_id}}
-      Market.Exchange.do_pairwise_cointergration_tests(market, time_info)
+      Market.Exchange.do_pairwise_cointergration_tests(market, timings)
     end
   end
 
   # ...
   def tell_all_markets_to(:make_time_sale_candle, timeframe_in_seconds) do
-    start_time = DateTime.utc_now()
-    end_time = DateTime.add(start_time, timeframe_in_seconds, :second)
-    time_info = {timeframe_in_seconds, {start_time, end_time}}
+    end_time = DateTime.utc_now()
+    start_time = DateTime.add(end_time, -timeframe_in_seconds, :second)
+    timings = {timeframe_in_seconds, {start_time, end_time}}
 
     market_ids = []
 
     for market_id <- market_ids do
       market = {:via, Registry, {Market.Exchange.Registry, market_id}}
-      Market.Exchange.make_buy_sell_candle(market, time_info)
+      Market.Exchange.make_buy_sell_candle(market, timings)
     end
   end
 
   # ...
   def tell_all_markets_to(:make_spread_candles, timeframe_in_seconds) do
-    start_time = DateTime.utc_now()
-    end_time = DateTime.add(start_time, timeframe_in_seconds, :second)
-    time_info = {timeframe_in_seconds, {start_time, end_time}}
+    end_time = DateTime.utc_now()
+    start_time = DateTime.add(end_time, -timeframe_in_seconds, :second)
+    timings = {timeframe_in_seconds, {start_time, end_time}}
 
     market_ids = []
 
     for market_id <- market_ids do
       market = {:via, Registry, {Market.Exchange.Registry, market_id}}
-      Market.Exchange.make_spread_candle(market, time_info)
+      Market.Exchange.make_spread_candle(market, timings)
     end
   end
 

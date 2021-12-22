@@ -1,7 +1,9 @@
 import Config
 
+# ecto storage repo
 config :level4, ecto_repos: [Storage.Repo]
 
+# ecto repo backend: postgres + timescaledb
 config :level4, Storage.Repo,
   database: "level4",
   username: "level4",
@@ -10,6 +12,11 @@ config :level4, Storage.Repo,
   port: 5432,
   pool_size: 25
 
+# pairwise cointergration job schedule.
+# uses :quantum to create crontab-like jobs.
+# each job tells all markets currently running to perform pairwise cointergration
+# tests with all other markets including themselves over a given timeframe in
+# seconds.
 config :level4, SchedulePairwiseCointegrationTests,
   overlap: true,
   timezone: :utc,
@@ -79,6 +86,10 @@ config :level4, SchedulePairwiseCointegrationTests,
     ]
   ]
 
+# timesale candles job schedule.
+# aggregates timesales data into candlesticks.
+# each job tells all markets currently running to compute OHLCV candles for the
+# last x seconds.
 config :level4, ScheduleTimeSaleCandles,
   overlap: true,
   timezone: :utc,
@@ -202,6 +213,12 @@ config :level4, ScheduleTimeSaleCandles,
     ]
   ]
 
+# spread candles job schedule.
+# aggregates best bid/ask prices into candlesticks. i.e. time binning for the "price
+# changes" time series data. each job tells all markets currently running to compute
+# OHLC candles for the last x seconds. the result is two sets of candles: one for the
+# bids side and one for the asks side. note: there is no "volume" metric because these
+# candles capture the bid/ask spread over time, which is purely speculative.
 config :level4, ScheduleSpreadCandles,
   overlap: true,
   timezone: :utc,

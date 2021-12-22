@@ -39,6 +39,7 @@ defmodule Market.Exchange do
         "starting exchange"
     )
 
+    # make and/or get the exchange record
     exchange =
       case Storage.Model.Exchange
            |> Storage.Repo.get_by(name: init_arg[:market].exchange_name) do
@@ -54,6 +55,7 @@ defmodule Market.Exchange do
           struct
       end
 
+    # make and/or get the major symbol record
     major_symbol =
       case Storage.Model.Symbol
            |> Storage.Repo.get_by(symbol: init_arg[:market].major_symbol) do
@@ -69,6 +71,7 @@ defmodule Market.Exchange do
           struct
       end
 
+    # make and/or get the quote symbol record
     quote_symbol =
       case Storage.Model.Symbol
            |> Storage.Repo.get_by(symbol: init_arg[:market].quote_symbol) do
@@ -84,6 +87,7 @@ defmodule Market.Exchange do
           struct
       end
 
+    # make and/or get the market record
     market =
       case Storage.Model.Market
            |> Storage.Repo.get_by(
@@ -121,9 +125,9 @@ defmodule Market.Exchange do
   end
 
   @doc """
-  GenServer cast function for :best_bid_change and :best_bid_change events
-  received from the mediator process.
+  GenServer cast functions for async API calls.
   """
+  # :best_bid_change -> the best bid price changed -> log it
   @impl true
   def handle_cast({:best_bid_change, {new_price, _, timestamp}}, market) do
     Storage.Repo.insert(%Storage.Model.BestBidPrice{
@@ -135,6 +139,7 @@ defmodule Market.Exchange do
     {:noreply, market}
   end
 
+  # :best_ask_change -> the best ask price changed -> log it
   def handle_cast({:best_ask_change, {new_price, _, timestamp}}, market) do
     Storage.Repo.insert(%Storage.Model.BestAskPrice{
       market_id: market.id,
@@ -145,6 +150,8 @@ defmodule Market.Exchange do
     {:noreply, market}
   end
 
+  # :do_pairwise_cointegration_tests -> do pairwise cointergration tests against all
+  # markets currently running, including myself -> save the results.
   def handle_cast(
         {:do_pairwise_cointegration_tests, {timeframe_in_seconds, {start_time, end_time}}},
         market
@@ -159,6 +166,7 @@ defmodule Market.Exchange do
     end)
   end
 
+  # :make_time_sale_candle -> make OHLCV candle -> save it
   def handle_cast(
         {:make_time_sale_candle, {timeframe_in_seconds, {start_time, end_time}}},
         market
@@ -173,6 +181,7 @@ defmodule Market.Exchange do
     end)
   end
 
+  # :make_spread_candle -> make OHLC candles for bids and asks -> save them
   def handle_cast(
         {:make_spread_candles, {timeframe_in_seconds, {start_time, end_time}}},
         market
@@ -188,7 +197,7 @@ defmodule Market.Exchange do
   end
 
   @doc """
-  Market.Exchange API: a helper function that sends a :best_bid_change to
+  Async Market.Exchange API: a helper function that sends a :best_bid_change to
   the GenServer. Note: casts are asynchronous requests.
   """
   def best_bid_change(exchange, {new_price, new_size, timestamp}) do
@@ -196,7 +205,7 @@ defmodule Market.Exchange do
   end
 
   @doc """
-  Market.Exchange API: a helper function that sends a :best_ask_change to
+  Async Market.Exchange API: a helper function that sends a :best_ask_change to
   the GenServer. Note: casts are asynchronous requests.
   """
   def best_ask_change(exchange, {new_price, new_size, timestamp}) do
@@ -204,8 +213,8 @@ defmodule Market.Exchange do
   end
 
   @doc """
-  ...
-  ...
+  Async Market.Exchange API: instruct exchange to do cointergration tests over
+  some timeframe.
   """
   def do_pairwise_cointergration_tests(
         exchange,
@@ -218,7 +227,8 @@ defmodule Market.Exchange do
   end
 
   @doc """
-  ...
+  Async Market.Exchange API: instruct exchange to make a OHLCV candle for some
+  timeframe.
   """
   def make_buy_sell_candle(
         exchange,
@@ -231,7 +241,8 @@ defmodule Market.Exchange do
   end
 
   @doc """
-  ...
+  Async Market.Exchange API: instruct exchange to make a OHLC candles for best
+  bid/ask price changes over some timeframe.
   """
   def make_spread_candle(
         exchange,
