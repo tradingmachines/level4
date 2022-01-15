@@ -2,13 +2,15 @@ require Logger
 
 defmodule Market.Level2.Mediator do
   @moduledoc """
-  ...
+  A level2 Mediator receives snapshot and delta commands from
+  a websocket connection. The Mediator is responsible for updating
+  the local orderbook structure.
   """
 
   use GenServer
 
   @doc """
-  ...
+  GenServer start_link callback. Register PID under marker Id.
   """
   def start_link(init_arg) do
     GenServer.start_link(
@@ -24,7 +26,9 @@ defmodule Market.Level2.Mediator do
   end
 
   @doc """
-  ...
+  GenServer init callback. Initial state is all zero: no best bid or ask
+  price seen yet. When either bid/ask prices change, this state will be
+  updated accordingly.
   """
   @impl true
   def init(init_arg) do
@@ -37,7 +41,7 @@ defmodule Market.Level2.Mediator do
   end
 
   @doc """
-  ...
+  Synchronous API. Apply snapshot to orderbook.
   """
   @impl true
   def handle_call({:snapshot, {bids, asks}}, _, {market, best_prices}) do
@@ -50,7 +54,7 @@ defmodule Market.Level2.Mediator do
       {bids, asks}
     )
 
-    {:reply, %{}, {market, best_prices}}
+    {:noreply, {market, best_prices}}
   end
 
   def handle_call(
@@ -92,8 +96,7 @@ defmodule Market.Level2.Mediator do
           )
 
           {
-            :reply,
-            %{},
+            :noreply,
             {
               market,
               {{new_best_bid_price, new_best_bid_size}, best_ask}
@@ -101,8 +104,7 @@ defmodule Market.Level2.Mediator do
           }
         else
           {
-            :reply,
-            %{},
+            :noreply,
             {
               market,
               {{best_bid_price, best_bid_size}, best_ask}
@@ -113,8 +115,7 @@ defmodule Market.Level2.Mediator do
       # the bids side is empty
       :side_empty ->
         {
-          :reply,
-          %{},
+          :noreply,
           {
             market,
             {{best_bid_price, best_bid_size}, best_ask}
@@ -162,8 +163,7 @@ defmodule Market.Level2.Mediator do
           )
 
           {
-            :reply,
-            %{},
+            :noreply,
             {
               market,
               {best_bid, {new_best_ask_price, new_best_ask_size}}
@@ -171,8 +171,7 @@ defmodule Market.Level2.Mediator do
           }
         else
           {
-            :reply,
-            %{},
+            :noreply,
             {
               market,
               {best_bid, {best_ask_price, best_ask_size}}
@@ -183,8 +182,7 @@ defmodule Market.Level2.Mediator do
       # the asks side is empty
       :side_empty ->
         {
-          :reply,
-          %{},
+          :noreply,
           {
             market,
             {best_bid, {best_ask_price, best_ask_size}}
@@ -194,7 +192,7 @@ defmodule Market.Level2.Mediator do
   end
 
   @doc """
-  ...
+  Handle GenServer termination.
   """
   @impl true
   def terminate(reason, {market, _}) do
@@ -205,25 +203,25 @@ defmodule Market.Level2.Mediator do
   end
 
   @doc """
-  ...
+  Reset both sides of the orderbook. Synchronous API call.
   """
   def snapshot(mediator, bids, asks) do
     GenServer.call(mediator, {:snapshot, {bids, asks}})
   end
 
   @doc """
-  ...
+  Apply a single delta to the order book. Synchronous API call.
+  """
+  def delta(mediator, delta) do
+    GenServer.call(mediator, {:delta, delta})
+  end
+
+  @doc """
+  Apply multiple deltas to the order book. Synchronous API call.
   """
   def deltas(mediator, deltas) do
     for delta <- deltas do
       GenServer.call(mediator, {:delta, delta})
     end
-  end
-
-  @doc """
-  ...
-  """
-  def delta(mediator, delta) do
-    GenServer.call(mediator, {:delta, delta})
   end
 end

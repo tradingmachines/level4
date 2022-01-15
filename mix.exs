@@ -22,7 +22,6 @@ defmodule Level4.MixProject do
     [
       {:gun, github: "ninenines/gun"},
       {:jason, "~> 1.2"},
-      {:quantum, "~> 3.0"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"}
     ]

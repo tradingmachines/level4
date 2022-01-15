@@ -55,14 +55,14 @@ defmodule Market.Exchange do
           struct
       end
 
-    # make and/or get the major symbol record
-    major_symbol =
+    # make and/or get the base symbol record
+    base_symbol =
       case Storage.Model.Symbol
-           |> Storage.Repo.get_by(symbol: init_arg[:market].major_symbol) do
+           |> Storage.Repo.get_by(symbol: init_arg[:market].base_symbol) do
         nil ->
           {:ok, struct} =
             Storage.Repo.insert(%Storage.Model.Symbol{
-              symbol: init_arg[:market].major_symbol
+              symbol: init_arg[:market].base_symbol
             })
 
           struct
@@ -91,7 +91,7 @@ defmodule Market.Exchange do
     market =
       case Storage.Model.Market
            |> Storage.Repo.get_by(
-             major_symbol_id: major_symbol.id,
+             base_symbol_id: base_symbol.id,
              quote_symbol_id: quote_symbol.id,
              exchange_id: exchange.id,
              market_type: init_arg[:market].market_type
@@ -99,7 +99,7 @@ defmodule Market.Exchange do
         nil ->
           {:ok, struct} =
             Storage.Repo.insert(%Storage.Model.Market{
-              major_symbol_id: major_symbol.id,
+              base_symbol_id: base_symbol.id,
               quote_symbol_id: quote_symbol.id,
               exchange_id: exchange.id,
               market_type: init_arg[:market].market_type,
@@ -113,15 +113,6 @@ defmodule Market.Exchange do
       end
 
     {:ok, market}
-  end
-
-  @doc """
-  Terminate function for the GenServer. Handles tear-down of the storage medium.
-  """
-  @impl true
-  def terminate(reason, market) do
-    # handle termination
-    # ...
   end
 
   @doc """
@@ -150,52 +141,6 @@ defmodule Market.Exchange do
     {:noreply, market}
   end
 
-  # :do_pairwise_cointegration_tests -> do pairwise cointergration tests against all
-  # markets currently running, including myself -> save the results.
-  def handle_cast(
-        {:do_pairwise_cointegration_tests, {timeframe_in_seconds, {start_time, end_time}}},
-        market
-      ) do
-    Task.async(fn ->
-      IO.puts("#{inspect(market)} :do_pairwise_cointegration_tests")
-
-      # do work
-      # ...
-
-      nil
-    end)
-  end
-
-  # :make_time_sale_candle -> make OHLCV candle -> save it
-  def handle_cast(
-        {:make_time_sale_candle, {timeframe_in_seconds, {start_time, end_time}}},
-        market
-      ) do
-    Task.async(fn ->
-      IO.puts("#{inspect(market)} :make_time_sale_candle")
-
-      # do work
-      # ...
-
-      nil
-    end)
-  end
-
-  # :make_spread_candle -> make OHLC candles for bids and asks -> save them
-  def handle_cast(
-        {:make_spread_candles, {timeframe_in_seconds, {start_time, end_time}}},
-        market
-      ) do
-    Task.async(fn ->
-      IO.puts("#{inspect(market)} :make_spread_candles")
-
-      # do work
-      # ...
-
-      nil
-    end)
-  end
-
   @doc """
   Async Market.Exchange API: a helper function that sends a :best_bid_change to
   the GenServer. Note: casts are asynchronous requests.
@@ -210,47 +155,5 @@ defmodule Market.Exchange do
   """
   def best_ask_change(exchange, {new_price, new_size, timestamp}) do
     GenServer.cast(exchange, {:best_ask_change, {new_price, new_size, timestamp}})
-  end
-
-  @doc """
-  Async Market.Exchange API: instruct exchange to do cointergration tests over
-  some timeframe.
-  """
-  def do_pairwise_cointergration_tests(
-        exchange,
-        {timeframe_in_seconds, {start_time, end_time}}
-      ) do
-    GenServer.cast(exchange, {
-      :do_pairwise_cointergration_tests,
-      {timeframe_in_seconds, {start_time, end_time}}
-    })
-  end
-
-  @doc """
-  Async Market.Exchange API: instruct exchange to make a OHLCV candle for some
-  timeframe.
-  """
-  def make_buy_sell_candle(
-        exchange,
-        {timeframe_in_seconds, {start_time, end_time}}
-      ) do
-    GenServer.cast(exchange, {
-      :make_buy_sell_candle,
-      {timeframe_in_seconds, {start_time, end_time}}
-    })
-  end
-
-  @doc """
-  Async Market.Exchange API: instruct exchange to make a OHLC candles for best
-  bid/ask price changes over some timeframe.
-  """
-  def make_spread_candle(
-        exchange,
-        {timeframe_in_seconds, {start_time, end_time}}
-      ) do
-    GenServer.cast(exchange, {
-      :make_spread_candle,
-      {timeframe_in_seconds, {start_time, end_time}}
-    })
   end
 end

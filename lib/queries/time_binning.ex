@@ -1,3 +1,0 @@
-defmodule Query.TimeBinning do
-  # ...
-end

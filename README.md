@@ -1,4 +1,4 @@
-# Level4
+# level4
 Ingress. This is were the data comes from.
 Level 4 is an elixir application which exposes some (convenient)
 interface to:

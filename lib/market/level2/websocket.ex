@@ -108,7 +108,7 @@ defmodule Market.Level2.WebSocket do
     # make the JSON subscription message for this exchange
     {:ok, json_str} =
       market.translation_scheme.make_subscribe_message(
-        market.major_symbol,
+        market.base_symbol,
         market.quote_symbol
       )
 

@@ -40,7 +40,6 @@ defmodule Market.Supervisor do
         "starting market supervisor"
     )
 
-    # market has an exchange child process and a supervised level2 subtree
     Supervisor.init(
       [
         %{

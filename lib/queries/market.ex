@@ -26,13 +26,13 @@ defmodule Query.Markets do
   end
 
   @doc """
-  Get all markets for a specific major symbol id. Optionally preload associated
+  Get all markets for a specific base symbol id. Optionally preload associated
   records.
   """
-  def for_major_symbol_id(id, preload \\ []) do
+  def for_base_symbol_id(id, preload \\ []) do
     query =
       Ecto.Query.from(market in Storage.Model.Market,
-        where: market.major_symbol_id == ^id
+        where: market.base_symbol_id == ^id
       )
 
     Storage.Repo.all(query)
