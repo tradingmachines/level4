@@ -21,5 +21,12 @@ defmodule TranslationScheme do
   @doc """
   ...
   """
-  @callback translate(String.t(), any()) :: {any(), any}
+  @callback translate(String.t(), any()) :: {any(), any()}
+
+  @doc """
+  ...
+  """
+  @callback check_sync_state(any()) ::
+              {:synced, any()}
+              | {:not_synced, any()}
 end

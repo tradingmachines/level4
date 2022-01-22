@@ -19,4 +19,9 @@ defmodule Exchanges.CexIO do
   def translate(json, sync_state) do
     nil
   end
+
+  @impl TranslationScheme
+  def check_sync_state(sync_state) do
+    {:synced, sync_state}
+  end
 end

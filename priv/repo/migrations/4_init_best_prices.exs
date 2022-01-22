@@ -5,12 +5,14 @@ defmodule Storage.Repo.Migrations.CreateBestPrices do
     create table(:best_bid_prices, primary_key: false) do
       add(:market_id, references(:markets), null: false)
       add(:price, :float, null: false)
+      add(:initial_liquidity, :float, null: false)
       add(:timestamp, :utc_datetime_usec, null: false)
     end
 
     create table(:best_ask_prices, primary_key: false) do
       add(:market_id, references(:markets), null: false)
       add(:price, :float, null: false)
+      add(:initial_liquidity, :float, null: false)
       add(:timestamp, :utc_datetime_usec, null: false)
     end
 

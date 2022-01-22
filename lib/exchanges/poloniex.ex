@@ -74,4 +74,9 @@ defmodule Exchanges.Poloniex do
 
     {instructions, sync_state}
   end
+
+  @impl TranslationScheme
+  def check_sync_state(sync_state) do
+    {:synced, sync_state}
+  end
 end
