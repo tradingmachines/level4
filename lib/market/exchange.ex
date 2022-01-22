@@ -120,10 +120,11 @@ defmodule Market.Exchange do
   """
   # :best_bid_change -> the best bid price changed -> log it
   @impl true
-  def handle_cast({:best_bid_change, {new_price, _, timestamp}}, market) do
+  def handle_cast({:best_bid_change, {new_price, new_size, timestamp}}, market) do
     Storage.Repo.insert(%Storage.Model.BestBidPrice{
       market_id: market.id,
       price: new_price,
+      initial_liquidity: new_size,
       timestamp: timestamp
     })
 
@@ -131,10 +132,11 @@ defmodule Market.Exchange do
   end
 
   # :best_ask_change -> the best ask price changed -> log it
-  def handle_cast({:best_ask_change, {new_price, _, timestamp}}, market) do
+  def handle_cast({:best_ask_change, {new_price, new_size, timestamp}}, market) do
     Storage.Repo.insert(%Storage.Model.BestAskPrice{
       market_id: market.id,
       price: new_price,
+      initial_liquidity: new_size,
       timestamp: timestamp
     })
 
