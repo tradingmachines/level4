@@ -58,6 +58,20 @@ defmodule Exchanges.Coinbase do
           {:deltas, deltas}
 
         # ...
+        "match" ->
+          {price, _} = Float.parse(json["price"])
+          {size, _} = Float.parse(json["size"])
+          {:ok, timestamp, 0} = DateTime.from_iso8601(json["time"])
+
+          case json["side"] do
+            "buy" ->
+              {:buys, [{price, size, timestamp}]}
+
+            "sell" ->
+              {:sells, [{price, size, timestamp}]}
+          end
+
+        # ...
         "subscriptions" ->
           :noop
 
@@ -71,10 +85,6 @@ defmodule Exchanges.Coinbase do
 
         # ...
         "last_match" ->
-          :noop
-
-        # ...
-        "match" ->
           :noop
 
         # ...

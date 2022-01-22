@@ -98,4 +98,12 @@ defmodule Markets do
       }
     )
   end
+
+  @doc """
+  ...
+  """
+  @spec start_market(String.t()) :: pid()
+  def stop_market(id) do
+    nil
+  end
 end

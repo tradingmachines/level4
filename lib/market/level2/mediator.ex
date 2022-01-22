@@ -54,7 +54,7 @@ defmodule Market.Level2.Mediator do
       {bids, asks}
     )
 
-    {:noreply, {market, best_prices}}
+    {:reply, :ok, {market, best_prices}}
   end
 
   def handle_call(
@@ -96,7 +96,8 @@ defmodule Market.Level2.Mediator do
           )
 
           {
-            :noreply,
+            :reply,
+            :ok,
             {
               market,
               {{new_best_bid_price, new_best_bid_size}, best_ask}
@@ -104,7 +105,8 @@ defmodule Market.Level2.Mediator do
           }
         else
           {
-            :noreply,
+            :reply,
+            :ok,
             {
               market,
               {{best_bid_price, best_bid_size}, best_ask}
@@ -115,7 +117,8 @@ defmodule Market.Level2.Mediator do
       # the bids side is empty
       :side_empty ->
         {
-          :noreply,
+          :reply,
+          :ok,
           {
             market,
             {{best_bid_price, best_bid_size}, best_ask}
@@ -163,7 +166,8 @@ defmodule Market.Level2.Mediator do
           )
 
           {
-            :noreply,
+            :reply,
+            :ok,
             {
               market,
               {best_bid, {new_best_ask_price, new_best_ask_size}}
@@ -171,7 +175,8 @@ defmodule Market.Level2.Mediator do
           }
         else
           {
-            :noreply,
+            :reply,
+            :ok,
             {
               market,
               {best_bid, {best_ask_price, best_ask_size}}
@@ -182,7 +187,8 @@ defmodule Market.Level2.Mediator do
       # the asks side is empty
       :side_empty ->
         {
-          :noreply,
+          :reply,
+          :ok,
           {
             market,
             {best_bid, {best_ask_price, best_ask_size}}
@@ -191,15 +197,66 @@ defmodule Market.Level2.Mediator do
     end
   end
 
+  # ...
+  def handle_call(
+        {:buy, {price, size, timestamp}},
+        _,
+        {market, {best_bid, best_ask}}
+      ) do
+    Market.Exchange.new_buy(
+      {:via, Registry,
+       {
+         Market.Exchange.Registry,
+         Market.id(market)
+       }},
+      {price, size, timestamp}
+    )
+
+    {
+      :reply,
+      :ok,
+      {
+        {market, {best_bid, best_ask}}
+      }
+    }
+  end
+
+  # ...
+  def handle_call(
+        {:sell, {price, size, timestamp}},
+        _,
+        {market, {best_bid, best_ask}}
+      ) do
+    Market.Exchange.new_sell(
+      {:via, Registry,
+       {
+         Market.Exchange.Registry,
+         Market.id(market)
+       }},
+      {price, size, timestamp}
+    )
+
+    {
+      :reply,
+      :ok,
+      {
+        {market, {best_bid, best_ask}}
+      }
+    }
+  end
+
   @doc """
   Handle GenServer termination.
   """
   @impl true
-  def terminate(reason, {market, _}) do
-    Logger.info(
-      "#{Market.id(market)} shutdown " <>
-        "mediator: #{inspect(reason)}"
-    )
+  def terminate(reason, state) do
+    IO.puts(inspect(reason))
+    IO.puts(inspect(state))
+
+    #    Logger.info(
+    #      "#{Market.id(market)} shutdown " <>
+    #        "mediator: #{inspect(reason)}"
+    #    )
   end
 
   @doc """
@@ -210,18 +267,29 @@ defmodule Market.Level2.Mediator do
   end
 
   @doc """
-  Apply a single delta to the order book. Synchronous API call.
-  """
-  def delta(mediator, delta) do
-    GenServer.call(mediator, {:delta, delta})
-  end
-
-  @doc """
   Apply multiple deltas to the order book. Synchronous API call.
   """
   def deltas(mediator, deltas) do
     for delta <- deltas do
       GenServer.call(mediator, {:delta, delta})
+    end
+  end
+
+  @doc """
+  ...
+  """
+  def buys(mediator, buys) do
+    for buy <- buys do
+      GenServer.call(mediator, {:buy, buy})
+    end
+  end
+
+  @doc """
+  ...
+  """
+  def sells(mediator, sells) do
+    for sell <- sells do
+      GenServer.call(mediator, {:sell, sell})
     end
   end
 end

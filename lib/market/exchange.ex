@@ -143,6 +143,30 @@ defmodule Market.Exchange do
     {:noreply, market}
   end
 
+  # ...
+  def handle_cast({:new_buy, {price, size, timestamp}}, market) do
+    Storage.Repo.insert(%Storage.Model.Buy{
+      market_id: market.id,
+      price: price,
+      size: size,
+      timestamp: timestamp
+    })
+
+    {:noreply, market}
+  end
+
+  # ...
+  def handle_cast({:new_sell, {price, size, timestamp}}, market) do
+    Storage.Repo.insert(%Storage.Model.Sell{
+      market_id: market.id,
+      price: price,
+      size: size,
+      timestamp: timestamp
+    })
+
+    {:noreply, market}
+  end
+
   @doc """
   Async Market.Exchange API: a helper function that sends a :best_bid_change to
   the GenServer. Note: casts are asynchronous requests.
@@ -157,5 +181,19 @@ defmodule Market.Exchange do
   """
   def best_ask_change(exchange, {new_price, new_size, timestamp}) do
     GenServer.cast(exchange, {:best_ask_change, {new_price, new_size, timestamp}})
+  end
+
+  @doc """
+  ...
+  """
+  def new_buy(exchange, {price, size, timestamp}) do
+    GenServer.cast(exchange, {:new_buy, {price, size, timestamp}})
+  end
+
+  @doc """
+  ...
+  """
+  def new_sell(exchange, {price, size, timestamp}) do
+    GenServer.cast(exchange, {:new_sell, {price, size, timestamp}})
   end
 end

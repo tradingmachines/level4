@@ -56,18 +56,28 @@ defmodule Exchanges.Poloniex do
               ["o", 1, price_str, size_str, epoch_ms] ->
                 {price, _} = Float.parse(price_str)
                 {size, _} = Float.parse(size_str)
-                {:delta, {:bid, price, size}}
+                {:deltas, [{:bid, price, size}]}
 
               ["o", 0, price_str, size_str, epoch_ms] ->
                 {price, _} = Float.parse(price_str)
                 {size, _} = Float.parse(size_str)
-                {:delta, {:ask, price, size}}
+                {:deltas, [{:ask, price, size}]}
 
-              ["t", trade_id, 1, price_Str, size_str, timestamp, epoch_ms] ->
-                :noop
+              ["t", trade_id, 1, price_str, size_str, timestamp, epoch_ms_str] ->
+                {price, _} = Float.parse(price_str)
+                {size, _} = Float.parse(size_str)
+                {epoch_ms, _} = Integer.parse(epoch_ms_str)
+                {:ok, timestamp, 0} = DateTime.from_unix(epoch_ms, :microsecond)
 
-              ["t", trade_id, 0, price_str, size_str, timestamp, epoch_ms] ->
-                :noop
+                {:buys, [{price, size, timestamp}]}
+
+              ["t", trade_id, 0, price_str, size_str, timestamp, epoch_ms_str] ->
+                {price, _} = Float.parse(price_str)
+                {size, _} = Float.parse(size_str)
+                {epoch_ms, _} = Integer.parse(epoch_ms_str)
+                {:ok, timestamp, 0} = DateTime.from_unix(epoch_ms, :microsecond)
+
+                {:sells, [{price, size, timestamp}]}
             end
           end
       end
