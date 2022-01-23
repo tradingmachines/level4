@@ -4,9 +4,9 @@
 
 ## Testing
 ```elixir
-Markets.start_market(%Market{exchange_name: "COINBASE-PRO", major_symbol: "LTC", quote_symbol: "GBP", market_type: "SPOT", ws_url: "ws-feed.exchange.coinbase.com", ws_port: 443, translation_scheme: Exchanges.Coinbase})
+Markets.start_market(%Market{exchange_name: "COINBASE-PRO", base_symbol: "BTC", quote_symbol: "GBP", market_type: "SPOT", ws_url: "ws-feed.exchange.coinbase.com", ws_port: 443, translation_scheme: Exchanges.Coinbase})
 
-Markets.start_market(%Market{exchange_name: "POLONIEX", major_symbol: "ETH", quote_symbol: "USDT", market_type: "SPOT", ws_url: "api2.poloniex.com", ws_port: 443, translation_scheme: Exchanges.Poloniex})
+Markets.start_market(%Market{exchange_name: "POLONIEX", base_symbol: "BTC", quote_symbol: "USDT", market_type: "SPOT", ws_url: "api2.poloniex.com", ws_port: 443, translation_scheme: Exchanges.Poloniex})
 
 
 [{"BTC", "GBP"},

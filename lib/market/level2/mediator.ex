@@ -32,231 +32,132 @@ defmodule Market.Level2.Mediator do
   """
   @impl true
   def init(init_arg) do
-    Logger.info(
-      "#{Market.id(init_arg[:market])} " <>
-        "starting mediator"
-    )
+    Logger.info("#{Market.id(init_arg[:market])} " <> "starting mediator")
 
-    {:ok, {init_arg[:market], {{0, 0}, {0, 0}}}}
+    {:ok,
+     %{
+       :market => init_arg[:market],
+       :best_bid => %{:price => 0, :size => 0},
+       :best_ask => %{:price => 0, :size => 0}
+     }}
   end
 
   @doc """
   Synchronous API. Apply snapshot to orderbook.
   """
   @impl true
-  def handle_call({:snapshot, {bids, asks}}, _, {market, best_prices}) do
+  def handle_call({:snapshot, {bids, asks}}, _, state) do
     Market.Level2.OrderBook.apply_snapshot(
       {:via, Registry,
        {
          Market.Level2.OrderBook.Registry,
-         Market.id(market)
+         Market.id(state[:market])
        }},
       {bids, asks}
     )
 
-    {:reply, :ok, {market, best_prices}}
+    {:reply, :ok, state}
   end
 
-  def handle_call(
-        {:delta, {:bid, price, liquidity}},
-        _,
-        {market, {{best_bid_price, best_bid_size}, best_ask}}
-      ) do
-    # apply the delta to the order book
-    Market.Level2.OrderBook.apply_delta(
+  # ...
+  def handle_call({:delta, {side, price, liquidity}}, _, state) do
+    # ...
+    timestamp = DateTime.utc_now()
+
+    # ...
+    orderbook =
       {:via, Registry,
        {
          Market.Level2.OrderBook.Registry,
-         Market.id(market)
-       }},
-      :bid,
-      {price, liquidity}
-    )
+         Market.id(state[:market])
+       }}
 
-    # get the current best bid price
-    case Market.Level2.OrderBook.best_bid(
-           {:via, Registry,
-            {
-              Market.Level2.OrderBook.Registry,
-              Market.id(market)
-            }}
-         ) do
-      # check if the best bid price changed
-      {new_best_bid_price, new_best_bid_size} ->
-        if best_bid_price != new_best_bid_price do
-          timestamp = DateTime.utc_now()
-
-          Market.Exchange.best_bid_change(
-            {:via, Registry,
-             {
-               Market.Exchange.Registry,
-               Market.id(market)
-             }},
-            {new_best_bid_price, new_best_bid_size, timestamp}
-          )
-
-          {
-            :reply,
-            :ok,
-            {
-              market,
-              {{new_best_bid_price, new_best_bid_size}, best_ask}
-            }
-          }
-        else
-          {
-            :reply,
-            :ok,
-            {
-              market,
-              {{best_bid_price, best_bid_size}, best_ask}
-            }
-          }
-        end
-
-      # the bids side is empty
-      :side_empty ->
-        {
-          :reply,
-          :ok,
-          {
-            market,
-            {{best_bid_price, best_bid_size}, best_ask}
-          }
-        }
-    end
-  end
-
-  def handle_call(
-        {:delta, {:ask, price, liquidity}},
-        _,
-        {market, {best_bid, {best_ask_price, best_ask_size}}}
-      ) do
-    # apply the delta to the order book
-    Market.Level2.OrderBook.apply_delta(
+    # ...
+    exchange =
       {:via, Registry,
        {
-         Market.Level2.OrderBook.Registry,
-         Market.id(market)
-       }},
-      :ask,
-      {price, liquidity}
-    )
+         Market.Exchange.Registry,
+         Market.id(state[:market])
+       }}
 
-    # get the current best ask price
-    case Market.Level2.OrderBook.best_ask(
-           {:via, Registry,
-            {
-              Market.Level2.OrderBook.Registry,
-              Market.id(market)
-            }}
-         ) do
-      # check if the best ask price changed
-      {new_best_ask_price, new_best_ask_size} ->
-        if best_ask_price != new_best_ask_price do
-          timestamp = DateTime.utc_now()
+    # apply the delta
+    Market.Level2.OrderBook.apply_delta(orderbook, side, {price, liquidity})
 
-          Market.Exchange.best_ask_change(
-            {:via, Registry,
-             {
-               Market.Exchange.Registry,
-               Market.id(market)
-             }},
-            {new_best_ask_price, new_best_ask_size, timestamp}
-          )
+    # check if best price changed
+    case side do
+      :bid ->
+        case Market.Level2.OrderBook.best_bid(orderbook) do
+          {new_best_bid_price, new_best_bid_size} ->
+            if state[:best_bid][:price] != new_best_bid_price do
+              # ...
+              Market.Exchange.best_bid_change(
+                exchange,
+                {new_best_bid_price, new_best_bid_size, timestamp}
+              )
 
-          {
-            :reply,
-            :ok,
-            {
-              market,
-              {best_bid, {new_best_ask_price, new_best_ask_size}}
-            }
-          }
-        else
-          {
-            :reply,
-            :ok,
-            {
-              market,
-              {best_bid, {best_ask_price, best_ask_size}}
-            }
-          }
+              # ...
+              new_state = %{
+                state
+                | :best_bid => %{
+                    :price => new_best_bid_price,
+                    :size => new_best_bid_size
+                  }
+              }
+
+              {:reply, :ok, new_state}
+            else
+              {:reply, :ok, state}
+            end
+
+          :side_empty ->
+            {:reply, :ok, state}
         end
 
-      # the asks side is empty
-      :side_empty ->
-        {
-          :reply,
-          :ok,
-          {
-            market,
-            {best_bid, {best_ask_price, best_ask_size}}
-          }
-        }
+      :ask ->
+        case Market.Level2.OrderBook.best_ask(orderbook) do
+          {new_best_ask_price, new_best_ask_size} ->
+            if state[:best_ask][:price] != new_best_ask_price do
+              # ...
+              Market.Exchange.best_ask_change(
+                exchange,
+                {new_best_ask_price, new_best_ask_size, timestamp}
+              )
+
+              # ...
+              new_state = %{
+                state
+                | :best_ask => %{
+                    :price => new_best_ask_price,
+                    :size => new_best_ask_size
+                  }
+              }
+
+              {:reply, :ok, new_state}
+            else
+              {:reply, :ok, state}
+            end
+
+          :side_empty ->
+            {:reply, :ok, state}
+        end
     end
   end
 
   # ...
-  def handle_call(
-        {:buy, {price, size, timestamp}},
-        _,
-        {market, {best_bid, best_ask}}
-      ) do
-    Market.Exchange.new_buy(
+  def handle_call({side, {price, size, timestamp}}, _, state) do
+    exchange =
       {:via, Registry,
        {
          Market.Exchange.Registry,
-         Market.id(market)
-       }},
-      {price, size, timestamp}
-    )
+         Market.id(state[:market])
+       }}
 
-    {
-      :reply,
-      :ok,
-      {
-        {market, {best_bid, best_ask}}
-      }
-    }
-  end
+    case side do
+      :buy -> Market.Exchange.new_buy(exchange, {price, size, timestamp})
+      :sell -> Market.Exchange.new_sell(exchange, {price, size, timestamp})
+    end
 
-  # ...
-  def handle_call(
-        {:sell, {price, size, timestamp}},
-        _,
-        {market, {best_bid, best_ask}}
-      ) do
-    Market.Exchange.new_sell(
-      {:via, Registry,
-       {
-         Market.Exchange.Registry,
-         Market.id(market)
-       }},
-      {price, size, timestamp}
-    )
-
-    {
-      :reply,
-      :ok,
-      {
-        {market, {best_bid, best_ask}}
-      }
-    }
-  end
-
-  @doc """
-  Handle GenServer termination.
-  """
-  @impl true
-  def terminate(reason, state) do
-    IO.puts(inspect(reason))
-    IO.puts(inspect(state))
-
-    #    Logger.info(
-    #      "#{Market.id(market)} shutdown " <>
-    #        "mediator: #{inspect(reason)}"
-    #    )
+    {:reply, :ok, state}
   end
 
   @doc """
