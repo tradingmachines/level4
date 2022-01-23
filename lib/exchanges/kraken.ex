@@ -63,52 +63,64 @@ defmodule Exchanges.Kraken do
           [{:snapshot, bids, asks}]
 
         [_, %{"b" => bid_updates}, _, _] ->
-          # need to pattern match republish message too
-          # [price_str, size_str, _, _]
           deltas =
             for [price_str, size_str, _] <- bid_updates do
               {price, _} = Float.parse(price_str)
               {size, _} = Float.parse(size_str)
               {:bid, price, size}
-            end
+            end ++
+              for [price_str, size_str, _, _] <- bid_updates do
+                {price, _} = Float.parse(price_str)
+                {size, _} = Float.parse(size_str)
+                {:bid, price, size}
+              end
 
           [{:deltas, deltas}]
 
         [_, %{"a" => ask_updates}, _, _] ->
-          # need to pattern match republish message too
-          # [price_str, size_str, _, _]
           deltas =
             for [price_str, size_str, _] <- ask_updates do
               {price, _} = Float.parse(price_str)
               {size, _} = Float.parse(size_str)
               {:ask, price, size}
-            end
+            end ++
+              for [price_str, size_str, _, _] <- ask_updates do
+                {price, _} = Float.parse(price_str)
+                {size, _} = Float.parse(size_str)
+                {:ask, price, size}
+              end
 
           [{:deltas, deltas}]
 
         [_, %{"a" => bid_updates}, %{"b" => ask_updates}, _, _] ->
-          # need to pattern match republish message too
-          # [price_str, size_str, _, _]
           bid_deltas =
             for [price_str, size_str, _] <- bid_updates do
               {price, _} = Float.parse(price_str)
               {size, _} = Float.parse(size_str)
               {:bid, price, size}
-            end
+            end ++
+              for [price_str, size_str, _, _] <- bid_updates do
+                {price, _} = Float.parse(price_str)
+                {size, _} = Float.parse(size_str)
+                {:bid, price, size}
+              end
 
-          # need to pattern match republish message too
-          # [price_str, size_str, _, _]
           ask_deltas =
             for [price_str, size_str, _] <- ask_updates do
               {price, _} = Float.parse(price_str)
               {size, _} = Float.parse(size_str)
               {:ask, price, size}
-            end
+            end ++
+              for [price_str, size_str, _, _] <- ask_updates do
+                {price, _} = Float.parse(price_str)
+                {size, _} = Float.parse(size_str)
+                {:ask, price, size}
+              end
 
           [{:deltas, bid_deltas ++ ask_deltas}]
 
         [_, trades, _, _] ->
-          for [price_str, size_str, timestamp_str, side, order_type, misc] <- trades do
+          for [price_str, size_str, timestamp_str, side, _, _] <- trades do
             {price, _} = Float.parse(price_str)
             {size, _} = Float.parse(size_str)
             {epoch, _} = Float.parse(timestamp_str)
