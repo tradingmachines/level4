@@ -14,8 +14,8 @@ defmodule TranslationScheme do
   Makes and returns the subscribe message sent to the websocket API
   after successfully connecting.
   """
-  @callback make_subscribe_message(String.t(), String.t()) ::
-              {:ok, String.t()}
+  @callback make_subscribe_messages(String.t(), String.t()) ::
+              {:ok, [String.t()]}
               | {:error, String.t()}
 
   @doc """

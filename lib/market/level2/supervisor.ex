@@ -39,7 +39,9 @@ defmodule Market.Level2.Supervisor do
         %{
           id: Market.Level2.WebSocket,
           start: {Market.Level2.WebSocket, :start_link, [init_arg]},
-          type: :worker
+          type: :worker,
+          max_restarts: 1,
+          max_seconds: 2
         }
       ],
       strategy: :rest_for_one

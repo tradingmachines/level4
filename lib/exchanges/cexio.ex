@@ -11,8 +11,8 @@ defmodule Exchanges.CexIO do
   end
 
   @impl TranslationScheme
-  def make_subscribe_message(major_symbol, quote_symbol) do
-    nil
+  def make_subscribe_messages(major_symbol, quote_symbol) do
+    []
   end
 
   @impl TranslationScheme

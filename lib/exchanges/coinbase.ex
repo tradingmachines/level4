@@ -11,12 +11,15 @@ defmodule Exchanges.Coinbase do
   end
 
   @impl TranslationScheme
-  def make_subscribe_message(major_symbol, quote_symbol) do
-    Jason.encode(%{
-      "type" => "subscribe",
-      "product_ids" => ["#{major_symbol}-#{quote_symbol}"],
-      "channels" => ["heartbeat", "level2", "matches"]
-    })
+  def make_subscribe_messages(major_symbol, quote_symbol) do
+    {:ok, json_str} =
+      Jason.encode(%{
+        "type" => "subscribe",
+        "product_ids" => ["#{major_symbol}-#{quote_symbol}"],
+        "channels" => ["heartbeat", "level2", "matches"]
+      })
+
+    [json_str]
   end
 
   @impl TranslationScheme

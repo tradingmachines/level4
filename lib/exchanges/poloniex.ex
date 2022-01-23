@@ -11,11 +11,14 @@ defmodule Exchanges.Poloniex do
   end
 
   @impl TranslationScheme
-  def make_subscribe_message(major_symbol, quote_symbol) do
-    Jason.encode(%{
-      "command" => "subscribe",
-      "channel" => "#{quote_symbol}_#{major_symbol}"
-    })
+  def make_subscribe_messages(major_symbol, quote_symbol) do
+    {:ok, json_str} =
+      Jason.encode(%{
+        "command" => "subscribe",
+        "channel" => "#{quote_symbol}_#{major_symbol}"
+      })
+
+    [json_str]
   end
 
   @impl TranslationScheme
@@ -63,19 +66,23 @@ defmodule Exchanges.Poloniex do
                 {size, _} = Float.parse(size_str)
                 {:deltas, [{:ask, price, size}]}
 
-              ["t", trade_id, 1, price_str, size_str, timestamp, epoch_ms_str] ->
+              ["t", trade_id, 1, price_str, size_str, timestamp, epoch_str] ->
                 {price, _} = Float.parse(price_str)
                 {size, _} = Float.parse(size_str)
-                {epoch_ms, _} = Integer.parse(epoch_ms_str)
-                {:ok, timestamp} = DateTime.from_unix(epoch_ms, :microsecond)
+                {epoch, _} = Integer.parse(epoch_str)
+
+                epoch_micro = epoch * 1000
+                {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
 
                 {:buys, [{price, size, timestamp}]}
 
-              ["t", trade_id, 0, price_str, size_str, timestamp, epoch_ms_str] ->
+              ["t", trade_id, 0, price_str, size_str, timestamp, epoch_str] ->
                 {price, _} = Float.parse(price_str)
                 {size, _} = Float.parse(size_str)
-                {epoch_ms, _} = Integer.parse(epoch_ms_str)
-                {:ok, timestamp} = DateTime.from_unix(epoch_ms, :microsecond)
+                {epoch, _} = Integer.parse(epoch_str)
+
+                epoch_micro = epoch * 1000
+                {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
 
                 {:sells, [{price, size, timestamp}]}
             end

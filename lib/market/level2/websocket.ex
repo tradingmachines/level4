@@ -105,16 +105,20 @@ defmodule Market.Level2.WebSocket do
         "opened successfully"
     )
 
-    # make the JSON subscription message for this exchange
-    {:ok, json_str} =
-      market.translation_scheme.make_subscribe_message(
+    # make the JSON subscription messages for this exchange
+    json_strs =
+      market.translation_scheme.make_subscribe_messages(
         market.base_symbol,
         market.quote_symbol
       )
 
-    # send the subscribe message to the server
-    :gun.ws_send(conn_pid, stream_ref, {:text, json_str})
-    Logger.info("#{Market.id(market)} sent subscribe message")
+    # send the subscribe messages to the server
+    for json_str <- json_strs do
+      :gun.ws_send(conn_pid, stream_ref, {:text, json_str})
+    end
+
+    Logger.info("#{Market.id(market)} sent subscribe messages")
+
     {:noreply, {conn_pid, market, sync_state}}
   end
 

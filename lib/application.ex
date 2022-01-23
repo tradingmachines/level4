@@ -102,8 +102,24 @@ defmodule Markets do
   @doc """
   ...
   """
-  @spec start_market(String.t()) :: pid()
+  @spec stop_market(String.t()) :: pid()
   def stop_market(id) do
     nil
+  end
+
+  @doc """
+  ...
+  """
+  @spec live_markets() :: [Level4.Market]
+  def live_markets() do
+    []
+  end
+
+  @doc """
+  ...
+  """
+  @spec all_markets() :: [Level4.Market]
+  def all_markets() do
+    []
   end
 end
