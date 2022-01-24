@@ -6,12 +6,12 @@ defmodule Exchanges.Bitstamp do
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state() do
+  def init_sync_state(base_symbol, quote_symbol) do
     nil
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(major_symbol, quote_symbol) do
+  def make_subscribe_messages(base_symbol, quote_symbol) do
     []
   end
 

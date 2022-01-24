@@ -8,7 +8,7 @@ defmodule TranslationScheme do
   Initialises the "synchronisation state" value that is used to check
   the message stream is in-sync i.e. no messages have been dropped.
   """
-  @callback init_sync_state() :: any()
+  @callback init_sync_state(String.t(), String.t()) :: any()
 
   @doc """
   Makes and returns the subscribe message sent to the websocket API

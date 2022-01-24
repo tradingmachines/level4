@@ -52,7 +52,10 @@ defmodule Market.Level2.WebSocket do
          {
            conn_pid,
            init_arg[:market],
-           init_arg[:market].translation_scheme.init_sync_state()
+           init_arg[:market].translation_scheme.init_sync_state(
+             init_arg[:market].base_symbol,
+             init_arg[:market].quote_symbol
+           )
          }}
 
       # failed to start connection process
@@ -91,7 +94,7 @@ defmodule Market.Level2.WebSocket do
         {_, market, sync_state}
       ) do
     # request a connection upgrade to websocket
-    :gun.ws_upgrade(conn_pid, "/")
+    :gun.ws_upgrade(conn_pid, market.ws_path)
     {:noreply, {conn_pid, market, sync_state}}
   end
 

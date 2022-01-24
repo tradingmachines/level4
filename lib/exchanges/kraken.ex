@@ -6,16 +6,16 @@ defmodule Exchanges.Kraken do
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state() do
+  def init_sync_state(base_symbol, quote_symbol) do
     %{"something" => nil}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(major_symbol, quote_symbol) do
+  def make_subscribe_messages(base_symbol, quote_symbol) do
     {:ok, json_str_book} =
       Jason.encode(%{
         "event" => "subscribe",
-        "pair" => ["#{major_symbol}/#{quote_symbol}"],
+        "pair" => ["#{base_symbol}/#{quote_symbol}"],
         "subscription" => %{
           "name" => "book",
           "depth" => 100
@@ -25,7 +25,7 @@ defmodule Exchanges.Kraken do
     {:ok, json_str_trade} =
       Jason.encode(%{
         "event" => "subscribe",
-        "pair" => ["#{major_symbol}/#{quote_symbol}"],
+        "pair" => ["#{base_symbol}/#{quote_symbol}"],
         "subscription" => %{
           "name" => "trade"
         }
@@ -45,7 +45,7 @@ defmodule Exchanges.Kraken do
             "heartbeat" -> [:noop]
           end
 
-        [_, %{"bs" => initial_bids, "as" => initial_asks}, _, _] ->
+        [_, %{"as" => initial_asks, "bs" => initial_bids}, _, _] ->
           bids =
             for [price_str, size_str, _] <- initial_bids do
               {price, _} = Float.parse(price_str)
@@ -64,58 +64,38 @@ defmodule Exchanges.Kraken do
 
         [_, %{"b" => bid_updates}, _, _] ->
           deltas =
-            for [price_str, size_str, _] <- bid_updates do
-              {price, _} = Float.parse(price_str)
-              {size, _} = Float.parse(size_str)
+            for bid_update <- bid_updates do
+              {price, _} = Float.parse(Enum.at(bid_update, 0))
+              {size, _} = Float.parse(Enum.at(bid_update, 1))
               {:bid, price, size}
-            end ++
-              for [price_str, size_str, _, _] <- bid_updates do
-                {price, _} = Float.parse(price_str)
-                {size, _} = Float.parse(size_str)
-                {:bid, price, size}
-              end
+            end
 
           [{:deltas, deltas}]
 
         [_, %{"a" => ask_updates}, _, _] ->
           deltas =
-            for [price_str, size_str, _] <- ask_updates do
-              {price, _} = Float.parse(price_str)
-              {size, _} = Float.parse(size_str)
+            for ask_update <- ask_updates do
+              {price, _} = Float.parse(Enum.at(ask_update, 0))
+              {size, _} = Float.parse(Enum.at(ask_update, 1))
               {:ask, price, size}
-            end ++
-              for [price_str, size_str, _, _] <- ask_updates do
-                {price, _} = Float.parse(price_str)
-                {size, _} = Float.parse(size_str)
-                {:ask, price, size}
-              end
+            end
 
           [{:deltas, deltas}]
 
-        [_, %{"a" => bid_updates}, %{"b" => ask_updates}, _, _] ->
+        [_, %{"a" => ask_updates}, %{"b" => bid_updates}, _, _] ->
           bid_deltas =
-            for [price_str, size_str, _] <- bid_updates do
-              {price, _} = Float.parse(price_str)
-              {size, _} = Float.parse(size_str)
+            for bid_update <- bid_updates do
+              {price, _} = Float.parse(Enum.at(bid_update, 0))
+              {size, _} = Float.parse(Enum.at(bid_update, 1))
               {:bid, price, size}
-            end ++
-              for [price_str, size_str, _, _] <- bid_updates do
-                {price, _} = Float.parse(price_str)
-                {size, _} = Float.parse(size_str)
-                {:bid, price, size}
-              end
+            end
 
           ask_deltas =
-            for [price_str, size_str, _] <- ask_updates do
-              {price, _} = Float.parse(price_str)
-              {size, _} = Float.parse(size_str)
+            for ask_update <- ask_updates do
+              {price, _} = Float.parse(Enum.at(ask_update, 0))
+              {size, _} = Float.parse(Enum.at(ask_update, 1))
               {:ask, price, size}
-            end ++
-              for [price_str, size_str, _, _] <- ask_updates do
-                {price, _} = Float.parse(price_str)
-                {size, _} = Float.parse(size_str)
-                {:ask, price, size}
-              end
+            end
 
           [{:deltas, bid_deltas ++ ask_deltas}]
 

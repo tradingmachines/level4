@@ -6,16 +6,16 @@ defmodule Exchanges.Coinbase do
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state() do
+  def init_sync_state(base_symbol, quote_symbol) do
     %{"previous_sequence_number" => 0}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(major_symbol, quote_symbol) do
+  def make_subscribe_messages(base_symbol, quote_symbol) do
     {:ok, json_str} =
       Jason.encode(%{
         "type" => "subscribe",
-        "product_ids" => ["#{major_symbol}-#{quote_symbol}"],
+        "product_ids" => ["#{base_symbol}-#{quote_symbol}"],
         "channels" => ["heartbeat", "level2", "matches"]
       })
 

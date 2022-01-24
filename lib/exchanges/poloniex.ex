@@ -6,16 +6,16 @@ defmodule Exchanges.Poloniex do
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state() do
+  def init_sync_state(base_symbol, quote_symbol) do
     %{"previous_sequence_number" => 0}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(major_symbol, quote_symbol) do
+  def make_subscribe_messages(base_symbol, quote_symbol) do
     {:ok, json_str} =
       Jason.encode(%{
         "command" => "subscribe",
-        "channel" => "#{quote_symbol}_#{major_symbol}"
+        "channel" => "#{quote_symbol}_#{base_symbol}"
       })
 
     [json_str]
