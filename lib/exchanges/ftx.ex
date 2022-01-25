@@ -11,6 +11,12 @@ defmodule Exchanges.FTX do
   end
 
   @impl TranslationScheme
+  def make_ping_message() do
+    {:ok, json_str} = Jason.encode(%{"op" => "ping"})
+    json_str
+  end
+
+  @impl TranslationScheme
   def make_subscribe_messages(base_symbol, quote_symbol) do
     {:ok, json_str_book} =
       Jason.encode(%{
@@ -40,6 +46,11 @@ defmodule Exchanges.FTX do
           [:noop]
 
         %{"type" => "info"} ->
+          [:noop]
+
+        %{"type" => "pong"} ->
+          IO.puts("PONG")
+
           [:noop]
 
         %{"type" => "error"} ->

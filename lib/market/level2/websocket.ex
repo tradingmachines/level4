@@ -10,6 +10,13 @@ defmodule Market.Level2.WebSocket do
   @doc """
   ...
   """
+  defp schedule_ping() do
+    Process.send_after(self(), :do_ping, 5000)
+  end
+
+  @doc """
+  ...
+  """
   def start_link(init_arg) do
     GenServer.start_link(__MODULE__, init_arg)
   end
@@ -47,6 +54,10 @@ defmodule Market.Level2.WebSocket do
           "#{Market.id(init_arg[:market])} " <>
             "opened connection"
         )
+
+        if init_arg[:market].ping? do
+          schedule_ping()
+        end
 
         {:ok,
          {
@@ -87,8 +98,20 @@ defmodule Market.Level2.WebSocket do
   @doc """
   ...
   """
-  # the connection is up.
   @impl true
+  # handle ping
+  def handle_info(:do_ping, {conn_pid, market, sync_state}) do
+    json_str = market.translation_scheme.make_ping_message()
+    :gun.ws_send(conn_pid, stream_ref, {:text, json_str})
+
+    if market.ping? do
+      schedule_ping()
+    end
+
+    {:noreply, {conn_pid, market, sync_state}}
+  end
+
+  # the connection is up.
   def handle_info(
         {:gun_up, conn_pid, protocol},
         {_, market, sync_state}

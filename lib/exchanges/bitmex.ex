@@ -7,7 +7,13 @@ defmodule Exchanges.Bitmex do
 
   @impl TranslationScheme
   def init_sync_state(base_symbol, quote_symbol) do
-    nil
+    %{"something" => nil}
+  end
+
+  @impl TranslationScheme
+  def make_ping_message() do
+    {:ok, json_str} = Jason.encode(%{"op" => "ping"})
+    json_str
   end
 
   @impl TranslationScheme
@@ -17,7 +23,9 @@ defmodule Exchanges.Bitmex do
 
   @impl TranslationScheme
   def translate(json, sync_state) do
-    nil
+    instructions = []
+
+    {instructions, sync_state}
   end
 
   @impl TranslationScheme

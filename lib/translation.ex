@@ -11,6 +11,11 @@ defmodule TranslationScheme do
   @callback init_sync_state(String.t(), String.t()) :: any()
 
   @doc """
+  ...
+  """
+  @callback make_ping_message() :: {:ok, String.t()} | {:error, String.t()}
+
+  @doc """
   Makes and returns the subscribe message sent to the websocket API
   after successfully connecting.
   """

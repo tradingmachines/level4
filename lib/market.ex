@@ -17,7 +17,8 @@ defmodule Market do
     :ws_port,
     :base_symbol,
     :quote_symbol,
-    :translation_scheme
+    :translation_scheme,
+    :ping?
   ]
   defstruct [
     :exchange_name,
@@ -27,7 +28,8 @@ defmodule Market do
     :ws_port,
     :base_symbol,
     :quote_symbol,
-    :translation_scheme
+    :translation_scheme,
+    :ping?
   ]
 
   @doc """
