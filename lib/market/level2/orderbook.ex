@@ -145,7 +145,11 @@ defmodule Market.Level2.OrderBook do
     if liquidity <= 0 do
       # remove price level from bids side if liquidity <= 0.
       Agent.update(book, fn {bids, asks} ->
-        {:gb_trees.delete(price, bids), asks}
+        if :gb_trees.is_defined(price, bids) do
+          {:gb_trees.delete(price, bids), asks}
+        else
+          {bids, asks}
+        end
       end)
     else
       # otherwise insert/update bid price level's liquidity.
@@ -160,7 +164,11 @@ defmodule Market.Level2.OrderBook do
     if liquidity <= 0 do
       # remove price level from asks side if liquidity <= 0.
       Agent.update(book, fn {bids, asks} ->
-        {bids, :gb_trees.delete(price, asks)}
+        if :gb_trees.is_defined(price, asks) do
+          {bids, :gb_trees.delete(price, asks)}
+        else
+          {bids, asks}
+        end
       end)
     else
       # otherwise insert/update ask price level's liquidity.
