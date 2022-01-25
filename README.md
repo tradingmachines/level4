@@ -26,3 +26,8 @@ Markets.start_market(%Market{exchange_name: "HITBTC", base_symbol: "BTC", quote_
 ```
 Markets.start_market(%Market{exchange_name: "GEMINI", base_symbol: "BTC", quote_symbol: "USD", market_type: "SPOT", ws_url: "api.gemini.com", ws_path: "/v2/marketdata", ws_port: 443, translation_scheme: Exchanges.Gemini})
 ```
+
+### ftx
+```
+Markets.start_market(%Market{exchange_name: "FTX", base_symbol: "BTC", quote_symbol: "USDT", market_type: "SPOT", ws_url: "ftx.com", ws_path: "/ws", ws_port: 443, translation_scheme: Exchanges.FTX})
+```
