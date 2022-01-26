@@ -31,3 +31,8 @@ Markets.start_market(%Market{exchange_name: "GEMINI", base_symbol: "BTC", quote_
 ```
 Markets.start_market(%Market{exchange_name: "FTX", base_symbol: "BTC", quote_symbol: "USDT", market_type: "SPOT", ws_url: "ftx.com", ws_path: "/ws", ws_port: 443, translation_scheme: Exchanges.FTX, ping?: true})
 ```
+
+### bybit
+```
+Markets.start_market(%Market{exchange_name: "BYBIT", base_symbol: "BTC", quote_symbol: "USDT", market_type: "SPOT", ws_url: "stream.bybit.com", ws_path: "/spot/quote/ws/v2", ws_port: 443, translation_scheme: Exchanges.BybitSpot, ping?: true})
+```
