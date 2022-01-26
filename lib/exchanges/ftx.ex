@@ -49,8 +49,6 @@ defmodule Exchanges.FTX do
           [:noop]
 
         %{"type" => "pong"} ->
-          IO.puts("PONG")
-
           [:noop]
 
         %{"type" => "error"} ->
