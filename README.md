@@ -36,5 +36,7 @@ Markets.start_market(%Market{exchange_name: "FTX", base_symbol: "BTC", quote_sym
 ```
 Markets.start_market(%Market{exchange_name: "BYBIT", base_symbol: "BTC", quote_symbol: "USDT", market_type: "SPOT", ws_url: "stream.bybit.com", ws_path: "/spot/quote/ws/v2", ws_port: 443, translation_scheme: Exchanges.Bybit.Spot, ping?: true})
 
-Markets.start_market(%Market{exchange_name: "BYBIT", base_symbol: "BTC", quote_symbol: "USDT", market_type: "PERP", ws_url: "stream.bybit.com", ws_path: "/future/quote/ws/v2", ws_port: 443, translation_scheme: Exchanges.Bybit.Perp, ping?: true})
+Markets.start_market(%Market{exchange_name: "BYBIT", base_symbol: "BTC", quote_symbol: "USDT", market_type: "PERP[USDT]", ws_url: "stream.bybit.com", ws_path: "/realtime_public", ws_port: 443, translation_scheme: Exchanges.Bybit.Perp.USDT, ping?: true})
+
+Markets.start_market(%Market{exchange_name: "BYBIT", base_symbol: "BTC", quote_symbol: "USD", market_type: "PERP[INVERSE]", ws_url: "stream.bybit.com", ws_path: "/realtime", ws_port: 443, translation_scheme: Exchanges.Bybit.Perp.Inverse, ping?: true})
 ```
