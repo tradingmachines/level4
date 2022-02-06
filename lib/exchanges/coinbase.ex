@@ -73,11 +73,8 @@ defmodule Exchanges.Coinbase do
           {:ok, timestamp, 0} = DateTime.from_iso8601(json["time"])
 
           case json["side"] do
-            "buy" ->
-              {:buys, [{price, size, timestamp}]}
-
-            "sell" ->
-              {:sells, [{price, size, timestamp}]}
+            "buy" -> {:buys, [{price, size, timestamp}]}
+            "sell" -> {:sells, [{price, size, timestamp}]}
           end
 
         # ...

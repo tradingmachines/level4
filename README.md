@@ -45,3 +45,8 @@ Markets.start_market(%Market{exchange_name: "BYBIT", base_symbol: "BTC", quote_s
 ```
 Markets.start_market(%Market{exchange_name: "BITSTAMP", base_symbol: "BTC", quote_symbol: "USD", market_type: "SPOT", ws_url: "ws.bitstamp.net", ws_path: "/", ws_port: 443, translation_scheme: Exchanges.Bitstamp, ping?: true})
 ```
+
+### bitmex
+```
+Markets.start_market(%Market{exchange_name: "BITMEX", base_symbol: "XBT", quote_symbol: "USD", market_type: "SPOT", ws_url: "ws.bitmex.com", ws_path: "/realtime", ws_port: 443, translation_scheme: Exchanges.Bitmex, ping?: true})
+```

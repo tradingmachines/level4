@@ -97,12 +97,15 @@ defmodule Exchanges.Bitstamp do
         %{
           "event" => "trade",
           "data" => %{
-            "price" => price,
-            "amount" => size,
+            "price" => price_int,
+            "amount" => size_int,
             "timestamp" => epoch_sec_str,
             "type" => side
           }
         } ->
+          price = price_int / 1
+          size = size_int / 1
+
           {epoch_sec, _} = Integer.parse(epoch_sec_str)
           epoch_ms = epoch_sec * 1000
           epoch_micro = epoch_ms * 1000

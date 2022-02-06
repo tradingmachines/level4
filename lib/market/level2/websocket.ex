@@ -249,21 +249,27 @@ defmodule Market.Level2.WebSocket do
       :sync_state => sync_state
     } = state
 
-    # decode the message and always assume it is JSON.
-    case Jason.decode(text) do
-      {:ok, json} ->
-        translated = market.translation_scheme.translate(json, sync_state)
-        {instructions, new_sync_state} = translated
+    cond do
+      text == "pong" ->
+        {:noreply, state}
 
-        case execute(instructions, market) do
-          :ok -> {:noreply, %{state | :sync_state => new_sync_state}}
-          {:error, error_msg} -> {:stop, error_msg, state}
+      true ->
+        # decode the message and always assume it is JSON.
+        case Jason.decode(text) do
+          {:ok, json} ->
+            translated = market.translation_scheme.translate(json, sync_state)
+            {instructions, new_sync_state} = translated
+
+            case execute(instructions, market) do
+              :ok -> {:noreply, %{state | :sync_state => new_sync_state}}
+              {:error, error_msg} -> {:stop, error_msg, state}
+            end
+
+          {:error, decode_error} ->
+            # stop the GenServer and reconnect later.
+            error_msg = "unable to decode JSON: #{decode_error}"
+            {:stop, error_msg, state}
         end
-
-      {:error, decode_error} ->
-        # stop the GenServer and reconnect later.
-        error_msg = "unable to decode JSON: #{decode_error}"
-        {:stop, error_msg, state}
     end
   end
 
