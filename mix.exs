@@ -13,7 +13,7 @@ defmodule Level4.MixProject do
 
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :inets],
       mod: {Level4, []}
     ]
   end

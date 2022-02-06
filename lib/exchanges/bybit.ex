@@ -68,7 +68,7 @@ defmodule Exchanges.Bybit.Spot do
               for [price_str, size_str] <- data["a"] do
                 {price, _} = Float.parse(price_str)
                 {size, _} = Float.parse(size_str)
-                {:bid, price, size}
+                {:ask, price, size}
               end
 
             {[{:deltas, bids ++ asks}], sync_state}

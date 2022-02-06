@@ -85,6 +85,12 @@ defmodule Market.Level2.WebSocket do
   end
 
   # ...
+  defp execute(:reconnect, _) do
+    error_msg = "reconnect requested"
+    {:error, error_msg}
+  end
+
+  # ...
   defp execute(:noop, _) do
     :ok
   end

@@ -31,10 +31,6 @@ config :level4,
       "spot" => fn something -> nil end,
       "futures" => fn something -> nil end
     },
-    "bittrex" => %{
-      "spot" => fn something -> nil end,
-      "futures" => fn something -> nil end
-    },
     "bybit" => %{
       "spot" => fn something -> nil end,
       "futures" => fn something -> nil end
