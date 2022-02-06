@@ -50,3 +50,13 @@ Markets.start_market(%Market{exchange_name: "BITSTAMP", base_symbol: "BTC", quot
 ```
 Markets.start_market(%Market{exchange_name: "BITMEX", base_symbol: "XBT", quote_symbol: "USD", market_type: "SPOT", ws_url: "ws.bitmex.com", ws_path: "/realtime", ws_port: 443, translation_scheme: Exchanges.Bitmex, ping?: true})
 ```
+
+### bitflyer
+```
+Markets.start_market(%Market{exchange_name: "BITFLYER", base_symbol: "BTC", quote_symbol: "JPY", market_type: "SPOT", ws_url: "ws.lightstream.bitflyer.com", ws_path: "/json-rpc", ws_port: 443, translation_scheme: Exchanges.Bitflyer.Spot, ping?: false})
+```
+
+### bitfinex
+```
+Markets.start_market(%Market{exchange_name: "BITFINEX", base_symbol: "BTC", quote_symbol: "USDT", market_type: "SPOT", ws_url: "api-pub.bitfinex.com", ws_path: "/", ws_port: 443, translation_scheme: Exchanges.Bitfinex, ping?: true})
+```

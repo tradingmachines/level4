@@ -23,6 +23,10 @@ config :level4,
       "spot" => fn something -> nil end,
       "futures" => fn something -> nil end
     },
+    "bitflyer" => %{
+      "spot" => fn something -> nil end,
+      "futures" => fn something -> nil end
+    },
     "bitmex" => %{
       "spot" => fn something -> nil end,
       "futures" => fn something -> nil end
