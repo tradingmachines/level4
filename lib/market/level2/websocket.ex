@@ -184,12 +184,16 @@ defmodule Market.Level2.WebSocket do
   def handle_info(:do_ping, state) do
     %{
       :market => market,
+      :sync_state => sync_state,
       :conn_pid => conn_pid,
       :stream_ref => stream_ref
     } = state
 
-    json_str = market.translation_scheme.make_ping_message()
-    :ok = :gun.ws_send(conn_pid, stream_ref, {:text, json_str})
+    json_strs = market.translation_scheme.make_ping_messages(sync_state)
+
+    for json_str <- json_strs do
+      :ok = :gun.ws_send(conn_pid, stream_ref, {:text, json_str})
+    end
 
     schedule_ping()
 

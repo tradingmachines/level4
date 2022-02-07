@@ -13,7 +13,7 @@ defmodule TranslationScheme do
   @doc """
   ...
   """
-  @callback make_ping_message() :: {:ok, String.t()} | {:error, String.t()}
+  @callback make_ping_messages(any()) :: [{:ok, String.t()}] | {:error, String.t()}
 
   @doc """
   Makes and returns the subscribe message sent to the websocket API

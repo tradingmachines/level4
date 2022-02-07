@@ -11,8 +11,8 @@ defmodule Exchanges.Bitmex do
   end
 
   @impl TranslationScheme
-  def make_ping_message() do
-    "ping"
+  def make_ping_messages(sync_state) do
+    ["ping"]
   end
 
   @impl TranslationScheme

@@ -11,13 +11,13 @@ defmodule Exchanges.Bybit.Spot do
   end
 
   @impl TranslationScheme
-  def make_ping_message() do
+  def make_ping_messages(sync_state) do
     timestamp = DateTime.utc_now()
     epoch_ms = DateTime.to_unix(timestamp, :millisecond)
 
     {:ok, json_str} = Jason.encode(%{"ping" => epoch_ms})
 
-    json_str
+    [json_str]
   end
 
   @impl TranslationScheme
@@ -127,9 +127,9 @@ defmodule Exchanges.Bybit.Perp.USDT do
   end
 
   @impl TranslationScheme
-  def make_ping_message() do
+  def make_ping_messages(sync_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    json_str
+    [json_str]
   end
 
   @impl TranslationScheme
@@ -286,9 +286,9 @@ defmodule Exchanges.Bybit.Perp.Inverse do
   end
 
   @impl TranslationScheme
-  def make_ping_message() do
+  def make_ping_messages(sync_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    json_str
+    [json_str]
   end
 
   @impl TranslationScheme

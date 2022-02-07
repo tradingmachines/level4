@@ -11,9 +11,9 @@ defmodule Exchanges.Bitstamp do
   end
 
   @impl TranslationScheme
-  def make_ping_message() do
+  def make_ping_messages(sync_state) do
     {:ok, json_str} = Jason.encode(%{"event" => "bts:heartbeat"})
-    json_str
+    [json_str]
   end
 
   @impl TranslationScheme
