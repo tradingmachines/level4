@@ -15,6 +15,40 @@ defmodule Market.Level2.WebSocket do
   @doc """
   ...
   """
+  defp decode(text, state) do
+    %{
+      :market => market,
+      :sync_state => sync_state
+    } = state
+
+    cond do
+      text == "pong" ->
+        :nothing
+
+      true ->
+        # decode the message and always assume it is JSON.
+        case Jason.decode(text) do
+          {:ok, json} ->
+            translated = market.translation_scheme.translate(json, sync_state)
+            {instructions, new_sync_state} = translated
+
+            case execute(instructions, market) do
+              :ok ->
+                {:new_state, %{state | :sync_state => new_sync_state}}
+
+              {:error, error_msg} ->
+                {:error, error_msg}
+            end
+
+          {:error, error_msg} ->
+            {:error, error_msg}
+        end
+    end
+  end
+
+  @doc """
+  ...
+  """
   # ...
   defp execute({:snapshot, bids, asks}, market) do
     Market.Level2.Mediator.snapshot(
@@ -68,6 +102,18 @@ defmodule Market.Level2.WebSocket do
        }},
       sells
     )
+
+    :ok
+  end
+
+  # ...
+  defp execute({:fetch, lambda}, _) do
+    respond_to = self()
+
+    Task.start(fn ->
+      json_str = lambda.()
+      send(respond_to, {:fetch_result, json_str})
+    end)
 
     :ok
   end
@@ -180,6 +226,20 @@ defmodule Market.Level2.WebSocket do
   ...
   """
   @impl true
+  # ...
+  def handle_info({:fetch_result, json_str}, state) do
+    case decode(json_str, state) do
+      :nothing ->
+        {:noreply, state}
+
+      {:new_state, new_state} ->
+        {:noreply, new_state}
+
+      {:error, error_msg} ->
+        {:stop, error_msg, state}
+    end
+  end
+
   # handle ping
   def handle_info(:do_ping, state) do
     %{
@@ -248,32 +308,15 @@ defmodule Market.Level2.WebSocket do
 
   # we received text data from the websocket.
   def handle_info({:gun_ws, _, _, {:text, text}}, state) do
-    %{
-      :market => market,
-      :sync_state => sync_state
-    } = state
-
-    cond do
-      text == "pong" ->
+    case decode(text, state) do
+      :nothing ->
         {:noreply, state}
 
-      true ->
-        # decode the message and always assume it is JSON.
-        case Jason.decode(text) do
-          {:ok, json} ->
-            translated = market.translation_scheme.translate(json, sync_state)
-            {instructions, new_sync_state} = translated
+      {:new_state, new_state} ->
+        {:noreply, new_state}
 
-            case execute(instructions, market) do
-              :ok -> {:noreply, %{state | :sync_state => new_sync_state}}
-              {:error, error_msg} -> {:stop, error_msg, state}
-            end
-
-          {:error, decode_error} ->
-            # stop the GenServer and reconnect later.
-            error_msg = "unable to decode JSON: #{decode_error}"
-            {:stop, error_msg, state}
-        end
+      {:error, error_msg} ->
+        {:stop, error_msg, state}
     end
   end
 

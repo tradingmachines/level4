@@ -60,3 +60,8 @@ Markets.start_market(%Market{exchange_name: "BITFLYER", base_symbol: "BTC", quot
 ```
 Markets.start_market(%Market{exchange_name: "BITFINEX", base_symbol: "BTC", quote_symbol: "USD", market_type: "SPOT", ws_url: "api-pub.bitfinex.com", ws_path: "/ws/2", ws_port: 443, translation_scheme: Exchanges.Bitfinex.Trading, ping?: true})
 ```
+
+### binance
+```
+Markets.start_market(%Market{exchange_name: "BINANCE", base_symbol: "BTC", quote_symbol: "USDT", market_type: "SPOT", ws_url: "stream.binance.com", ws_path: "/ws", ws_port: 443, translation_scheme: Exchanges.Binance.Spot, ping?: false})
+```
