@@ -1,6 +1,15 @@
 defmodule Storage.Model.Market do
   use Ecto.Schema
 
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :exchange_id,
+             :base_symbol_id,
+             :quote_symbol_id,
+             :market_type,
+             :level4_feed_enabled
+           ]}
   schema "markets" do
     belongs_to(:base_symbol, Storage.Model.Symbol)
     belongs_to(:quote_symbol, Storage.Model.Symbol)

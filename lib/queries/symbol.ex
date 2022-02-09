@@ -1,13 +1,16 @@
 defmodule Query.Symbols do
   def all do
-    Storage.Model.Symbol |> Storage.Repo.all()
+    result = Storage.Model.Symbol |> Storage.Repo.all()
+    {:ok, result}
   end
 
   def by_id(id) do
-    Storage.Model.Symbol |> Storage.Repo.get(id)
+    result = Storage.Model.Symbol |> Storage.Repo.get(id)
+    {:ok, result}
   end
 
   def by_name(name) do
-    Storage.Model.Symbol |> Storage.Repo.get_by(symbol: name)
+    result = Storage.Model.Symbol |> Storage.Repo.get_by(symbol: name)
+    {:ok, result}
   end
 end

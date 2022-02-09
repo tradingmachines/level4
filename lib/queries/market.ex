@@ -11,18 +11,24 @@ defmodule Query.Markets do
   Get all markets and optionally preload associated records.
   """
   def all(preload \\ []) do
-    Storage.Model.Market
-    |> Storage.Repo.all()
-    |> Storage.Repo.preload(preload)
+    result =
+      Storage.Model.Market
+      |> Storage.Repo.all()
+      |> Storage.Repo.preload(preload)
+
+    {:ok, result}
   end
 
   @doc """
   Get a single market by its id and optionally preload associated records.
   """
   def by_id(id, preload \\ []) do
-    Storage.Model.Market
-    |> Storage.Repo.get(id)
-    |> Storage.Repo.preload(preload)
+    result =
+      Storage.Model.Market
+      |> Storage.Repo.get(id)
+      |> Storage.Repo.preload(preload)
+
+    {:ok, result}
   end
 
   @doc """
@@ -35,8 +41,11 @@ defmodule Query.Markets do
         where: market.base_symbol_id == ^id
       )
 
-    Storage.Repo.all(query)
-    |> Storage.Repo.preload(preload)
+    result =
+      Storage.Repo.all(query)
+      |> Storage.Repo.preload(preload)
+
+    {:ok, result}
   end
 
   @doc """
@@ -49,8 +58,11 @@ defmodule Query.Markets do
         where: market.quote_symbol_id == ^id
       )
 
-    Storage.Repo.all(query)
-    |> Storage.Repo.preload(preload)
+    result =
+      Storage.Repo.all(query)
+      |> Storage.Repo.preload(preload)
+
+    {:ok, result}
   end
 
   @doc """
@@ -62,8 +74,11 @@ defmodule Query.Markets do
         where: market.exchange_id == ^id
       )
 
-    Storage.Repo.all(query)
-    |> Storage.Repo.preload(preload)
+    result =
+      Storage.Repo.all(query)
+      |> Storage.Repo.preload(preload)
+
+    {:ok, result}
   end
 
   @doc """
@@ -76,7 +91,10 @@ defmodule Query.Markets do
         where: market.market_type == ^type
       )
 
-    Storage.Repo.all(query)
-    |> Storage.Repo.preload(preload)
+    result =
+      Storage.Repo.all(query)
+      |> Storage.Repo.preload(preload)
+
+    {:ok, result}
   end
 end

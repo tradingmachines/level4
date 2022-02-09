@@ -19,8 +19,11 @@ defmodule Query.BestAsks do
         order_by: [asc: ask.timestamp]
       )
 
-    Storage.Repo.all(query)
-    |> Storage.Repo.preload(preload)
+    result =
+      Storage.Repo.all(query)
+      |> Storage.Repo.preload(preload)
+
+    {:ok, result}
   end
 end
 
@@ -43,7 +46,10 @@ defmodule Query.BestBids do
         order_by: [asc: bid.timestamp]
       )
 
-    Storage.Repo.all(query)
-    |> Storage.Repo.preload(preload)
+    result =
+      Storage.Repo.all(query)
+      |> Storage.Repo.preload(preload)
+
+    {:ok, result}
   end
 end

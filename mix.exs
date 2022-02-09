@@ -20,7 +20,9 @@ defmodule Level4.MixProject do
 
   defp deps do
     [
-      {:gun, github: "ninenines/gun"},
+      {:gun, "~> 2.0.0-rc.2"},
+      {:cowboy, "~> 2.9"},
+      {:plug_cowboy, "~> 2.0"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"}

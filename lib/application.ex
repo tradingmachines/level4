@@ -43,6 +43,10 @@ defmodule Level4 do
           Registry,
           keys: :unique, name: Market.Level2.OrderBook.Registry
         },
+        {
+          Plug.Cowboy,
+          scheme: :http, plug: Level4.Server, options: [port: 8080]
+        },
         Storage.Repo,
         Markets
       ],
@@ -87,8 +91,20 @@ defmodule Markets do
   Market.Supervisor is responsible for building this tree according to the
   market information provided.
   """
-  @spec start_market(Level4.Market) :: pid()
-  def start_market(market) do
+  @spec create_market(Level4.Market) :: any()
+  def create_market(market) do
+    nil
+  end
+
+  @doc """
+  ...
+  """
+  @spec start_market(String.t()) :: any()
+  def start_market(id) do
+    # get from store using id
+    # ...
+    market = nil
+
     DynamicSupervisor.start_child(
       __MODULE__,
       %{
@@ -102,7 +118,7 @@ defmodule Markets do
   @doc """
   ...
   """
-  @spec stop_market(String.t()) :: pid()
+  @spec stop_market(String.t()) :: any()
   def stop_market(id) do
     nil
   end
@@ -110,16 +126,23 @@ defmodule Markets do
   @doc """
   ...
   """
-  @spec live_markets() :: [Level4.Market]
-  def live_markets() do
+  # ...
+  @spec list_markets() :: [Level4.Market]
+  def list_markets() do
     []
   end
 
-  @doc """
-  ...
-  """
-  @spec all_markets() :: [Level4.Market]
-  def all_markets() do
-    []
+  # ...
+  @spec list_markets(:started) :: [Level4.Market]
+  def list_markets(:started) do
+    Level4.list_markets()
+    |> Enum.filter(fn x -> false end)
+  end
+
+  # ...
+  @spec list_markets(:stopped) :: [Level4.Market]
+  def list_markets(:stopped) do
+    Level4.list_markets()
+    |> Enum.filter(fn x -> false end)
   end
 end

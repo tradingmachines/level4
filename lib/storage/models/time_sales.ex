@@ -2,6 +2,7 @@ defmodule Storage.Model.Buy do
   use Ecto.Schema
 
   @primary_key false
+  @derive {Jason.Encoder, only: [:price, :size, :timestamp]}
   schema "buys" do
     belongs_to(:market, Storage.Model.Market)
     field(:price, :float)
@@ -14,6 +15,7 @@ defmodule Storage.Model.Sell do
   use Ecto.Schema
 
   @primary_key false
+  @derive {Jason.Encoder, only: [:price, :size, :timestamp]}
   schema "sells" do
     belongs_to(:market, Storage.Model.Market)
     field(:price, :float)
