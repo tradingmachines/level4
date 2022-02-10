@@ -14,7 +14,7 @@ config :level4, Storage.Repo,
 
 # exchange translation scheme map
 config :level4,
-  translation_schemes: %{
+  exchanges: %{
     "BINANCE" => %{
       "SPOT" => fn ->
         translation_scheme = Exchanges.Binance.Spot
@@ -89,7 +89,7 @@ config :level4,
 
         {translation_scheme, url, path, port, ping?}
       end,
-      "PERP[INVSERSE]" => fn ->
+      "PERP[INVERSE]" => fn ->
         translation_scheme = Exchanges.Bybit.Perp.Inverse
         url = "stream.bybit.com"
         path = "/realtime"

@@ -63,6 +63,27 @@ defmodule Markets do
 
   use DynamicSupervisor
 
+  # ...
+  defp to_internal_representation(result) do
+    {:ok, exchanges} = Application.fetch_env(:level4, :exchanges)
+    market_types = exchanges[result.exchange.name]
+    market = market_types[result.market_type]
+
+    {translation_scheme, url, path, port, ping?} = market.()
+
+    %Market{
+      translation_scheme: translation_scheme,
+      exchange_name: result.exchange.name,
+      base_symbol: result.base_symbol.symbol,
+      quote_symbol: result.quote_symbol.symbol,
+      market_type: result.market_type,
+      ws_url: url,
+      ws_path: path,
+      ws_port: port,
+      ping?: ping?
+    }
+  end
+
   @doc """
   Starts and links a new DynamicSupervisor named Level4.DynamicSupervisor.
   Three is only ever one of these processes in the application's supervision
@@ -91,23 +112,7 @@ defmodule Markets do
   """
   def start(id) do
     {:ok, result} = Query.Markets.by_id(id)
-
-    # get scheme builder from config
-    # ...
-
-    {translation_scheme, url, path, port, ping?} = scheme_builder.()
-
-    market = %Market{
-      translation_scheme: translation_scheme,
-      exchange_name: result.exchange.name,
-      base_symbol: result.base_symbol.symbol,
-      quote_symbol: result.quote_symbol.symbol,
-      market_type: result.market_type,
-      ws_url: url,
-      ws_path: path,
-      ws_port: port,
-      ping?: ping?
-    }
+    market = to_internal_representation(result)
 
     cond do
       result.level4_feed_enabled == true ->
@@ -134,6 +139,7 @@ defmodule Markets do
   """
   def stop(id) do
     {:ok, result} = Query.Markets.by_id(id)
+    market = to_internal_representation(result)
 
     cond do
       result.level4_feed_enabled == false ->
@@ -142,16 +148,8 @@ defmodule Markets do
       result.level4_feed_enabled == true ->
         {:ok, new_result} = Query.Markets.update(result, level4_feed_enabled: false)
 
-        # ...
-
-        #    DynamicSupervisor.start_child(
-        #      __MODULE__,
-        #      %{
-        #        id: Market.Supervisor,
-        #        start: {Market.Supervisor, :start_link, [[market: market]]},
-        #        type: :supervisor
-        #      }
-        #    )
+        [{pid, _}] = Registry.lookup(Market.Supervisor.Registry, Market.id(market))
+        :ok = DynamicSupervisor.terminate_child(__MODULE__, pid)
 
         {:ok, new_result}
     end
