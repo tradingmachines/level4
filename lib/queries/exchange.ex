@@ -6,6 +6,18 @@ defmodule Query.Exchanges do
   """
 
   @doc """
+   ...
+  """
+  def new(name) do
+    {:ok, result} =
+      Storage.Repo.insert(%Storage.Model.Exchange{
+        name: name
+      })
+
+    {:ok, result}
+  end
+
+  @doc """
   Get all exchanges and optionally preload associated records.
   """
   def all(preload \\ []) do

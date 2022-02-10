@@ -17,7 +17,11 @@ defmodule Level4.Server do
         new_meta = Map.put(meta, "status", "no result")
         Map.put(msg, "meta", new_meta)
 
-      :error ->
+      :input_error ->
+        new_meta = Map.put(meta, "status", "bad input")
+        Map.put(msg, "meta", new_meta)
+
+      :internal_error ->
         new_meta = Map.put(meta, "status", "error")
         Map.put(msg, "meta", new_meta)
     end
@@ -44,20 +48,8 @@ defmodule Level4.Server do
     {status, msg} =
       case result do
         {:ok, nil} ->
-          {400,
-           %{}
-           |> payload(nil)
-           |> (meta()
-               |> status(:no_result))}
+          IO.puts("a")
 
-        {:ok, []} ->
-          {400,
-           %{}
-           |> payload(nil)
-           |> (meta()
-               |> status(:no_result))}
-
-        {:ok, %{}} ->
           {400,
            %{}
            |> payload(nil)

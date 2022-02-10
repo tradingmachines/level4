@@ -10,6 +10,28 @@ defmodule Query.Markets do
   @doc """
   Get all markets and optionally preload associated records.
   """
+  def new(
+        exchange_id,
+        base_symbol_id,
+        quote_symbol_id,
+        market_type,
+        level4_feed_enabled
+      ) do
+    {:ok, result} =
+      Storage.Repo.insert(%Storage.Model.Market{
+        exchange_id: exchange_id,
+        base_symbol_id: base_symbol_id,
+        quote_symbol_id: quote_symbol_id,
+        market_type: market_type,
+        level4_feed_enabled: level4_feed_enabled
+      })
+
+    {:ok, result}
+  end
+
+  @doc """
+  Get all markets and optionally preload associated records.
+  """
   def all(preload \\ []) do
     result =
       Storage.Model.Market

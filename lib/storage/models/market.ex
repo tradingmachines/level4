@@ -4,9 +4,9 @@ defmodule Storage.Model.Market do
   @derive {Jason.Encoder,
            only: [
              :id,
-             :exchange_id,
-             :base_symbol_id,
-             :quote_symbol_id,
+             :exchange,
+             :base_symbol,
+             :quote_symbol,
              :market_type,
              :level4_feed_enabled
            ]}
