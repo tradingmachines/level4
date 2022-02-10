@@ -1,4 +1,10 @@
 defmodule Query.Symbols do
+  @moduledoc """
+   ...
+  """
+
+  @preload []
+
   @doc """
    ...
   """

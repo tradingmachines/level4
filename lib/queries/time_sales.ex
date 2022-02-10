@@ -2,14 +2,15 @@ require Ecto.Query
 
 defmodule Query.TimeSale.Buys do
   @moduledoc """
-  Query.TimeSale.Buys contains ecto queries for buy trades (take from ask side)
-  that executed on a particular market.
+  ...
   """
+
+  @preload []
 
   @doc """
   ...
   """
-  def for_market_id(market_id, start_time, end_time, preload \\ []) do
+  def for_market_id(market_id, start_time, end_time) do
     query =
       Ecto.Query.from(buy in Storage.Model.Buy,
         where:
@@ -21,7 +22,7 @@ defmodule Query.TimeSale.Buys do
 
     result =
       Storage.Repo.all(query)
-      |> Storage.Repo.preload(preload)
+      |> Storage.Repo.preload(@preload)
 
     {:ok, result}
   end
@@ -29,14 +30,15 @@ end
 
 defmodule Query.TimeSale.Sells do
   @moduledoc """
-  Query.TimeSale.Buys contains ecto queries for sell trades (take from bid side)
-  that executed on a particular market.
+  ...
   """
+
+  @preload []
 
   @doc """
   ...
   """
-  def for_market_id(market_id, start_time, end_time, preload \\ []) do
+  def for_market_id(market_id, start_time, end_time) do
     query =
       Ecto.Query.from(sell in Storage.Model.Sell,
         where:
@@ -48,7 +50,7 @@ defmodule Query.TimeSale.Sells do
 
     result =
       Storage.Repo.all(query)
-      |> Storage.Repo.preload(preload)
+      |> Storage.Repo.preload(@preload)
 
     {:ok, result}
   end

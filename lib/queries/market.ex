@@ -2,13 +2,13 @@ require Ecto.Query
 
 defmodule Query.Markets do
   @moduledoc """
-  Query.Markets contains ecto queries for market records. There is no need
-  for complex buffering and pagination here because the total number of exchanges
-  is always relatively small.
+  ...
   """
 
+  @preload [:base_symbol, :quote_symbol, :exchange]
+
   @doc """
-  Get all markets and optionally preload associated records.
+  ...
   """
   def new(
         exchange_id,
@@ -30,34 +30,43 @@ defmodule Query.Markets do
   end
 
   @doc """
-  Get all markets and optionally preload associated records.
+  ...
   """
-  def all(preload \\ []) do
+  def update(market, fields) do
+    new_market = Ecto.Changeset.change(market, fields)
+
+    {:ok, result} = Storage.Repo.update(new_market)
+    {:ok, result}
+  end
+
+  @doc """
+  ...
+  """
+  def all() do
     result =
       Storage.Model.Market
       |> Storage.Repo.all()
-      |> Storage.Repo.preload(preload)
+      |> Storage.Repo.preload(@preload)
 
     {:ok, result}
   end
 
   @doc """
-  Get a single market by its id and optionally preload associated records.
+  ...
   """
-  def by_id(id, preload \\ []) do
+  def by_id(id) do
     result =
       Storage.Model.Market
       |> Storage.Repo.get(id)
-      |> Storage.Repo.preload(preload)
+      |> Storage.Repo.preload(@preload)
 
     {:ok, result}
   end
 
   @doc """
-  Get all markets for a specific base symbol id. Optionally preload associated
-  records.
+  ...
   """
-  def for_base_symbol_id(id, preload \\ []) do
+  def for_base_symbol_id(id) do
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.base_symbol_id == ^id
@@ -65,16 +74,15 @@ defmodule Query.Markets do
 
     result =
       Storage.Repo.all(query)
-      |> Storage.Repo.preload(preload)
+      |> Storage.Repo.preload(@preload)
 
     {:ok, result}
   end
 
   @doc """
-  Get all markets for a specific quote symbol id. Optionally preload associated
-  records.
+  ...
   """
-  def for_quote_symbol_id(id, preload \\ []) do
+  def for_quote_symbol_id(id) do
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.quote_symbol_id == ^id
@@ -82,15 +90,15 @@ defmodule Query.Markets do
 
     result =
       Storage.Repo.all(query)
-      |> Storage.Repo.preload(preload)
+      |> Storage.Repo.preload(@preload)
 
     {:ok, result}
   end
 
   @doc """
-  Get all markets for a specific exchange id. Optionally preload associated records.
+  ...
   """
-  def for_exchange_id(id, preload \\ []) do
+  def for_exchange_id(id) do
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.exchange_id == ^id
@@ -98,16 +106,15 @@ defmodule Query.Markets do
 
     result =
       Storage.Repo.all(query)
-      |> Storage.Repo.preload(preload)
+      |> Storage.Repo.preload(@preload)
 
     {:ok, result}
   end
 
   @doc """
-  Get all markets for a specific market type (e.g. spot, future). Optionally preload
-  associated records.
+  ...
   """
-  def by_market_type(type, preload \\ []) do
+  def by_market_type(type) do
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.market_type == ^type
@@ -115,7 +122,39 @@ defmodule Query.Markets do
 
     result =
       Storage.Repo.all(query)
-      |> Storage.Repo.preload(preload)
+      |> Storage.Repo.preload(@preload)
+
+    {:ok, result}
+  end
+
+  @doc """
+  ...
+  """
+  def are_enabled() do
+    query =
+      Ecto.Query.from(market in Storage.Model.Market,
+        where: market.level4_feed_enabled == true
+      )
+
+    result =
+      Storage.Repo.all(query)
+      |> Storage.Repo.preload(@preload)
+
+    {:ok, result}
+  end
+
+  @doc """
+  ...
+  """
+  def are_disabled() do
+    query =
+      Ecto.Query.from(market in Storage.Model.Market,
+        where: market.level4_feed_enabled == false
+      )
+
+    result =
+      Storage.Repo.all(query)
+      |> Storage.Repo.preload(@preload)
 
     {:ok, result}
   end

@@ -1,8 +1,6 @@
 defmodule Level4.Server.HTTP.ControlPanel.Markets do
   use Plug.Router
 
-  @preload [:base_symbol, :quote_symbol, :exchange]
-
   plug(:match)
 
   plug(Plug.Parsers,
@@ -19,44 +17,31 @@ defmodule Level4.Server.HTTP.ControlPanel.Markets do
     result =
       case params do
         %{"id" => id} ->
-          Query.Markets.by_id(id, @preload)
+          Query.Markets.by_id(id)
 
         %{"base_symbol_id" => id} ->
-          Query.Markets.for_base_symbol_id(id, @preload)
+          Query.Markets.for_base_symbol_id(id)
 
         %{"quote_symbol_id" => id} ->
-          Query.Markets.for_quote_symbol_id(id, @preload)
+          Query.Markets.for_quote_symbol_id(id)
 
         %{"exchange_id" => id} ->
-          Query.Markets.for_exchange_id(id, @preload)
+          Query.Markets.for_exchange_id(id)
+
+        %{"market_type" => market_type} ->
+          Query.Markets.by_market_type(market_type)
+
+        %{"enabled" => "true"} ->
+          Query.Markets.are_enabled()
+
+        %{"enabled" => "false"} ->
+          Query.Markets.are_disabled()
 
         _ ->
-          Query.Markets.all(@preload)
+          Query.Markets.all()
       end
 
     {status, json_str} = Level4.Server.response(result)
-
-    conn
-    |> put_resp_content_type("application/json")
-    |> send_resp(status, json_str)
-  end
-
-  post "/:market_id/start" do
-    # ...
-
-    status = 200
-    json_str = ""
-
-    conn
-    |> put_resp_content_type("application/json")
-    |> send_resp(status, json_str)
-  end
-
-  post "/:market_id/stop" do
-    # ...
-
-    status = 200
-    json_str = ""
 
     conn
     |> put_resp_content_type("application/json")
@@ -89,6 +74,26 @@ defmodule Level4.Server.HTTP.ControlPanel.Markets do
              "quote_symbol_id::int, market_type::string, " <>
              "level4_feed_enabled:boolean"}
       end
+
+    {status, json_str} = Level4.Server.response(result)
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(status, json_str)
+  end
+
+  post "/:market_id/start" do
+    result = Markets.start(market_id)
+
+    {status, json_str} = Level4.Server.response(result)
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(status, json_str)
+  end
+
+  post "/:market_id/stop" do
+    result = Markets.stop(market_id)
 
     {status, json_str} = Level4.Server.response(result)
 

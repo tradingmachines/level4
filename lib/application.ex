@@ -87,62 +87,73 @@ defmodule Markets do
   end
 
   @doc """
-  Spawns and adds a new market to the supervision tree. The
-  Market.Supervisor is responsible for building this tree according to the
-  market information provided.
-  """
-  @spec create_market(Level4.Market) :: any()
-  def create_market(market) do
-    nil
-  end
-
-  @doc """
   ...
   """
-  @spec start_market(String.t()) :: any()
-  def start_market(id) do
-    # get from store using id
+  def start(id) do
+    {:ok, result} = Query.Markets.by_id(id)
+
+    # get scheme builder from config
     # ...
-    market = nil
 
-    DynamicSupervisor.start_child(
-      __MODULE__,
-      %{
-        id: Market.Supervisor,
-        start: {Market.Supervisor, :start_link, [[market: market]]},
-        type: :supervisor
-      }
-    )
+    {translation_scheme, url, path, port, ping?} = scheme_builder.()
+
+    market = %Market{
+      translation_scheme: translation_scheme,
+      exchange_name: result.exchange.name,
+      base_symbol: result.base_symbol.symbol,
+      quote_symbol: result.quote_symbol.symbol,
+      market_type: result.market_type,
+      ws_url: url,
+      ws_path: path,
+      ws_port: port,
+      ping?: ping?
+    }
+
+    cond do
+      result.level4_feed_enabled == true ->
+        {:input_error, "market already started"}
+
+      result.level4_feed_enabled == false ->
+        {:ok, new_result} = Query.Markets.update(result, level4_feed_enabled: true)
+
+        DynamicSupervisor.start_child(
+          __MODULE__,
+          %{
+            id: Market.Supervisor,
+            start: {Market.Supervisor, :start_link, [[market: market]]},
+            type: :supervisor
+          }
+        )
+
+        {:ok, new_result}
+    end
   end
 
   @doc """
   ...
   """
-  @spec stop_market(String.t()) :: any()
-  def stop_market(id) do
-    nil
-  end
+  def stop(id) do
+    {:ok, result} = Query.Markets.by_id(id)
 
-  @doc """
-  ...
-  """
-  # ...
-  @spec list_markets() :: [Level4.Market]
-  def list_markets() do
-    []
-  end
+    cond do
+      result.level4_feed_enabled == false ->
+        {:input_error, "market already stopped"}
 
-  # ...
-  @spec list_markets(:started) :: [Level4.Market]
-  def list_markets(:started) do
-    Level4.list_markets()
-    |> Enum.filter(fn x -> false end)
-  end
+      result.level4_feed_enabled == true ->
+        {:ok, new_result} = Query.Markets.update(result, level4_feed_enabled: false)
 
-  # ...
-  @spec list_markets(:stopped) :: [Level4.Market]
-  def list_markets(:stopped) do
-    Level4.list_markets()
-    |> Enum.filter(fn x -> false end)
+        # ...
+
+        #    DynamicSupervisor.start_child(
+        #      __MODULE__,
+        #      %{
+        #        id: Market.Supervisor,
+        #        start: {Market.Supervisor, :start_link, [[market: market]]},
+        #        type: :supervisor
+        #      }
+        #    )
+
+        {:ok, new_result}
+    end
   end
 end
