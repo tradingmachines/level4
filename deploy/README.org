@@ -1,0 +1,21 @@
+#+TITLE:  deploying to docker swarm
+#+AUTHOR: William Santos
+#+EMAIL:  w@wsantos.net
+
+#+ID:               level4.deploy
+#+LANGUAGE:         en
+#+STARTUP:          showall
+#+EXPORT_FILE_NAME: level4-deploy
+
+
+** compose file
+...
+
+** pushing the images
+...
+
+** deploy and rm
+...
+
+** useful commands
+...
