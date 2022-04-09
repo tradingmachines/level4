@@ -9,3 +9,10 @@
 
 
 Aggregated & normalised level2 market data feeds
+
+
+** building the container image
+...
+
+** deploy to docker swarm
+...
