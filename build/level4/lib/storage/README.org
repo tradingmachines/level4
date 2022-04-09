@@ -1,0 +1,18 @@
+#+TITLE:  storage
+#+AUTHOR: William Santos
+#+EMAIL:  w@wsantos.net
+
+#+ID:               level4.storage
+#+LANGUAGE:         en
+#+STARTUP:          showall
+#+EXPORT_FILE_NAME: level4-storage
+
+
+** what is stored
+...
+
+** what is not stored
+...
+
+** models
+...

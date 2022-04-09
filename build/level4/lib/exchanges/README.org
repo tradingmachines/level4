@@ -1,0 +1,24 @@
+#+TITLE:  level4 exchange translation schemes
+#+AUTHOR: William Santos
+#+EMAIL:  w@wsantos.net
+
+#+ID:               level4.exchanges
+#+LANGUAGE:         en
+#+STARTUP:          showall
+#+EXPORT_FILE_NAME: level4-exchange-translation-schemes
+
+
+** init_sync_state
+...
+
+** make_ping_messages
+...
+
+** make_subscribe_messages
+...
+
+** translate
+...
+
+** check_sync_state
+...

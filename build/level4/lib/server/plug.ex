@@ -35,21 +35,17 @@ defmodule Level4.Server do
   plug(:dispatch)
 
   forward("/control", to: Level4.Server.HTTP.ControlPanel)
-  forward("/historical", to: Level4.Server.HTTP.HistoricalMarketData)
-  forward("/stream/market-data", to: Level4.Server.WebSocket.LiveMarketData)
 
   match _ do
     conn
     |> put_resp_content_type("text/plain")
-    |> send_resp(404, "nothing here")
+    |> send_resp(404, "wrong path.. nothing here")
   end
 
   def response(result) do
     {status, msg} =
       case result do
         {:ok, nil} ->
-          IO.puts("a")
-
           {400,
            %{}
            |> payload(nil)
@@ -79,7 +75,6 @@ defmodule Level4.Server do
       end
 
     {:ok, json_str} = Jason.encode(msg)
-
     {status, json_str}
   end
 end

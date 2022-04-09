@@ -1,0 +1,30 @@
+#+TITLE:  level4 elixir source
+#+AUTHOR: William Santos
+#+EMAIL:  w@wsantos.net
+
+#+ID:               level4.lib
+#+LANGUAGE:         en
+#+STARTUP:          showall
+#+EXPORT_FILE_NAME: level4-elixir-source
+
+
+** the main application
+...
+
+** exchanges
+...
+
+** market
+...
+
+** queries
+...
+
+** server
+...
+
+** storage
+...
+
+** translation scheme
+...

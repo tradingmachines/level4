@@ -1,0 +1,18 @@
+#+TITLE:  ecto repo queries
+#+AUTHOR: William Santos
+#+EMAIL:  w@wsantos.net
+
+#+ID:               level4.queries
+#+LANGUAGE:         en
+#+STARTUP:          showall
+#+EXPORT_FILE_NAME: level4-ecto-repo-queries
+
+
+** exchange
+...
+
+** market
+...
+
+** symbol
+...
