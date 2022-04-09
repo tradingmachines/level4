@@ -2,8 +2,8 @@ require Logger
 
 defmodule Level4 do
   @moduledoc """
-  Elixir application. Spawns a root supervisor that monitors
-  multiple registries and one main dynamic supervisor.
+  Mix application. Spawns a root supervisor that monitors
+  1) multiple registries and 2) one main dynamic supervisor.
   """
 
   use Application
@@ -18,7 +18,7 @@ defmodule Level4 do
   3. market -> level2 mediator process Ids;
   4. market -> level2 orderbook Ids.
 
-  The dynamic supervisor dynamically creates and destroys market
+  The supervisor dynamically creates and destroys market
   supervision trees as-and-when they are needed.
   """
   @impl true
@@ -27,26 +27,11 @@ defmodule Level4 do
 
     Supervisor.start_link(
       [
-        {
-          Registry,
-          keys: :unique, name: Market.Supervisor.Registry
-        },
-        {
-          Registry,
-          keys: :unique, name: Market.Exchange.Registry
-        },
-        {
-          Registry,
-          keys: :unique, name: Market.Level2.Mediator.Registry
-        },
-        {
-          Registry,
-          keys: :unique, name: Market.Level2.OrderBook.Registry
-        },
-        {
-          Plug.Cowboy,
-          scheme: :http, plug: Level4.Server, options: [port: 8080]
-        },
+        {Registry, keys: :unique, name: Market.Supervisor.Registry},
+        {Registry, keys: :unique, name: Market.Exchange.Registry},
+        {Registry, keys: :unique, name: Market.Level2.Mediator.Registry},
+        {Registry, keys: :unique, name: Market.Level2.OrderBook.Registry},
+        {Plug.Cowboy, scheme: :http, plug: Level4.Server, options: [port: 8080]},
         Storage.Repo,
         Markets
       ],

@@ -1,0 +1,18 @@
+#+TITLE:  level4 elixir project
+#+AUTHOR: William Santos
+#+EMAIL:  w@wsantos.net
+
+#+ID:               level4.elixir-project
+#+LANGUAGE:         en
+#+STARTUP:          showall
+#+EXPORT_FILE_NAME: level4-elixir-project
+
+
+** supervision tree topology
+...
+
+** exchange translation schemes
+...
+
+** ecto repo and postgres database
+...

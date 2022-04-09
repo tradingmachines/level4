@@ -3,14 +3,21 @@ import Config
 # ecto storage repo
 config :level4, ecto_repos: [Storage.Repo]
 
-# ecto repo backend: postgres + timescaledb
+# ecto repo backend (postgres)
 config :level4, Storage.Repo,
   database: "level4",
   username: "level4",
   password: "level4",
-  hostname: "127.0.0.1",
+  hostname: "postgres",
   port: 5432,
-  pool_size: 25
+  pool_size: 10
+
+# http server host and port
+config :level4,
+  http_server: %{
+    host: "0.0.0.0",
+    port: 8080
+  }
 
 # exchange translation scheme map
 config :level4,
