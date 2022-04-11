@@ -9,10 +9,31 @@
 
 
 ** symbols
-...
+| field  | type   | can be null? | comment                                     |
+|--------+--------+--------------+---------------------------------------------|
+| symbol | string | no           | the symbol's string representation e.g. GBP |
+
+There is a unique index on the symbol field, which prevents
+duplicate symbols from being inserted into the repo.
 
 ** exchanges
-...
+| field | type   | can be null? | comment                               |
+|-------+--------+--------------+---------------------------------------|
+| name  | string | no           | the exchange's name e.g. COINBASE-PRO |
+
+There is a unique index on the exchange name field, which
+prevents duplicate exchanges from being inserted into the
+repo.
 
 ** markets
-...
+| field               | type    | can be null? | comment                           |
+|---------------------+---------+--------------+-----------------------------------|
+| base_symbol_id      | int     | no           | id of the base symbol             |
+| quote_symbol_id     | int     | no           | id of the quote symbol            |
+| exchange_id         | int     | no           | id of the exchange                |
+| market_type         | string  | no           | the market type e.g. SPOT or PERP |
+| level4_feed_enabled | boolean | no           | is level4 feed currently enabled  |
+
+There is a unique index on (base id, quote id, exchange id,
+market type) uniquely identifies a particular market. This prevents
+duplicate markets from being inserted into the repo.
