@@ -8,15 +8,17 @@ config :level4, Storage.Repo,
   database: "level4",
   username: "level4",
   password: "level4",
-  hostname: "postgres",
+  hostname: "127.0.0.1",
   port: 5432,
   pool_size: 10
 
 # http server host and port
 config :level4,
   http_server: %{
-    host: "0.0.0.0",
+    host: {0, 0, 0, 0},
     port: 8080
+    # add stream handlers?
+    # ...
   }
 
 # exchange translation scheme map
