@@ -20,8 +20,8 @@ The root supervisor has a =one_for_rest= strategy because non of its
 children should crash. A market supervisor can use a =one_for_rest=
 strategy due to the order in which children are started.
 #+BEGIN_SRC text
-		      root supervisor
-			     |
+		                          root supervisor
+                                                 |
      -------------------------------------------------------------------------------------------
      |          |          |          |              |                    |                    |
   registry   registry   registry   registry   dynamic supervisor   plug http server   ecto repo (postgres)
@@ -111,5 +111,7 @@ functions defined above. See =lib/server= for more details.
 7. =GET /markets?enabled=true|false=
 
 **** start/stop market data feeds
+start/stop all are not available via the http api as they are
+potentially long-running processes.
 1. =PATCH /markets/<id>= with JSON text body
    ={ ... "level4_feed_enabled": true|false, ... }=
