@@ -22,9 +22,9 @@ strategy due to the order in which children are started.
 #+BEGIN_SRC text
 		      root supervisor
 			     |
-     -------------------------------------------------
-     |          |          |          |              |   
-  registry   registry   registry   registry   dynamic supervisor
+     -------------------------------------------------------------------------------------------
+     |          |          |          |              |                    |                    |
+  registry   registry   registry   registry   dynamic supervisor   plug http server   ecto repo (postgres)
 						     |
 						    0..*
 						     |
