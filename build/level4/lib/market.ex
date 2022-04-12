@@ -37,7 +37,7 @@ defmodule Market do
 
   <exchange name>.<market type>:<base>-<quote>
 
-  all in capitals. for example:
+  always fully capitalised. for example:
 
   COINBASE-PRO.SPOT:BTC-USDT
   POLONIEX.SPOT:BTC-USDT
@@ -49,7 +49,6 @@ defmodule Market do
     market_type = String.upcase(market.market_type)
     base_symbol = String.upcase(market.base_symbol)
     quote_symbol = String.upcase(market.quote_symbol)
-
     "#{exchange_name}.#{market_type}:#{base_symbol}-#{quote_symbol}"
   end
 end

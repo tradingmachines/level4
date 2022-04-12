@@ -1,30 +1,43 @@
-#+TITLE:  level4 elixir source
+#+TITLE:  level4 elixir source code
 #+AUTHOR: William Santos
 #+EMAIL:  w@wsantos.net
 
 #+ID:               level4.lib
 #+LANGUAGE:         en
 #+STARTUP:          showall
-#+EXPORT_FILE_NAME: level4-elixir-source
+#+EXPORT_FILE_NAME: level4-elixir-source-code
 
 
 ** the main application
-...
+The =Level4= module defines the main application. It contains a =start=
+function which will create and start the root supervisor. The root
+supervisor has 5 children and uses the =one_for_all= strategy. One of
+the children is a dynamic supervisor.
 
-** exchanges
-...
+The =Markets= module defines methods for starting and stopping data
+feeds, which are children of the dynamic supervisor. There is also a
+private function that converts a market record into an "internal
+representation".
 
-** market
-...
+** market internal representation
+The =Market= module defines a struct. All of its keys are enforced i.e.
+cannot be null. The struct encapsulates metadata for an active market
+data feed.
 
-** queries
-...
+** translation scheme protocol and exchanges
+The =TranslationScheme= module defines a translation scheme protocol.
+Exchange translation schemes in =exchanges= directory are expected to
+implement this protocol.
 
-** server
-...
+** ecto repo queries and storage backend
+The =queries= package contains modules and relevant documentation for
+queries and mutations that can be done on the ecto repo. Of course,
+you could manually interface with ecto but this is discouraged.
+The storage backend is Postgres. It is responsible for persisting
+symbol, exchange, and market metadata. Ecto models can be found in
+=storage/models=.
 
-** storage
-...
-
-** translation scheme
-...
+** http server
+The =server= package contains =Level4.Server= module which implements
+the plug router. Modules for control panel endpoint logic can be found
+in =server/control.ex=.

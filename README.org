@@ -8,7 +8,8 @@
 #+EXPORT_FILE_NAME: level4
 
 
-Aggregated & normalised level2 market data feeds
+Aggregated & normalised level2 market data feeds for 12 different
+crypto currency exchanges.
 
 
 ** building the container image
