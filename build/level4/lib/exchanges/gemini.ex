@@ -1,23 +1,26 @@
 defmodule Exchanges.Gemini do
   @moduledoc """
-  Contains translation scheme for the Gemini websocket API.
+  Translation scheme for the Gemini websocket API.
+
+  Websocket docs:
+  - https://docs.gemini.com/websocket-api/
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"something" => nil}
   end
 
   @impl TranslationScheme
-  def make_ping_messages(sync_state) do
+  def ping_msg(current_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str} =
       Jason.encode(%{
         "type" => "subscribe",
@@ -29,11 +32,17 @@ defmodule Exchanges.Gemini do
         ]
       })
 
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
     instructions =
       case json do
         %{"type" => "heartbeat", "timestamp" => _} ->
@@ -113,11 +122,6 @@ defmodule Exchanges.Gemini do
           end
       end
 
-    {instructions, sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, current_state}
   end
 end

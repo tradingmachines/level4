@@ -1,27 +1,30 @@
 defmodule Exchanges.Bybit.Spot do
   @moduledoc """
-  Contains translation scheme for the Bybit spot websocket API.
+  Translation scheme for the Bybit spot websocket API.
+
+  Change log and websocket docs:
+  - https://bybit-exchange.github.io/docs/spot/#t-changelog
+  - https://bybit-exchange.github.io/docs/spot/#t-websocket
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"did_snapshot" => false}
   end
 
   @impl TranslationScheme
-  def make_ping_messages(sync_state) do
+  def ping_msg(current_state) do
     timestamp = DateTime.utc_now()
     epoch_ms = DateTime.to_unix(timestamp, :millisecond)
 
     {:ok, json_str} = Jason.encode(%{"ping" => epoch_ms})
-
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str_book} =
       Jason.encode(%{
         "topic" => "depth",
@@ -42,21 +45,27 @@ defmodule Exchanges.Bybit.Spot do
         }
       })
 
-    [json_str_book, json_str_trade]
+    {:ok, [json_str_book, json_str_trade]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
-    {instructions, new_sync_state} =
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
+    {instructions, next_state} =
       case json do
         %{"event" => "sub"} ->
-          {[:noop], sync_state}
+          {[:noop], current_state}
 
         %{"pong" => _} ->
-          {[:noop], sync_state}
+          {[:noop], current_state}
 
         %{"topic" => "depth", "data" => data} ->
-          if sync_state["did_snapshot"] do
+          if current_state["did_snapshot"] do
             bids =
               for [price_str, size_str] <- data["b"] do
                 {price, _} = Float.parse(price_str)
@@ -71,7 +80,7 @@ defmodule Exchanges.Bybit.Spot do
                 {:ask, price, size}
               end
 
-            {[{:deltas, bids ++ asks}], sync_state}
+            {[{:deltas, bids ++ asks}], current_state}
           else
             bids =
               for [price_str, size_str] <- data["b"] do
@@ -87,7 +96,7 @@ defmodule Exchanges.Bybit.Spot do
                 {price, size}
               end
 
-            {[{:snapshot, bids, asks}], %{sync_state | "did_snapshot" => true}}
+            {[{:snapshot, bids, asks}], %{current_state | "did_snapshot" => true}}
           end
 
         %{"topic" => "trade", "data" => data} ->
@@ -99,41 +108,40 @@ defmodule Exchanges.Bybit.Spot do
           {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
 
           case data["m"] do
-            true -> {[{:buys, [{price, size, timestamp}]}], sync_state}
-            false -> {[{:sells, [{price, size, timestamp}]}], sync_state}
+            true -> {[{:buys, [{price, size, timestamp}]}], current_state}
+            false -> {[{:sells, [{price, size, timestamp}]}], current_state}
           end
       end
 
-    {instructions, sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, next_state}
   end
 end
 
 defmodule Exchanges.Bybit.Perp.USDT do
   @moduledoc """
-  Contains translation scheme for the Bybit perpetual USDT futures
+  Translation scheme for the Bybit perpetual USDT futures
   websocket API.
+
+  Change log and websocket docs:
+  - https://bybit-exchange.github.io/docs/linear/#t-changelog
+  - https://bybit-exchange.github.io/docs/linear/#t-websocket
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"something" => nil}
   end
 
   @impl TranslationScheme
-  def make_ping_messages(sync_state) do
+  def ping_msg(current_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str} =
       Jason.encode(%{
         "op" => "subscribe",
@@ -143,11 +151,17 @@ defmodule Exchanges.Bybit.Perp.USDT do
         ]
       })
 
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
     instructions =
       case json do
         %{"res_message" => "pong"} ->
@@ -263,36 +277,35 @@ defmodule Exchanges.Bybit.Perp.USDT do
           [{:buys, buys}, {:sells, sells}]
       end
 
-    {instructions, sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, current_state}
   end
 end
 
 defmodule Exchanges.Bybit.Perp.Inverse do
   @moduledoc """
-  Contains translation scheme for the Bybit inverse perpetual futures
+  Translation scheme for the Bybit inverse perpetual futures
   websocket API.
+
+  Change log and websocket docs:
+  - https://bybit-exchange.github.io/docs/inverse_futures/#t-changelog
+  - https://bybit-exchange.github.io/docs/inverse_futures/#t-websocket
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"something" => nil}
   end
 
   @impl TranslationScheme
-  def make_ping_messages(sync_state) do
+  def ping_msg(current_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str} =
       Jason.encode(%{
         "op" => "subscribe",
@@ -302,11 +315,17 @@ defmodule Exchanges.Bybit.Perp.Inverse do
         ]
       })
 
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
     instructions =
       case json do
         %{"res_message" => "pong"} ->
@@ -420,11 +439,6 @@ defmodule Exchanges.Bybit.Perp.Inverse do
           [{:buys, buys}, {:sells, sells}]
       end
 
-    {instructions, sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, current_state}
   end
 end

@@ -1,23 +1,26 @@
 defmodule Exchanges.FTX do
   @moduledoc """
-  Contains translation scheme for the FTX websocket API.
+  Translation scheme for the FTX websocket API.
+
+  Websocket docs:
+  - https://docs.ftx.com/#websocket-api
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"something" => nil}
   end
 
   @impl TranslationScheme
-  def make_ping_messages(sync_state) do
+  def ping_msg(current_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str_book} =
       Jason.encode(%{
         "op" => "subscribe",
@@ -32,11 +35,17 @@ defmodule Exchanges.FTX do
         "channel" => "trades"
       })
 
-    [json_str_book, json_str_trade]
+    {:ok, [json_str_book, json_str_trade]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
     instructions =
       case json do
         %{"type" => "subscribed"} ->
@@ -99,11 +108,6 @@ defmodule Exchanges.FTX do
           end
       end
 
-    {instructions, sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, current_state}
   end
 end

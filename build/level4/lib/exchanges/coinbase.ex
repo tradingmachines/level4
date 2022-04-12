@@ -1,23 +1,26 @@
 defmodule Exchanges.Coinbase do
   @moduledoc """
-  Contains translation scheme for the Coinbase Pro websocket API.
+  Translation scheme for the Coinbase Pro websocket API.
+
+  Websocket docs:
+  - https://docs.cloud.coinbase.com/exchange/docs/websocket-overview
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"previous_sequence_number" => 0}
   end
 
   @impl TranslationScheme
-  def make_ping_message(sync_state) do
+  def ping_msg(current_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str} =
       Jason.encode(%{
         "type" => "subscribe",
@@ -25,15 +28,19 @@ defmodule Exchanges.Coinbase do
         "channels" => ["heartbeat", "level2", "matches"]
       })
 
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
-    # all coinbase messages have a "type" field.
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
     instruction =
       case json["type"] do
-        # ...
         "snapshot" ->
           bids =
             for [price_str, size_str] <- json["bids"] do
@@ -51,7 +58,6 @@ defmodule Exchanges.Coinbase do
 
           {:snapshot, bids, asks}
 
-        # ...
         "l2update" ->
           deltas =
             for [side, price_str, size_str] <- json["changes"] do
@@ -66,7 +72,6 @@ defmodule Exchanges.Coinbase do
 
           {:deltas, deltas}
 
-        # ...
         "match" ->
           {price, _} = Float.parse(json["price"])
           {size, _} = Float.parse(json["size"])
@@ -77,32 +82,22 @@ defmodule Exchanges.Coinbase do
             "sell" -> {:sells, [{price, size, timestamp}]}
           end
 
-        # ...
         "subscriptions" ->
           :noop
 
-        # ...
         "heartbeat" ->
           :noop
 
-        # ...
         "error" ->
           :noop
 
-        # ...
         "last_match" ->
           :noop
 
-        # ...
         _ ->
           :unknown
       end
 
-    {[instruction], sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, [instruction], current_state}
   end
 end

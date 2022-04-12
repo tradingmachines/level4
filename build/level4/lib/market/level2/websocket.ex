@@ -29,7 +29,7 @@ defmodule Market.Level2.WebSocket do
         # decode the message and always assume it is JSON.
         case Jason.decode(text) do
           {:ok, json} ->
-            translated = market.translation_scheme.translate(json, sync_state)
+            {:ok, translated} = market.translation_scheme.translate(json, sync_state)
             {instructions, new_sync_state} = translated
 
             case execute(instructions, market) do
@@ -175,7 +175,7 @@ defmodule Market.Level2.WebSocket do
     market = init_arg[:market]
 
     sync_state =
-      market.translation_scheme.init_sync_state(
+      market.translation_scheme.initial_state(
         market.base_symbol,
         market.quote_symbol
       )
@@ -249,7 +249,7 @@ defmodule Market.Level2.WebSocket do
       :stream_ref => stream_ref
     } = state
 
-    json_strs = market.translation_scheme.make_ping_messages(sync_state)
+    {:ok, json_strs} = market.translation_scheme.ping_msg(sync_state)
 
     for json_str <- json_strs do
       :ok = :gun.ws_send(conn_pid, stream_ref, {:text, json_str})
@@ -286,8 +286,8 @@ defmodule Market.Level2.WebSocket do
     } = state
 
     # make the JSON subscription messages for this exchange
-    json_strs =
-      market.translation_scheme.make_subscribe_messages(
+    {:ok, json_strs} =
+      market.translation_scheme.subscribe_msg(
         market.base_symbol,
         market.quote_symbol
       )

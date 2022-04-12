@@ -1,34 +1,44 @@
 defmodule Exchanges.Poloniex do
   @moduledoc """
-  Contains translation scheme for the Poloniex websocket API.
+  Translation scheme for the Poloniex websocket API.
+
+  Change log and websocket docs:
+  - https://docs.poloniex.com/#changelog
+  - https://docs.poloniex.com/#websocket-api
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"previous_sequence_number" => 0}
   end
 
   @impl TranslationScheme
-  def make_ping_message(sync_state) do
+  def ping_msg(current_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str} =
       Jason.encode(%{
         "command" => "subscribe",
         "channel" => "#{quote_symbol}_#{base_symbol}"
       })
 
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
     instructions =
       case json do
         [1010] ->
@@ -95,11 +105,6 @@ defmodule Exchanges.Poloniex do
           end
       end
 
-    {instructions, sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, current_state}
   end
 end

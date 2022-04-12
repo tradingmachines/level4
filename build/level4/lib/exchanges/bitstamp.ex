@@ -1,23 +1,26 @@
 defmodule Exchanges.Bitstamp do
   @moduledoc """
-  Contains translation scheme for the Bitstamp websocket API.
+  Translation scheme for the Bitstamp websocket API.
+
+  Websocket docs:
+  - https://www.bitstamp.net/websocket/v2/
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"did_snapshot" => false}
   end
 
   @impl TranslationScheme
-  def make_ping_messages(sync_state) do
+  def ping_msg(current_state) do
     {:ok, json_str} = Jason.encode(%{"event" => "bts:heartbeat"})
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     base_symbol_lower = String.downcase(base_symbol)
     quote_symbol_lower = String.downcase(quote_symbol)
 
@@ -37,21 +40,27 @@ defmodule Exchanges.Bitstamp do
         }
       })
 
-    [json_str_book, json_str_trade]
+    {:ok, [json_str_book, json_str_trade]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
-    {instructions, new_sync_state} =
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
+    {instructions, next_state} =
       case json do
         %{"event" => "bts:subscription_succeeded"} ->
-          {[:noop], sync_state}
+          {[:noop], current_state}
 
         %{"event" => "bts:heartbeat"} ->
-          {[:noop], sync_state}
+          {[:noop], current_state}
 
         %{"event" => "bts:request_reconnect"} ->
-          {[:reconnect], sync_state}
+          {[:reconnect], current_state}
 
         %{
           "event" => "data",
@@ -60,7 +69,7 @@ defmodule Exchanges.Bitstamp do
             "asks" => ask_strs
           }
         } ->
-          if sync_state["did_snapshot"] do
+          if current_state["did_snapshot"] do
             bids =
               for [price_str, size_str] <- bid_strs do
                 {price, _} = Float.parse(price_str)
@@ -75,7 +84,7 @@ defmodule Exchanges.Bitstamp do
                 {:ask, price, size}
               end
 
-            {[{:deltas, bids ++ asks}], sync_state}
+            {[{:deltas, bids ++ asks}], current_state}
           else
             bids =
               for [price_str, size_str] <- bid_strs do
@@ -91,7 +100,7 @@ defmodule Exchanges.Bitstamp do
                 {price, size}
               end
 
-            {[{:snapshot, bids, asks}], %{sync_state | "did_snapshot" => true}}
+            {[{:snapshot, bids, asks}], %{current_state | "did_snapshot" => true}}
           end
 
         %{
@@ -112,16 +121,11 @@ defmodule Exchanges.Bitstamp do
           {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
 
           case side do
-            0 -> {[{:buys, [{price, size, timestamp}]}], sync_state}
-            1 -> {[{:sells, [{price, size, timestamp}]}], sync_state}
+            0 -> {[{:buys, [{price, size, timestamp}]}], current_state}
+            1 -> {[{:sells, [{price, size, timestamp}]}], current_state}
           end
       end
 
-    {instructions, new_sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, next_state}
   end
 end

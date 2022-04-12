@@ -1,23 +1,26 @@
 defmodule Exchanges.Bitflyer.Spot do
   @moduledoc """
-  Contains translation scheme for the Bitflyer websocket API.
+  Translation scheme for the Bitflyer websocket API.
+
+  Websocket docs:
+  - https://lightning.bitflyer.com/docs#order-book
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"base_symbol" => base_symbol, "quote_symbol" => quote_symbol}
   end
 
   @impl TranslationScheme
-  def make_ping_messages(sync_state) do
+  def ping_msg(current_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str_snapshot} =
       Jason.encode(%{
         "id" => "json_str_snapshot",
@@ -48,13 +51,19 @@ defmodule Exchanges.Bitflyer.Spot do
         }
       })
 
-    [json_str_snapshot, json_str_updates, json_str_trade]
+    {:ok, [json_str_snapshot, json_str_updates, json_str_trade]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
-    base_symbol = sync_state["base_symbol"]
-    quote_symbol = sync_state["quote_symbol"]
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
+    base_symbol = current_state["base_symbol"]
+    quote_symbol = current_state["quote_symbol"]
 
     instructions =
       case json do
@@ -159,11 +168,6 @@ defmodule Exchanges.Bitflyer.Spot do
           end
       end
 
-    {instructions, sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, current_state}
   end
 end

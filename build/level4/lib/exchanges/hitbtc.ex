@@ -1,23 +1,27 @@
 defmodule Exchanges.HitBTC do
   @moduledoc """
-  Contains translation scheme for the HitBTC websocket API.
+  Translation scheme for the HitBTC websocket API.
+
+  Change log and websocket docs:
+  - https://api.hitbtc.com/#change-log
+  - https://api.hitbtc.com/#socket-api-reference
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"symbol" => "#{base_symbol}#{quote_symbol}"}
   end
 
   @impl TranslationScheme
-  def make_ping_messages(sync_state) do
+  def ping_msg(current_state) do
     {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str_book} =
       Jason.encode(%{
         "method" => "subscribe",
@@ -37,12 +41,18 @@ defmodule Exchanges.HitBTC do
         }
       })
 
-    [json_str_book, json_str_trade]
+    {:ok, [json_str_book, json_str_trade]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
-    symbol = sync_state["symbol"]
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
+    symbol = current_state["symbol"]
 
     instructions =
       case json do
@@ -114,11 +124,6 @@ defmodule Exchanges.HitBTC do
           end
       end
 
-    {instructions, sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, current_state}
   end
 end

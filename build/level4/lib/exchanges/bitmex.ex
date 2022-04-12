@@ -1,22 +1,26 @@
 defmodule Exchanges.Bitmex do
   @moduledoc """
-  Contains translation scheme for the Bitmex websocket API.
+  Translation scheme for the Bitmex websocket API.
+
+  Change log and websocket docs:
+  - https://www.bitmex.com/app/apiChangelog
+  - https://www.bitmex.com/app/wsAPI
   """
 
   @behaviour TranslationScheme
 
   @impl TranslationScheme
-  def init_sync_state(base_symbol, quote_symbol) do
+  def initial_state(base_symbol, quote_symbol) do
     %{"id_to_price" => %{}}
   end
 
   @impl TranslationScheme
-  def make_ping_messages(sync_state) do
-    ["ping"]
+  def ping_msg(current_state) do
+    {:ok, ["ping"]}
   end
 
   @impl TranslationScheme
-  def make_subscribe_messages(base_symbol, quote_symbol) do
+  def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str} =
       Jason.encode(%{
         "op" => "subscribe",
@@ -26,21 +30,27 @@ defmodule Exchanges.Bitmex do
         ]
       })
 
-    [json_str]
+    {:ok, [json_str]}
   end
 
   @impl TranslationScheme
-  def translate(json, sync_state) do
-    {instructions, new_sync_state} =
+  def synchronised?(current_state) do
+    # TODO
+    true
+  end
+
+  @impl TranslationScheme
+  def translate(json, current_state) do
+    {instructions, next_state} =
       case json do
         %{"docs" => _, "info" => _, "version" => _} ->
-          {[:noop], sync_state}
+          {[:noop], current_state}
 
         %{"request" => %{"op" => "subscribe"}, "success" => true} ->
-          {[:noop], sync_state}
+          {[:noop], current_state}
 
         %{"table" => "trade", "action" => "partial"} ->
-          {[:noop], sync_state}
+          {[:noop], current_state}
 
         %{
           "table" => "orderBookL2_25",
@@ -76,7 +86,7 @@ defmodule Exchanges.Bitmex do
               end
             )
 
-          {[{:snapshot, bids, asks}], %{sync_state | "id_to_price" => id_to_price}}
+          {[{:snapshot, bids, asks}], %{current_state | "id_to_price" => id_to_price}}
 
         %{
           "table" => "orderBookL2_25",
@@ -86,7 +96,7 @@ defmodule Exchanges.Bitmex do
           {deltas, new_id_to_price} =
             data
             |> Enum.reduce(
-              {[], sync_state["id_to_price"]},
+              {[], current_state["id_to_price"]},
               fn level, {deltas, id_to_price} ->
                 case action do
                   "insert" ->
@@ -104,7 +114,7 @@ defmodule Exchanges.Bitmex do
 
                   "update" ->
                     id = level["id"]
-                    price = sync_state["id_to_price"][id]
+                    price = current_state["id_to_price"][id]
                     size = level["size"] / 1
 
                     delta =
@@ -117,7 +127,7 @@ defmodule Exchanges.Bitmex do
 
                   "delete" ->
                     id = level["id"]
-                    price = sync_state["id_to_price"][id]
+                    price = current_state["id_to_price"][id]
 
                     delta =
                       case level["side"] do
@@ -130,7 +140,7 @@ defmodule Exchanges.Bitmex do
               end
             )
 
-          {[{:deltas, deltas}], %{sync_state | "id_to_price" => new_id_to_price}}
+          {[{:deltas, deltas}], %{current_state | "id_to_price" => new_id_to_price}}
 
         %{
           "table" => "trade",
@@ -181,14 +191,9 @@ defmodule Exchanges.Bitmex do
               {price, size, timestamp_micro}
             end)
 
-          {[{:buys, buys}, {:sells, sells}], sync_state}
+          {[{:buys, buys}, {:sells, sells}], current_state}
       end
 
-    {instructions, new_sync_state}
-  end
-
-  @impl TranslationScheme
-  def check_sync_state(sync_state) do
-    {:synced, sync_state}
+    {:ok, instructions, next_state}
   end
 end
