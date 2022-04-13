@@ -52,3 +52,9 @@ defmodule Market do
     "#{exchange_name}.#{market_type}:#{base_symbol}-#{quote_symbol}"
   end
 end
+
+defimpl String.Chars, for: Market do
+  def to_string(market) do
+    Market.id(market)
+  end
+end

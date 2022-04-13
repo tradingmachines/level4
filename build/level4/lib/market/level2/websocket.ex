@@ -16,28 +16,21 @@ defmodule Market.Level2.WebSocket do
   ...
   """
   defp decode(text, state) do
-    %{
-      :market => market,
-      :sync_state => sync_state
-    } = state
+    schm = market.translation_scheme
+    %{:market => market, :current_state => current_state} = state
 
     cond do
       text == "pong" ->
         :nothing
 
       true ->
-        # decode the message and always assume it is JSON.
         case Jason.decode(text) do
           {:ok, json} ->
-            {:ok, translated} = market.translation_scheme.translate(json, sync_state)
-            {instructions, new_sync_state} = translated
+            {:ok, instructions, nest_state} = schm.translate(json, current_state)
 
             case execute(instructions, market) do
-              :ok ->
-                {:new_state, %{state | :sync_state => new_sync_state}}
-
-              {:error, error_msg} ->
-                {:error, error_msg}
+              :ok -> {:new_state, %{state | :sync_state => new_sync_state}}
+              {:error, error_msg} -> {:error, error_msg}
             end
 
           {:error, error_msg} ->

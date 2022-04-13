@@ -14,8 +14,7 @@ defmodule Query.Markets do
         exchange_id,
         base_symbol_id,
         quote_symbol_id,
-        market_type,
-        level4_feed_enabled
+        market_type
       ) do
     {:ok, result} =
       Storage.Repo.insert(%Storage.Model.Market{
@@ -23,7 +22,7 @@ defmodule Query.Markets do
         base_symbol_id: base_symbol_id,
         quote_symbol_id: quote_symbol_id,
         market_type: market_type,
-        level4_feed_enabled: level4_feed_enabled
+        level4_feed_enabled: false
       })
 
     {:ok, result}
@@ -47,6 +46,22 @@ defmodule Query.Markets do
       Storage.Model.Market
       |> Storage.Repo.all()
       |> Storage.Repo.preload(@preload)
+
+    {:ok, result}
+  end
+
+  @doc """
+  ...
+  """
+  def get(base_symbol, quote_symbol, exchange, market_type) do
+    result =
+      Storage.Model.Market
+      |> Storage.Repo.get_by(
+        base_symbol_id: base_symbol.id,
+        quote_symbol_id: quote_symbol.id,
+        exchange_id: exchange.id,
+        market_type: market_type
+      )
 
     {:ok, result}
   end

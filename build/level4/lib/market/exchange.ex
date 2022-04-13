@@ -3,10 +3,8 @@ require Logger
 defmodule Market.Exchange do
   @moduledoc """
   A Market.Exchange receives and handles messages from a
-  Market.Level2.Mediator process.
-
-  The exchange process is responsible for writing data to some persistent
-  storage medium.
+  Market.Level2.Mediator process. The exchange process is
+  responsible for writing data to the data sump.
   """
 
   use GenServer
@@ -29,90 +27,32 @@ defmodule Market.Exchange do
   end
 
   @doc """
-  Init function for the GenServer. Initialises a new storage medium and returns
-  it to the GenServer so it is kept in the server's state for future use.
+  Init function for the GenServer. Return the :market from init_arg
+  as well as the PID of a TCP socket client -> to use as GenServer
+  initial state.
   """
   @impl true
   def init(init_arg) do
+    {:ok, data_sump} = Application.fetch_env(:level4, :data_sump)
+
     Logger.info(
       "#{Market.id(init_arg[:market])} " <>
-        "starting exchange"
+        "starting exchange genserver"
     )
 
-    # make and/or get the exchange record
-    exchange =
-      case Storage.Model.Exchange
-           |> Storage.Repo.get_by(name: init_arg[:market].exchange_name) do
-        nil ->
-          {:ok, struct} =
-            Storage.Repo.insert(%Storage.Model.Exchange{
-              name: init_arg[:market].exchange_name
-            })
+    {:ok, socket} =
+      :gen_tcp.connect(
+        data_sump[:host],
+        data_sump[:port],
+        [:binary, active: false]
+      )
 
-          struct
+    Logger.info(
+      "#{Market.id(init_arg[:market])} " <>
+        "connected to data sump"
+    )
 
-        struct ->
-          struct
-      end
-
-    # make and/or get the base symbol record
-    base_symbol =
-      case Storage.Model.Symbol
-           |> Storage.Repo.get_by(symbol: init_arg[:market].base_symbol) do
-        nil ->
-          {:ok, struct} =
-            Storage.Repo.insert(%Storage.Model.Symbol{
-              symbol: init_arg[:market].base_symbol
-            })
-
-          struct
-
-        struct ->
-          struct
-      end
-
-    # make and/or get the quote symbol record
-    quote_symbol =
-      case Storage.Model.Symbol
-           |> Storage.Repo.get_by(symbol: init_arg[:market].quote_symbol) do
-        nil ->
-          {:ok, struct} =
-            Storage.Repo.insert(%Storage.Model.Symbol{
-              symbol: init_arg[:market].quote_symbol
-            })
-
-          struct
-
-        struct ->
-          struct
-      end
-
-    # make and/or get the market record
-    market =
-      case Storage.Model.Market
-           |> Storage.Repo.get_by(
-             base_symbol_id: base_symbol.id,
-             quote_symbol_id: quote_symbol.id,
-             exchange_id: exchange.id,
-             market_type: init_arg[:market].market_type
-           ) do
-        nil ->
-          {:ok, struct} =
-            Storage.Repo.insert(%Storage.Model.Market{
-              base_symbol_id: base_symbol.id,
-              quote_symbol_id: quote_symbol.id,
-              exchange_id: exchange.id,
-              market_type: init_arg[:market].market_type,
-              level4_feed_enabled: true
-            })
-
-          struct
-
-        struct ->
-          struct
-      end
-
-    {:ok, market}
+    {:ok, {init_arg[:market], socket}}
   end
 
   @doc """
@@ -120,80 +60,94 @@ defmodule Market.Exchange do
   """
   # :best_bid_change -> the best bid price changed -> log it
   @impl true
-  def handle_cast({:best_bid_change, {new_price, new_size, timestamp}}, market) do
-    Storage.Repo.insert(%Storage.Model.BestBidPrice{
-      market_id: market.id,
-      price: new_price,
-      initial_liquidity: new_size,
-      timestamp: timestamp
-    })
-
-    {:noreply, market}
+  def handle_cast(
+        {:best_bid_change, {new_price, initial_liquidity, timestamp}},
+        {market, socket}
+      ) do
+    # ...
+    payload = "bids,#{market.id},#{new_price},#{initial_liquidity},#{timestamp}\n"
+    :ok = :gen_tcp.send(socket, payload)
+    {:noreply, {market, socket}}
   end
 
   # :best_ask_change -> the best ask price changed -> log it
-  def handle_cast({:best_ask_change, {new_price, new_size, timestamp}}, market) do
-    Storage.Repo.insert(%Storage.Model.BestAskPrice{
-      market_id: market.id,
-      price: new_price,
-      initial_liquidity: new_size,
-      timestamp: timestamp
-    })
-
-    {:noreply, market}
+  def handle_cast(
+        {:best_ask_change, {new_price, initial_liquidity, timestamp}},
+        {market, socket}
+      ) do
+    # ...
+    payload = "asks,#{market.id},#{new_price},#{initial_liquidity},#{timestamp}\n"
+    :ok = :gen_tcp.send(socket, payload)
+    {:noreply, {market, socket}}
   end
 
-  # ...
-  def handle_cast({:new_buy, {price, size, timestamp}}, market) do
-    Storage.Repo.insert(%Storage.Model.Buy{
-      market_id: market.id,
-      price: price,
-      size: size,
-      timestamp: timestamp
-    })
-
-    {:noreply, market}
+  # :new_buy -> there was a new market buy -> log it
+  def handle_cast(
+        {:new_buy, {price, size, timestamp}},
+        {market, socket}
+      ) do
+    # ...
+    payload = "buy,#{market.id},#{price},#{size},#{timestamp}\n"
+    :ok = :gen_tcp.send(socket, payload)
+    {:noreply, {market, socket}}
   end
 
-  # ...
-  def handle_cast({:new_sell, {price, size, timestamp}}, market) do
-    Storage.Repo.insert(%Storage.Model.Sell{
-      market_id: market.id,
-      price: price,
-      size: size,
-      timestamp: timestamp
-    })
-
-    {:noreply, market}
+  # :new_sell -> there was a new market buy -> log it
+  def handle_cast(
+        {:new_sell, {price, size, timestamp}},
+        {market, socket}
+      ) do
+    # ...
+    payload = "sell,#{market.id},#{price},#{size},#{timestamp}\n"
+    :ok = :gen_tcp.send(socket, payload)
+    {:noreply, {market, socket}}
   end
 
   @doc """
-  Async Market.Exchange API: a helper function that sends a :best_bid_change to
-  the GenServer. Note: casts are asynchronous requests.
+  Async Market.Exchange API: a helper function that sends a
+  :best_bid_change to the GenServer. Note: casts are asynchronous
+  requests.
   """
   def best_bid_change(exchange, {new_price, new_size, timestamp}) do
-    GenServer.cast(exchange, {:best_bid_change, {new_price, new_size, timestamp}})
+    GenServer.cast(
+      exchange,
+      {:best_bid_change, {new_price, new_size, timestamp}}
+    )
   end
 
   @doc """
-  Async Market.Exchange API: a helper function that sends a :best_ask_change to
-  the GenServer. Note: casts are asynchronous requests.
+  Async Market.Exchange API: a helper function that sends a
+  :best_ask_change to the GenServer. Note: casts are asynchronous
+  requests.
   """
   def best_ask_change(exchange, {new_price, new_size, timestamp}) do
-    GenServer.cast(exchange, {:best_ask_change, {new_price, new_size, timestamp}})
+    GenServer.cast(
+      exchange,
+      {:best_ask_change, {new_price, new_size, timestamp}}
+    )
   end
 
   @doc """
-  ...
+  Async Market.Exchange API: a helper function that sends a
+  :new_buy to the GenServer. Note: casts are asynchronous
+  requests.
   """
   def new_buy(exchange, {price, size, timestamp}) do
-    GenServer.cast(exchange, {:new_buy, {price, size, timestamp}})
+    GenServer.cast(
+      exchange,
+      {:new_buy, {price, size, timestamp}}
+    )
   end
 
   @doc """
-  ...
+  Async Market.Exchange API: a helper function that sends a
+  :new_sell to the GenServer. Note: casts are asynchronous
+  requests.
   """
   def new_sell(exchange, {price, size, timestamp}) do
-    GenServer.cast(exchange, {:new_sell, {price, size, timestamp}})
+    GenServer.cast(
+      exchange,
+      {:new_sell, {price, size, timestamp}}
+    )
   end
 end

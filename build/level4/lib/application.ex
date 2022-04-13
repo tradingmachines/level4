@@ -50,7 +50,7 @@ defmodule Level4 do
         {Plug.Cowboy,
          scheme: :http,
          plug: Level4.Server,
-         options: [ip: http_server[:host], port: http_server[:port]]},
+         options: [ip: http_server[:iface], port: http_server[:port]]},
 
         # ecto repo
         Storage.Repo,
@@ -161,11 +161,11 @@ defmodule Markets do
 
     cond do
       # according to the repo the market is already running
-      result.level4_feed_enabled == true ->
-        {:error, "market already in started state"}
+      #      result.level4_feed_enabled == true ->
+      #        {:error, "market already in started state"}
 
       # market is not running
-      result.level4_feed_enabled == false ->
+      result.level4_feed_enabled == true ->
         # update market's state in the repo
         {:ok, new_result} =
           Query.Markets.update(result,

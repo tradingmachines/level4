@@ -6,7 +6,7 @@ defmodule Query.Symbols do
   @preload []
 
   @doc """
-   ...
+  ...
   """
   def new(symbol) do
     {:ok, result} =
@@ -18,7 +18,7 @@ defmodule Query.Symbols do
   end
 
   @doc """
-   ...
+  ...
   """
   def all do
     result = Storage.Model.Symbol |> Storage.Repo.all()
@@ -26,7 +26,7 @@ defmodule Query.Symbols do
   end
 
   @doc """
-   ...
+  ...
   """
   def by_id(id) do
     result = Storage.Model.Symbol |> Storage.Repo.get(id)
@@ -34,7 +34,7 @@ defmodule Query.Symbols do
   end
 
   @doc """
-   ...
+  ...
   """
   def by_name(name) do
     result = Storage.Model.Symbol |> Storage.Repo.get_by(symbol: name)

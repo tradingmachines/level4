@@ -15,10 +15,17 @@ config :level4, Storage.Repo,
 # http server host and port
 config :level4,
   http_server: %{
-    host: {0, 0, 0, 0},
+    iface: {0, 0, 0, 0},
     port: 8080
     # add stream handlers?
     # ...
+  }
+
+# data sump host and port
+config :level4,
+  data_sump: %{
+    host: '127.0.0.1',
+    port: 5000
   }
 
 # exchange translation scheme map

@@ -109,15 +109,13 @@ defmodule Level4.Server.ControlPanel.Markets do
           "exchange_id" => exchange_id,
           "base_symbol_id" => base_symbol_id,
           "quote_symbol_id" => quote_symbol_id,
-          "market_type" => market_type,
-          "level4_feed_enabled" => level4_feed_enabled
+          "market_type" => market_type
         } ->
           Query.Markets.new(
             exchange_id,
             base_symbol_id,
             quote_symbol_id,
-            market_type,
-            level4_feed_enabled
+            market_type
           )
 
         _ ->
@@ -204,5 +202,22 @@ defmodule Level4.Server.ControlPanel.Symbols do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, json_str)
+  end
+end
+
+defmodule Level4.Server.ControlPanel do
+  use Plug.Router
+
+  plug(:match)
+  plug(:dispatch)
+
+  forward("/symbols", to: Level4.Server.ControlPanel.Symbols)
+  forward("/exchanges", to: Level4.Server.ControlPanel.Exchanges)
+  forward("/markets", to: Level4.Server.ControlPanel.Markets)
+
+  match _ do
+    conn
+    |> put_resp_content_type("text/plain")
+    |> send_resp(404, "nothing here")
   end
 end
