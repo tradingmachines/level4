@@ -9,7 +9,7 @@
 
 
 Aggregated & normalised level2 market data feeds for 12 different
-crypto currency exchanges.
+cryptocurrency exchanges.
 
 
 ** building the container image

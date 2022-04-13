@@ -8,23 +8,39 @@
 #+EXPORT_FILE_NAME: level4-market-supervision-subtree
 
 
-** level2
-...
-
-*** mediator
-...
-
-*** orderbook
-...
-
-*** supervisor
-...
-
-*** websocket
-...
+** supervisor
+Supervises a static tree consisting of a Market.Exchange
+process and a Market.Level2.Supervisor.
 
 ** exchange
-...
+Receives and handles messages from a Market.Level2.Mediator
+process. The exchange process is responsible for writing data
+to the data sump.
 
-** supervisor
-...
+** level2
+A level2 data feed sends an initial snapshot of the market's
+orderbook, followed by bid and ask deltas. The level2 feed
+also sends market buys and market sells. Level4 connects to
+multiple level2 feeds across several exchanges and monitors
+buys/sells and best bid/ask price changes.
+
+*** supervisor
+A level2 supervisor monitors the mediator, orderbook, and
+websocket child processes. The rest_for_one strategy is used.
+
+*** mediator
+Receives snapshot and delta commands from a websocket
+connection. The Mediator is responsible for updating the
+local orderbook structure.
+
+*** orderbook
+Bid and ask sides are represented in memory using general
+balanced trees. This allows fast inserting, updating, and
+deleting while maintaining sorted order of both sides.
+- Bids -> highest to lowest
+- Asks -> Lowest to highest
+
+*** websocket
+Contains all logic for reading from a level2 data feed
+websocket. Uses a translation scheme to translate text messages
+into internal instructions.
