@@ -20,7 +20,7 @@ defmodule Market.Level2.Mediator do
         {:via, Registry,
          {
            Market.Level2.Mediator.Registry,
-           Market.id(init_arg[:market])
+           Market.tag(init_arg[:market])
          }}
     )
   end
@@ -32,7 +32,7 @@ defmodule Market.Level2.Mediator do
   """
   @impl true
   def init(init_arg) do
-    Logger.info("#{Market.id(init_arg[:market])} " <> "starting mediator")
+    Logger.info("#{init_arg[:market]}: starting mediator")
 
     {:ok,
      %{
@@ -51,7 +51,7 @@ defmodule Market.Level2.Mediator do
       {:via, Registry,
        {
          Market.Level2.OrderBook.Registry,
-         Market.id(state[:market])
+         Market.tag(state[:market])
        }},
       {bids, asks}
     )
@@ -59,43 +59,48 @@ defmodule Market.Level2.Mediator do
     {:reply, :ok, state}
   end
 
-  # ...
+  # handle book bid/ask delta
   def handle_call({:delta, {side, price, liquidity}}, _, state) do
-    # ...
+    # record the current timestamp
     timestamp = DateTime.utc_now()
 
-    # ...
+    # get orderbook pid
     orderbook =
       {:via, Registry,
        {
          Market.Level2.OrderBook.Registry,
-         Market.id(state[:market])
+         Market.tag(state[:market])
        }}
 
-    # ...
+    # get exchange pid
     exchange =
       {:via, Registry,
        {
          Market.Exchange.Registry,
-         Market.id(state[:market])
+         Market.tag(state[:market])
        }}
 
     # apply the delta
-    Market.Level2.OrderBook.apply_delta(orderbook, side, {price, liquidity})
+    Market.Level2.OrderBook.apply_delta(
+      orderbook,
+      side,
+      {price, liquidity}
+    )
 
-    # check if best price changed
     case side do
+      # check if best bid price changed
       :bid ->
         case Market.Level2.OrderBook.best_bid(orderbook) do
           {new_best_bid_price, new_best_bid_size} ->
             if state[:best_bid][:price] != new_best_bid_price do
-              # ...
+              # tell exchange -> the best bid price changed
               Market.Exchange.best_bid_change(
                 exchange,
                 {new_best_bid_price, new_best_bid_size, timestamp}
               )
 
-              # ...
+              # update the state
+              # store new best bid price and initial liquidity
               new_state = %{
                 state
                 | :best_bid => %{
@@ -113,17 +118,19 @@ defmodule Market.Level2.Mediator do
             {:reply, :ok, state}
         end
 
+      # check if best ask price changed
       :ask ->
         case Market.Level2.OrderBook.best_ask(orderbook) do
           {new_best_ask_price, new_best_ask_size} ->
             if state[:best_ask][:price] != new_best_ask_price do
-              # ...
+              # tell exchange -> the best ask price changed
               Market.Exchange.best_ask_change(
                 exchange,
                 {new_best_ask_price, new_best_ask_size, timestamp}
               )
 
-              # ...
+              # update the state
+              # store new best ask price and initial liquidity
               new_state = %{
                 state
                 | :best_ask => %{
@@ -143,18 +150,30 @@ defmodule Market.Level2.Mediator do
     end
   end
 
-  # ...
+  # handle market buys and sells
   def handle_call({side, {price, size, timestamp}}, _, state) do
+    # get exchange pid
     exchange =
       {:via, Registry,
        {
          Market.Exchange.Registry,
-         Market.id(state[:market])
+         Market.tag(state[:market])
        }}
 
     case side do
-      :buy -> Market.Exchange.new_buy(exchange, {price, size, timestamp})
-      :sell -> Market.Exchange.new_sell(exchange, {price, size, timestamp})
+      # tell exchange -> there was a market buy
+      :buy ->
+        Market.Exchange.new_buy(
+          exchange,
+          {price, size, timestamp}
+        )
+
+      # tell exchange -> there was a market sell
+      :sell ->
+        Market.Exchange.new_sell(
+          exchange,
+          {price, size, timestamp}
+        )
     end
 
     {:reply, :ok, state}
@@ -177,7 +196,8 @@ defmodule Market.Level2.Mediator do
   end
 
   @doc """
-  ...
+  One or more market buys. Taking from the ask side.
+  Synchronous API call.
   """
   def buys(mediator, buys) do
     for buy <- buys do
@@ -186,7 +206,8 @@ defmodule Market.Level2.Mediator do
   end
 
   @doc """
-  ...
+  One or more market sells. Taking from the bid side.
+  Synchronous API call.
   """
   def sells(mediator, sells) do
     for sell <- sells do

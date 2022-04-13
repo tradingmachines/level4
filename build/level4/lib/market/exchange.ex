@@ -21,7 +21,7 @@ defmodule Market.Exchange do
         {:via, Registry,
          {
            Market.Exchange.Registry,
-           Market.id(init_arg[:market])
+           Market.tag(init_arg[:market])
          }}
     )
   end
@@ -35,11 +35,9 @@ defmodule Market.Exchange do
   def init(init_arg) do
     {:ok, data_sump} = Application.fetch_env(:level4, :data_sump)
 
-    Logger.info(
-      "#{Market.id(init_arg[:market])} " <>
-        "starting exchange genserver"
-    )
+    Logger.info("#{init_arg[:market]}: starting exchange genserver")
 
+    # tcp socket: connect to flume data sump
     {:ok, socket} =
       :gen_tcp.connect(
         data_sump[:host],
@@ -47,58 +45,83 @@ defmodule Market.Exchange do
         [:binary, active: false]
       )
 
-    Logger.info(
-      "#{Market.id(init_arg[:market])} " <>
-        "connected to data sump"
-    )
+    Logger.info("#{init_arg[:market]}: connected to data sump")
 
     {:ok, {init_arg[:market], socket}}
+  end
+
+  @doc """
+  close tcp socket on terminate.
+  """
+  @impl true
+  def terminate(_, {_, socket}) do
+    :ok = :gen_tcp.close(socket)
   end
 
   @doc """
   GenServer cast functions for async API calls.
   """
   # :best_bid_change -> the best bid price changed -> log it
+  # {price, initial liquidity, utc timestamp}
   @impl true
   def handle_cast(
-        {:best_bid_change, {new_price, initial_liquidity, timestamp}},
+        {:best_bid_change, {price, liquidity, timestamp}},
         {market, socket}
       ) do
-    # ...
-    payload = "bids,#{market.id},#{new_price},#{initial_liquidity},#{timestamp}\n"
+    # make payload string
+    market_id = market.market_id
+    unix_ns = DateTime.to_unix(timestamp, :nanosecond)
+    payload = "bids,#{market_id},#{price},#{liquidity},#{unix_ns}\n"
+
+    # send string to data sump
     :ok = :gen_tcp.send(socket, payload)
     {:noreply, {market, socket}}
   end
 
   # :best_ask_change -> the best ask price changed -> log it
+  # {price, initial liquidity, utc timestamp}
   def handle_cast(
-        {:best_ask_change, {new_price, initial_liquidity, timestamp}},
+        {:best_ask_change, {price, liquidity, timestamp}},
         {market, socket}
       ) do
-    # ...
-    payload = "asks,#{market.id},#{new_price},#{initial_liquidity},#{timestamp}\n"
+    # make payload string
+    market_id = market.market_id
+    unix_ns = DateTime.to_unix(timestamp, :nanosecond)
+    payload = "asks,#{market_id},#{price},#{liquidity},#{unix_ns}\n"
+
+    # send string to data sump
     :ok = :gen_tcp.send(socket, payload)
     {:noreply, {market, socket}}
   end
 
   # :new_buy -> there was a new market buy -> log it
+  # {price, size, utc timestamp}
   def handle_cast(
         {:new_buy, {price, size, timestamp}},
         {market, socket}
       ) do
-    # ...
-    payload = "buy,#{market.id},#{price},#{size},#{timestamp}\n"
+    # make payload string
+    market_id = market.market_id
+    unix_ns = DateTime.to_unix(timestamp, :nanosecond)
+    payload = "buy,#{market_id},#{price},#{size},#{unix_ns}\n"
+
+    # send string to data sump
     :ok = :gen_tcp.send(socket, payload)
     {:noreply, {market, socket}}
   end
 
   # :new_sell -> there was a new market buy -> log it
+  # {price, size, utc timestamp}
   def handle_cast(
         {:new_sell, {price, size, timestamp}},
         {market, socket}
       ) do
-    # ...
-    payload = "sell,#{market.id},#{price},#{size},#{timestamp}\n"
+    # make payload string
+    market_id = market.market_id
+    unix_ns = DateTime.to_unix(timestamp, :nanosecond)
+    payload = "sell,#{market_id},#{price},#{size},#{unix_ns}\n"
+
+    # send string to data sump
     :ok = :gen_tcp.send(socket, payload)
     {:noreply, {market, socket}}
   end

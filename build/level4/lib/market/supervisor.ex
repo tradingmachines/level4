@@ -24,7 +24,7 @@ defmodule Market.Supervisor do
         {:via, Registry,
          {
            Market.Supervisor.Registry,
-           Market.id(init_arg[:market])
+           Market.tag(init_arg[:market])
          }}
     )
   end
@@ -35,10 +35,7 @@ defmodule Market.Supervisor do
   """
   @impl true
   def init(init_arg) do
-    Logger.info(
-      "#{Market.id(init_arg[:market])} " <>
-        "starting market supervisor"
-    )
+    Logger.info("#{init_arg[:market]}: starting market supervisor")
 
     Supervisor.init(
       [

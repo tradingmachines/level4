@@ -74,24 +74,25 @@ defmodule Markets do
   use DynamicSupervisor
 
   # turn market model into internal representation
-  defp to_internal_representation(result) do
+  defp to_internal_representation(market) do
     # get exchange map from config/config.exs
     {:ok, exchanges} = Application.fetch_env(:level4, :exchanges)
 
     # walk the map exchange name -> market type -> market lambda
     # get parameters from market lambda
-    market_types = exchanges[result.exchange.name]
-    market = market_types[result.market_type]
-    {translation_scheme, url, path, port, ping?} = market.()
+    market_types = exchanges[market.exchange.name]
+    make_params = market_types[market.market_type]
+    {translation_scheme, url, path, port, ping?} = make_params.()
 
     # make market struct using above parameters
     # this is the "internal representation" used throughout level4
     %Market{
       translation_scheme: translation_scheme,
-      exchange_name: result.exchange.name,
-      base_symbol: result.base_symbol.symbol,
-      quote_symbol: result.quote_symbol.symbol,
-      market_type: result.market_type,
+      exchange_name: market.exchange.name,
+      base_symbol: market.base_symbol.symbol,
+      quote_symbol: market.quote_symbol.symbol,
+      market_type: market.market_type,
+      market_id: market.id,
       ws_url: url,
       ws_path: path,
       ws_port: port,
@@ -161,11 +162,11 @@ defmodule Markets do
 
     cond do
       # according to the repo the market is already running
-      #      result.level4_feed_enabled == true ->
-      #        {:error, "market already in started state"}
+      result.level4_feed_enabled == true ->
+        {:error, "market already in started state"}
 
       # market is not running
-      result.level4_feed_enabled == true ->
+      result.level4_feed_enabled == false ->
         # update market's state in the repo
         {:ok, new_result} =
           Query.Markets.update(result,
@@ -182,7 +183,7 @@ defmodule Markets do
           }
         )
 
-        Logger.info("started market #{market}")
+        Logger.info("#{market}: started market")
         {:ok, new_result}
     end
   end
@@ -240,14 +241,14 @@ defmodule Markets do
         [{pid, _}] =
           Registry.lookup(
             Market.Supervisor.Registry,
-            Market.id(market)
+            Market.tag(market)
           )
 
         # terminate the child
         # this will trigger shutdown process down the subtree
         :ok = DynamicSupervisor.terminate_child(__MODULE__, pid)
 
-        Logger.info("stopped market #{market}")
+        Logger.info("#{market}: stopped market")
         {:ok, new_result}
     end
   end

@@ -35,10 +35,7 @@ defmodule Market.Level2.OrderBook do
   where a side is a general balanced tree mapping prices to their liquidity.
   """
   def start_link(init_arg) do
-    Logger.info(
-      "#{Market.id(init_arg[:market])} " <>
-        "starting orderbook"
-    )
+    Logger.info("#{init_arg[:market]}: starting orderbook")
 
     Agent.start_link(
       fn -> {:gb_trees.empty(), :gb_trees.empty()} end,
@@ -46,7 +43,7 @@ defmodule Market.Level2.OrderBook do
         {:via, Registry,
          {
            Market.Level2.OrderBook.Registry,
-           Market.id(init_arg[:market])
+           Market.tag(init_arg[:market])
          }}
     )
   end
