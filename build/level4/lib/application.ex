@@ -78,11 +78,14 @@ defmodule Markets do
     # get exchange map from config/config.exs
     {:ok, exchanges} = Application.fetch_env(:level4, :exchanges)
 
-    # walk the map exchange name -> market type -> market lambda
-    # get parameters from market lambda
-    market_types = exchanges[market.exchange.name]
-    make_params = market_types[market.market_type]
-    {translation_scheme, url, path, port, ping?} = make_params.()
+    # walk the map exchange name -> market type -> market parameters
+    %{
+      translation_scheme: translation_scheme,
+      url: url,
+      path: path,
+      port: port,
+      ping?: ping?
+    } = exchanges[market.exchange.name][market.market_type]
 
     # make market struct using above parameters
     # this is the "internal representation" used throughout level4
