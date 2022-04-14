@@ -33,6 +33,7 @@ stream handlers later.
 See https://ninenines.eu/docs/en/cowboy/2.5/guide/streams/.
 
 ** data sump
+There's two of them: a =bidasksum= and a =timesalesump=.
 Is the apache flume service running inside the dark big data cluster.
 It handles streaming data into hive as well as kafka. It runs a tcp
 server which level4 will connect to. Each market data feed maintains

@@ -33,29 +33,40 @@ defmodule Market.Exchange do
   """
   @impl true
   def init(init_arg) do
-    {:ok, data_sump} = Application.fetch_env(:level4, :data_sump)
+    {:ok, data_sumps} = Application.fetch_env(:level4, :data_sumps)
 
     Logger.info("#{init_arg[:market]}: starting exchange genserver")
 
-    # tcp socket: connect to flume data sump
-    {:ok, socket} =
+    # tcp socket: connect to flume bidasksump
+    {:ok, bidasksump} =
       :gen_tcp.connect(
-        data_sump[:host],
-        data_sump[:port],
+        data_sumps[:bidasksump][:host],
+        data_sumps[:bidasksump][:port],
         [:binary, active: false]
       )
 
-    Logger.info("#{init_arg[:market]}: connected to data sump")
+    Logger.info("#{init_arg[:market]}: connected to bidasksump")
 
-    {:ok, {init_arg[:market], socket}}
+    # tcp socket: connect to flume timesalesump
+    {:ok, timesalesump} =
+      :gen_tcp.connect(
+        data_sumps[:timesalesump][:host],
+        data_sumps[:timesalesump][:port],
+        [:binary, active: false]
+      )
+
+    Logger.info("#{init_arg[:market]}: connected to timesalesump")
+
+    {:ok, {init_arg[:market], bidasksump, timesalesump}}
   end
 
   @doc """
-  close tcp socket on terminate.
+  Close tcp sockets on terminate.
   """
   @impl true
-  def terminate(_, {_, socket}) do
-    :ok = :gen_tcp.close(socket)
+  def terminate(_, {_, bidasksump, timesalesump}) do
+    :ok = :gen_tcp.close(bidasksump)
+    :ok = :gen_tcp.close(timesalesump)
   end
 
   @doc """
@@ -66,64 +77,64 @@ defmodule Market.Exchange do
   @impl true
   def handle_cast(
         {:best_bid_change, {price, liquidity, timestamp}},
-        {market, socket}
+        {market, bidasksump, timesalesump}
       ) do
     # make payload string
     market_id = market.market_id
     unix_ns = DateTime.to_unix(timestamp, :nanosecond)
     payload = "bids,#{market_id},#{price},#{liquidity},#{unix_ns}\n"
 
-    # send string to data sump
-    :ok = :gen_tcp.send(socket, payload)
-    {:noreply, {market, socket}}
+    # send string to bidasksump
+    :ok = :gen_tcp.send(bidasksump, payload)
+    {:noreply, {market, bidasksump, timesalesump}}
   end
 
   # :best_ask_change -> the best ask price changed -> log it
   # {price, initial liquidity, utc timestamp}
   def handle_cast(
         {:best_ask_change, {price, liquidity, timestamp}},
-        {market, socket}
+        {market, bidasksump, timesalesump}
       ) do
     # make payload string
     market_id = market.market_id
     unix_ns = DateTime.to_unix(timestamp, :nanosecond)
     payload = "asks,#{market_id},#{price},#{liquidity},#{unix_ns}\n"
 
-    # send string to data sump
-    :ok = :gen_tcp.send(socket, payload)
-    {:noreply, {market, socket}}
+    # send string to bidasksump
+    :ok = :gen_tcp.send(bidasksump, payload)
+    {:noreply, {market, bidasksump, timesalesump}}
   end
 
   # :new_buy -> there was a new market buy -> log it
   # {price, size, utc timestamp}
   def handle_cast(
         {:new_buy, {price, size, timestamp}},
-        {market, socket}
+        {market, bidasksump, timesalesump}
       ) do
     # make payload string
     market_id = market.market_id
     unix_ns = DateTime.to_unix(timestamp, :nanosecond)
     payload = "buy,#{market_id},#{price},#{size},#{unix_ns}\n"
 
-    # send string to data sump
-    :ok = :gen_tcp.send(socket, payload)
-    {:noreply, {market, socket}}
+    # send string to timesalesump
+    :ok = :gen_tcp.send(timesalesump, payload)
+    {:noreply, {market, bidasksump, timesalesump}}
   end
 
   # :new_sell -> there was a new market buy -> log it
   # {price, size, utc timestamp}
   def handle_cast(
         {:new_sell, {price, size, timestamp}},
-        {market, socket}
+        {market, bidasksump, timesalesump}
       ) do
     # make payload string
     market_id = market.market_id
     unix_ns = DateTime.to_unix(timestamp, :nanosecond)
     payload = "sell,#{market_id},#{price},#{size},#{unix_ns}\n"
 
-    # send string to data sump
-    :ok = :gen_tcp.send(socket, payload)
-    {:noreply, {market, socket}}
+    # send string to timesalesump
+    :ok = :gen_tcp.send(timesalesump, payload)
+    {:noreply, {market, bidasksump, timesalesump}}
   end
 
   @doc """

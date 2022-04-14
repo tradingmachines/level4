@@ -8,7 +8,7 @@ config :level4, Storage.Repo,
   database: "level4",
   username: "level4",
   password: "level4",
-  hostname: "127.0.0.1",
+  hostname: "database",
   port: 5432,
   pool_size: 10
 
@@ -23,9 +23,15 @@ config :level4,
 
 # data sump host and port
 config :level4,
-  data_sump: %{
-    host: '127.0.0.1',
-    port: 5000
+  data_sumps: %{
+    bidasksump: %{
+      host: 'bidasksump',
+      port: 5000
+    },
+    timesalesump: %{
+      host: 'timesalesump',
+      port: 5000
+    }
   }
 
 # exchange translation scheme map
