@@ -1,4 +1,10 @@
 defmodule Level4.Server.ControlPanel.Exchanges do
+  @moduledoc """
+  Endpoints for exchanges resource.
+  - get /control/exchanges
+  - post /control/exchanges
+  """
+
   use Plug.Router
 
   plug(:match)
@@ -11,39 +17,56 @@ defmodule Level4.Server.ControlPanel.Exchanges do
 
   plug(:dispatch)
 
+  # [GET /control/exchanges] :: get all / subset exchanges
   get "/" do
-    %{:query_params => params} = Plug.Conn.fetch_query_params(conn)
+    # extract query params
+    %{
+      :query_params => params
+    } = Plug.Conn.fetch_query_params(conn)
 
+    # determine query using url query parameters
     result =
       case params do
+        # get by id
         %{"id" => id} ->
           Query.Exchanges.by_id(id)
 
+        # get by name
         %{"name" => name} ->
           Query.Exchanges.by_name(name)
 
+        # no filter, get all
         _ ->
           Query.Exchanges.all()
       end
 
+    # make the response message
     {status, json_str} = Level4.Server.response(result)
 
+    # respond with json string
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, json_str)
   end
 
+  # [POST /control/exchanges] :: create new exchange
   post "/" do
-    json = conn.body_params
-
+    # determine query using body parameters
     result =
-      case json do
-        %{"name" => name} -> Query.Exchanges.new(name)
-        _ -> {:input_error, "required fields => name::string"}
+      case conn.body_params do
+        # extract required values
+        %{"name" => name} ->
+          Query.Exchanges.new(name)
+
+        # missing values
+        _ ->
+          {:input_error, "required fields => name::string"}
       end
 
+    # make the respond message
     {status, json_str} = Level4.Server.response(result)
 
+    # respond with json string
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, json_str)
@@ -51,6 +74,14 @@ defmodule Level4.Server.ControlPanel.Exchanges do
 end
 
 defmodule Level4.Server.ControlPanel.Markets do
+  @moduledoc """
+  Endpoints for markets resource.
+  - get /control/markets
+  - post /control/markets
+  - post /control/markets/<id>/start
+  - post /control/markets/<id>/stop
+  """
+
   use Plug.Router
 
   plug(:match)
@@ -63,54 +94,75 @@ defmodule Level4.Server.ControlPanel.Markets do
 
   plug(:dispatch)
 
+  # [GET /control/exchanges] :: get all / subset markets
   get "/" do
-    %{:query_params => params} = Plug.Conn.fetch_query_params(conn)
+    # extract query params
+    %{
+      :query_params => params
+    } = Plug.Conn.fetch_query_params(conn)
 
+    # determine query using url query parameters
     result =
       case params do
+        # get by id
         %{"id" => id} ->
           Query.Markets.by_id(id)
 
+        # get all that have a specific base symbol id
         %{"base_symbol_id" => id} ->
           Query.Markets.for_base_symbol_id(id)
 
+        # get all that have a specific quote symbol id
         %{"quote_symbol_id" => id} ->
           Query.Markets.for_quote_symbol_id(id)
 
+        # get all that have a specific exchange id
         %{"exchange_id" => id} ->
           Query.Markets.for_exchange_id(id)
 
+        # get all that have a specific market type
         %{"market_type" => market_type} ->
           Query.Markets.by_market_type(market_type)
 
+        # get all enabled
         %{"enabled" => "true"} ->
           Query.Markets.are_enabled()
 
+        # get all disabled
         %{"enabled" => "false"} ->
           Query.Markets.are_disabled()
 
+        # no filter, get all
         _ ->
           Query.Markets.all()
       end
 
+    # make the respond message
     {status, json_str} = Level4.Server.response(result)
 
+    # respond with json string
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, json_str)
   end
 
+  # [POST /control/markets] :: create new market
   post "/" do
-    json = conn.body_params
-
+    # determine query using body parameters
     result =
-      case json do
+      case conn.body_params do
+        # extract required values
         %{
           "exchange_id" => exchange_id,
           "base_symbol_id" => base_symbol_id,
           "quote_symbol_id" => quote_symbol_id,
           "market_type" => market_type
         } ->
+          IO.puts(exchange_id)
+          IO.puts(base_symbol_id)
+          IO.puts(quote_symbol_id)
+          IO.puts(market_type)
+
           Query.Markets.new(
             exchange_id,
             base_symbol_id,
@@ -118,35 +170,63 @@ defmodule Level4.Server.ControlPanel.Markets do
             market_type
           )
 
+        # missing values
         _ ->
           {:input_error,
            "required fields => exchange_id::int, base_symbol_id::int, " <>
-             "quote_symbol_id::int, market_type::string, " <>
-             "level4_feed_enabled:boolean"}
+             "quote_symbol_id::int, market_type::string"}
       end
 
+    # make the respond message
     {status, json_str} = Level4.Server.response(result)
 
+    # respond with json string
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, json_str)
   end
 
+  # [POST /control/markets/<id>/start] :: start market data feed
   post "/:market_id/start" do
-    result = Markets.start(market_id)
+    # determine result using outcome of Markets.start
+    result =
+      case MarketController.start(market_id) do
+        # started successfully
+        {:ok, result} ->
+          {:ok, result}
 
+        # there was an error
+        {:error, error_msg} ->
+          {:internal_error, error_msg}
+      end
+
+    # make the respond message
     {status, json_str} = Level4.Server.response(result)
 
+    # respond with json string
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, json_str)
   end
 
+  # [POST /control/markets/<id>/stop] :: stop market data feed
   post "/:market_id/stop" do
-    result = Markets.stop(market_id)
+    # determine result using outcome of Markets.stop
+    result =
+      case MarketController.stop(market_id) do
+        # started successfully
+        {:ok, result} ->
+          {:ok, result}
 
+        # there was an error
+        {:error, error_msg} ->
+          {:internal_error, error_msg}
+      end
+
+    # make the respond message
     {status, json_str} = Level4.Server.response(result)
 
+    # respond with json string
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, json_str)
@@ -154,6 +234,12 @@ defmodule Level4.Server.ControlPanel.Markets do
 end
 
 defmodule Level4.Server.ControlPanel.Symbols do
+  @moduledoc """
+  Endpoints for symbols resource.
+  - get /control/symbols
+  - post /control/symbols
+  """
+
   use Plug.Router
 
   plug(:match)
@@ -166,58 +252,58 @@ defmodule Level4.Server.ControlPanel.Symbols do
 
   plug(:dispatch)
 
+  # [GET /control/exchanges] :: get all / subset symbols
   get "/" do
-    %{:query_params => params} = Plug.Conn.fetch_query_params(conn)
+    # extract query params
+    %{
+      :query_params => params
+    } = Plug.Conn.fetch_query_params(conn)
 
+    # determine query using url query parameters
     result =
       case params do
+        # get by id
         %{"id" => id} ->
           Query.Symbols.by_id(id)
 
+        # get by name
         %{"name" => name} ->
           Query.Symbols.by_name(name)
 
+        # no filter, get all
         _ ->
           Query.Symbols.all()
       end
 
+    # make the respond message
     {status, json_str} = Level4.Server.response(result)
 
+    # respond with json string
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, json_str)
   end
 
+  # [POST /control/symbols] :: create new symbol
   post "/" do
-    json = conn.body_params
-
+    # determine query using body parameters
     result =
-      case json do
-        %{"symbol" => symbol} -> Query.Symbols.new(symbol)
-        _ -> {:input_error, "required fields => symbol::string"}
+      case conn.body_params do
+        # extract required values
+        %{"symbol" => symbol} ->
+          Query.Symbols.new(symbol)
+
+        # missing values
+        _ ->
+          {:input_error, "required fields => symbol::string"}
       end
 
+    # make the respond message
     {status, json_str} = Level4.Server.response(result)
 
+    # respond with json string
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, json_str)
-  end
-end
-
-defmodule Level4.Server.ControlPanel do
-  use Plug.Router
-
-  plug(:match)
-  plug(:dispatch)
-
-  forward("/symbols", to: Level4.Server.ControlPanel.Symbols)
-  forward("/exchanges", to: Level4.Server.ControlPanel.Exchanges)
-  forward("/markets", to: Level4.Server.ControlPanel.Markets)
-
-  match _ do
-    conn
-    |> put_resp_content_type("text/plain")
-    |> send_resp(404, "nothing here")
   end
 end

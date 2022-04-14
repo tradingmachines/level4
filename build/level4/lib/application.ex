@@ -29,7 +29,6 @@ defmodule Level4 do
   @impl true
   def start(_type, _args) do
     {:ok, http_server} = Application.fetch_env(:level4, :http_server)
-
     Logger.info("starting level4")
 
     Supervisor.start_link(
@@ -56,7 +55,7 @@ defmodule Level4 do
         Storage.Repo,
 
         # dynamic supervisor for market supervisors
-        Markets
+        MarketController
       ],
       # if any the root supervisor's children crash
       # then restart everything because that shouldn't have happened
@@ -65,7 +64,41 @@ defmodule Level4 do
   end
 end
 
-defmodule Markets do
+defmodule Level4.Release do
+  @moduledoc """
+  Contains helper functions for handling ecto schema migrations in
+  production releases.
+  See https://hexdocs.pm/ecto_sql/Ecto.Migrator.html
+
+  note: bin/ can be omitted when added to path:
+  - bin/level4 eval "Level4.Release.migrate"
+  - bin/level4 start
+  """
+
+  @app :level4
+
+  # return the list of ecto repos
+  defp repos do
+    :ok = Application.load(@app)
+    {:ok, repos} = Application.fetch_env(@app, :ecto_repos)
+    repos
+  end
+
+  @doc """
+  Run all of the migrations for each repo.
+  """
+  def migrate do
+    for repo <- repos() do
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(
+          repo,
+          &Ecto.Migrator.run(&1, :up, all: true)
+        )
+    end
+  end
+end
+
+defmodule MarketController do
   @moduledoc """
   Spanws and destroys market sub-trees using Market.Supervisor, which
   is responsible for building and maintaining processes in its tree.
@@ -171,10 +204,7 @@ defmodule Markets do
       # market is not running
       result.level4_feed_enabled == false ->
         # update market's state in the repo
-        {:ok, new_result} =
-          Query.Markets.update(result,
-            level4_feed_enabled: true
-          )
+        {:ok, new_result} = Query.Markets.set_enabled(result, true)
 
         # create a new child in the dynamic supervisor
         DynamicSupervisor.start_child(
@@ -235,10 +265,7 @@ defmodule Markets do
       # market is running
       result.level4_feed_enabled == true ->
         # update market's state in the repo
-        {:ok, new_result} =
-          Query.Markets.update(result,
-            level4_feed_enabled: false
-          )
+        {:ok, new_result} = Query.Markets.set_enabled(result, false)
 
         # consult Market.Supervisor.Registry to find child's pid
         [{pid, _}] =

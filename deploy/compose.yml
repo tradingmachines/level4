@@ -3,7 +3,7 @@ version: "3.9"
 networks:
   traefik_public:
     external: true
-  sumpnet:
+  dark_wsantos_net_sumpnet:
     external: true
   database:
     driver: "overlay"
@@ -34,13 +34,17 @@ x-deploy-manager-dnsrr: &to_manager_with_dnsrr
 services:
   level4:
     image: "registry.wsantos.net/tradingmachines/level4:latest"
+    depends_on:
+      - "database"
     networks:
       - "traefik_public"
-      - "sumpnet"
+      - "dark_wsantos_net_sumpnet"
       - "database"
-    volumes:
-      - "logs:/opt/hadoop/volume/logs"
-      - "level4:/opt/hadoop/volume/data"
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: "tcp"
+        mode: "host"
     deploy:
       <<: *to_manager_with_dnsrr
       labels:
@@ -58,8 +62,6 @@ services:
 
   database:
     image: "postgres:latest"
-    depends_on:
-      - "level4"
     networks:
       - "database"
     volumes:

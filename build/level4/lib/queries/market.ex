@@ -16,6 +16,7 @@ defmodule Query.Markets do
         quote_symbol_id,
         market_type
       ) do
+    # ...
     {:ok, result} =
       Storage.Repo.insert(%Storage.Model.Market{
         exchange_id: exchange_id,
@@ -25,23 +26,45 @@ defmodule Query.Markets do
         level4_feed_enabled: false
       })
 
-    {:ok, result}
+    # ...
+    result_with_relations =
+      Storage.Repo.preload(
+        result,
+        @preload
+      )
+
+    {:ok, result_with_relations}
   end
 
   @doc """
   ...
   """
-  def update(market, fields) do
-    new_market = Ecto.Changeset.change(market, fields)
+  def set_enabled(market, enabled?) do
+    # ...
+    changeset =
+      Ecto.Changeset.change(
+        market,
+        level4_feed_enabled: enabled?
+      )
 
-    {:ok, result} = Storage.Repo.update(new_market)
-    {:ok, result}
+    # ...
+    {:ok, result} = Storage.Repo.update(changeset)
+
+    # ...
+    result_with_relations =
+      Storage.Repo.preload(
+        result,
+        @preload
+      )
+
+    {:ok, result_with_relations}
   end
 
   @doc """
   ...
   """
   def all() do
+    # ...
     result =
       Storage.Model.Market
       |> Storage.Repo.all()
@@ -54,6 +77,7 @@ defmodule Query.Markets do
   ...
   """
   def get(base_symbol, quote_symbol, exchange, market_type) do
+    # ...
     result =
       Storage.Model.Market
       |> Storage.Repo.get_by(
@@ -70,6 +94,7 @@ defmodule Query.Markets do
   ...
   """
   def by_id(id) do
+    # ...
     result =
       Storage.Model.Market
       |> Storage.Repo.get(id)
@@ -79,14 +104,17 @@ defmodule Query.Markets do
   end
 
   @doc """
+
   ...
   """
   def for_base_symbol_id(id) do
+    # ...
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.base_symbol_id == ^id
       )
 
+    # ...
     result =
       Storage.Repo.all(query)
       |> Storage.Repo.preload(@preload)
@@ -98,11 +126,13 @@ defmodule Query.Markets do
   ...
   """
   def for_quote_symbol_id(id) do
+    # ...
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.quote_symbol_id == ^id
       )
 
+    # ...
     result =
       Storage.Repo.all(query)
       |> Storage.Repo.preload(@preload)
@@ -114,11 +144,13 @@ defmodule Query.Markets do
   ...
   """
   def for_exchange_id(id) do
+    # ...
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.exchange_id == ^id
       )
 
+    # ...
     result =
       Storage.Repo.all(query)
       |> Storage.Repo.preload(@preload)
@@ -130,11 +162,13 @@ defmodule Query.Markets do
   ...
   """
   def by_market_type(type) do
+    # ...
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.market_type == ^type
       )
 
+    # ...
     result =
       Storage.Repo.all(query)
       |> Storage.Repo.preload(@preload)
@@ -146,11 +180,13 @@ defmodule Query.Markets do
   ...
   """
   def are_enabled() do
+    # ...
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.level4_feed_enabled == true
       )
 
+    # ...
     result =
       Storage.Repo.all(query)
       |> Storage.Repo.preload(@preload)
@@ -162,11 +198,13 @@ defmodule Query.Markets do
   ...
   """
   def are_disabled() do
+    # ...
     query =
       Ecto.Query.from(market in Storage.Model.Market,
         where: market.level4_feed_enabled == false
       )
 
+    # ...
     result =
       Storage.Repo.all(query)
       |> Storage.Repo.preload(@preload)

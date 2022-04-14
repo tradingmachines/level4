@@ -7,8 +7,7 @@ defmodule Storage.Model.Market do
              :exchange,
              :base_symbol,
              :quote_symbol,
-             :market_type,
-             :level4_feed_enabled
+             :market_type
            ]}
   schema "markets" do
     belongs_to(:base_symbol, Storage.Model.Symbol)
