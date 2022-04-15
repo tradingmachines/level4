@@ -1,0 +1,19 @@
+#+TITLE:  level4
+#+AUTHOR: William Santos
+#+EMAIL:  w@wsantos.net
+
+#+ID:               level4
+#+LANGUAGE:         en
+#+STARTUP:          showall
+#+EXPORT_FILE_NAME: level4
+
+
+Aggregated & normalised level2 market data feeds for 12 different
+cryptocurrency exchanges.
+
+
+** building the container image
+...
+
+** deploy to docker swarm
+...

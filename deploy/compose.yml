@@ -1,0 +1,75 @@
+version: "3.9"
+
+networks:
+  traefik_public:
+    external: true
+  light_wsantos_net_sump:
+    external: true
+  database:
+    driver: "overlay"
+
+volumes:
+  database:
+    driver: "local"
+
+x-deploy-default: &deploy_default
+  replicas: 1
+  restart_policy:
+    condition: "any"
+    delay: "5s"
+
+x-deploy-manager: &manager_default
+  placement:
+    constraints:
+      - "node.role==manager"
+
+x-deploy-manager-vip: &to_manager_with_vip
+  <<: *manager_default
+  endpoint_mode: "vip"
+
+x-deploy-manager-dnsrr: &to_manager_with_dnsrr
+  <<: *manager_default
+  endpoint_mode: "dnsrr"
+
+services:
+  level4:
+    image: "registry.wsantos.net/tradingmachines/level4:latest"
+    depends_on:
+      - "database"
+    networks:
+      - "traefik_public"
+      - "dark_wsantos_net_sumpnet"
+      - "database"
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: "tcp"
+        mode: "host"
+    deploy:
+      <<: *to_manager_with_dnsrr
+      labels:
+        # traefik
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik_public"
+        # http
+        - "traefik.http.routers.level4_wsantos_net-level4.entrypoints=websecure"
+        - "traefik.http.routers.level4_wsantos_net-level4.rule=Host(`level4.wsantos.net`)"
+        - "traefik.http.routers.level4_wsantos_net-level4.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.level4_wsantos_net-level4.service=level4_wsantos_net-level4"
+        - "traefik.http.routers.level4_wsantos_net-level4.middlewares=level4_wsantos_net-level4_auth"
+        - "traefik.http.services.level4_wsantos_net-level4.loadbalancer.server.port=8080"
+        - "traefik.http.middlewares.level4_wsantos_net-level4_auth.basicauth.users=william:$$apr1$$PwWBs2/Z$$vxn5miRORxXIFnEEl9DW31"
+
+  database:
+    image: "postgres:latest"
+    networks:
+      - "database"
+    volumes:
+      - "database:/var/lib/postgresql/data"
+    environment:
+      - "POSTGRES_DB=level4"
+      - "POSTGRES_USER=level4"
+      - "POSTGRES_PASSWORD=level4"
+      - "POSTGRES_HOST_AUTH_METHOD=password"
+    deploy:
+      <<: *to_manager_with_dnsrr

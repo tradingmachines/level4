@@ -1,0 +1,15 @@
+#+TITLE:  level4 exchange unit tests
+#+AUTHOR: William Santos
+#+EMAIL:  w@wsantos.net
+
+#+ID:               level4.tests.exchanges
+#+LANGUAGE:         en
+#+STARTUP:          showall
+#+EXPORT_FILE_NAME: level4-exchange-unit-tests
+
+
+** what is tested
+...
+
+** what is not tested
+...
