@@ -3,7 +3,7 @@ version: "3.9"
 networks:
   traefik_public:
     external: true
-  dark_wsantos_net_sumpnet:
+  light_wsantos_net_sump:
     external: true
   database:
     driver: "overlay"
