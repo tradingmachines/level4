@@ -5,9 +5,6 @@ ARG LEVEL4_RELEASE_PATH
 # level4 environment
 ENV LEVEL4_HOME=/home/level4
 ENV PATH=${PATH}:${LEVEL4_HOME}/bin
-ENV LC_ALL=en_GB.UTF-8
-ENV LANG=en_GB.UTF-8
-ENV LANGUAGE=en_GB.UTF-8
 
 # create level4 home
 USER root
