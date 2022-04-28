@@ -3,7 +3,7 @@ version: "3.9"
 networks:
   traefik_public:
     external: true
-  light_wsantos_net_sump:
+  light_wsantos_net_streaming:
     external: true
   database:
     driver: "overlay"
@@ -38,11 +38,11 @@ services:
       - "database"
     networks:
       - "traefik_public"
-      - "dark_wsantos_net_sumpnet"
+      - "light_wsantos_net_streaming"
       - "database"
     ports:
-      - target: 8080
-        published: 8080
+      - target: 5000
+        published: 5000
         protocol: "tcp"
         mode: "host"
     deploy:
@@ -57,7 +57,7 @@ services:
         - "traefik.http.routers.level4_wsantos_net-level4.tls.certresolver=letsencrypt"
         - "traefik.http.routers.level4_wsantos_net-level4.service=level4_wsantos_net-level4"
         - "traefik.http.routers.level4_wsantos_net-level4.middlewares=level4_wsantos_net-level4_auth"
-        - "traefik.http.services.level4_wsantos_net-level4.loadbalancer.server.port=8080"
+        - "traefik.http.services.level4_wsantos_net-level4.loadbalancer.server.port=5000"
         - "traefik.http.middlewares.level4_wsantos_net-level4_auth.basicauth.users=william:$$apr1$$PwWBs2/Z$$vxn5miRORxXIFnEEl9DW31"
 
   database:
