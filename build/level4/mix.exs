@@ -13,8 +13,12 @@ defmodule Level4.MixProject do
 
   def application do
     [
-      extra_applications: [:logger, :inets],
-      mod: {Level4, []}
+      mod: {Level4, []},
+      extra_applications: [
+        :logger,
+        :inets,
+        :kaffe
+      ]
     ]
   end
 
@@ -25,6 +29,7 @@ defmodule Level4.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:jason, "~> 1.2"},
       {:ecto_sql, "~> 3.0"},
+      {:kaffe, "~> 1.0"},
       {:postgrex, ">= 0.0.0"}
     ]
   end

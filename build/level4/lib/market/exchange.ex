@@ -4,7 +4,7 @@ defmodule Market.Exchange do
   @moduledoc """
   A Market.Exchange receives and handles messages from a
   Market.Level2.Mediator process. The exchange process is
-  responsible for writing data to the data sump.
+  responsible for writing data to kafka topics.
   """
 
   use GenServer
@@ -28,113 +28,140 @@ defmodule Market.Exchange do
 
   @doc """
   Init function for the GenServer. Return the :market from init_arg
-  as well as the PID of a TCP socket client -> to use as GenServer
-  initial state.
+  as initial state.
   """
   @impl true
   def init(init_arg) do
-    {:ok, data_sumps} = Application.fetch_env(:level4, :data_sumps)
-
     Logger.info("#{init_arg[:market]}: starting exchange genserver")
-
-    # tcp socket: connect to flume bidasksump
-    {:ok, bidasksump} =
-      :gen_tcp.connect(
-        data_sumps[:bidasksump][:host],
-        data_sumps[:bidasksump][:port],
-        [:binary, active: false]
-      )
-
-    Logger.info("#{init_arg[:market]}: connected to bidasksump")
-
-    # tcp socket: connect to flume timesalesump
-    {:ok, timesalesump} =
-      :gen_tcp.connect(
-        data_sumps[:timesalesump][:host],
-        data_sumps[:timesalesump][:port],
-        [:binary, active: false]
-      )
-
-    Logger.info("#{init_arg[:market]}: connected to timesalesump")
-
-    {:ok, {init_arg[:market], bidasksump, timesalesump}}
-  end
-
-  @doc """
-  Close tcp sockets on terminate.
-  """
-  @impl true
-  def terminate(_, {_, bidasksump, timesalesump}) do
-    :ok = :gen_tcp.close(bidasksump)
-    :ok = :gen_tcp.close(timesalesump)
+    {:ok, init_arg[:market]}
   end
 
   @doc """
   GenServer cast functions for async API calls.
   """
   # :best_bid_change -> the best bid price changed -> log it
-  # {price, initial liquidity, utc timestamp}
+  # {price, initial liquidity, utc timestamp nano seconds}
   @impl true
   def handle_cast(
         {:best_bid_change, {price, liquidity, timestamp}},
-        {market, bidasksump, timesalesump}
+        market
       ) do
-    # make payload string
-    market_id = market.market_id
-    unix_ns = DateTime.to_unix(timestamp, :nanosecond)
-    payload = "bids,#{market_id},#{price},#{liquidity},#{unix_ns}\n"
+    # nano second time
+    # use market id as kafka message key
+    unix_ts_ns = DateTime.to_unix(timestamp, :nanosecond)
+    market_id_str = Integer.to_string(market.market_id)
 
-    # send string to bidasksump
-    :ok = :gen_tcp.send(bidasksump, payload)
-    {:noreply, {market, bidasksump, timesalesump}}
+    # make json string message content
+    {:ok, json_str} =
+      Jason.encode(%{
+        "side" => "bids",
+        "price" => price,
+        "liquidity" => liquidity,
+        "unix_ts_ns" => unix_ts_ns
+      })
+
+    # send to message queue topic
+    :ok =
+      Kaffe.Producer.produce_sync(
+        "level4.spread",
+        market_id_str,
+        json_str
+      )
+
+    {:noreply, market}
   end
 
   # :best_ask_change -> the best ask price changed -> log it
-  # {price, initial liquidity, utc timestamp}
+  # {price, initial liquidity, utc timestamp nano seconds}
   def handle_cast(
         {:best_ask_change, {price, liquidity, timestamp}},
-        {market, bidasksump, timesalesump}
+        market
       ) do
-    # make payload string
-    market_id = market.market_id
-    unix_ns = DateTime.to_unix(timestamp, :nanosecond)
-    payload = "asks,#{market_id},#{price},#{liquidity},#{unix_ns}\n"
+    # nano second time
+    # use market id as kafka message key
+    unix_ts_ns = DateTime.to_unix(timestamp, :nanosecond)
+    market_id_str = Integer.to_string(market.market_id)
 
-    # send string to bidasksump
-    :ok = :gen_tcp.send(bidasksump, payload)
-    {:noreply, {market, bidasksump, timesalesump}}
+    # make json string message content
+    {:ok, json_str} =
+      Jason.encode(%{
+        "side" => "asks",
+        "price" => price,
+        "liquidity" => liquidity,
+        "unix_ts_ns" => unix_ts_ns
+      })
+
+    # send to message queue topic
+    :ok =
+      Kaffe.Producer.produce_sync(
+        "level4.spread",
+        market_id_str,
+        json_str
+      )
+
+    {:noreply, market}
   end
 
   # :new_buy -> there was a new market buy -> log it
-  # {price, size, utc timestamp}
+  # {price, size, utc timestamp nano seconds}
   def handle_cast(
         {:new_buy, {price, size, timestamp}},
-        {market, bidasksump, timesalesump}
+        market
       ) do
-    # make payload string
-    market_id = market.market_id
-    unix_ns = DateTime.to_unix(timestamp, :nanosecond)
-    payload = "buy,#{market_id},#{price},#{size},#{unix_ns}\n"
+    # nano second time
+    # use market id as kafka message key
+    unix_ts_ns = DateTime.to_unix(timestamp, :nanosecond)
+    market_id_str = Integer.to_string(market.market_id)
 
-    # send string to timesalesump
-    :ok = :gen_tcp.send(timesalesump, payload)
-    {:noreply, {market, bidasksump, timesalesump}}
+    # make json string message content
+    {:ok, json_str} =
+      Jason.encode(%{
+        "side" => "buy",
+        "price" => price,
+        "size" => size,
+        "unix_ts_ns" => unix_ts_ns
+      })
+
+    # send to message queue topic
+    :ok =
+      Kaffe.Producer.produce_sync(
+        "level4.timesale",
+        market_id_str,
+        json_str
+      )
+
+    {:noreply, market}
   end
 
   # :new_sell -> there was a new market buy -> log it
-  # {price, size, utc timestamp}
+  # {price, size, utc timestamp nano seconds}
   def handle_cast(
         {:new_sell, {price, size, timestamp}},
-        {market, bidasksump, timesalesump}
+        market
       ) do
-    # make payload string
-    market_id = market.market_id
-    unix_ns = DateTime.to_unix(timestamp, :nanosecond)
-    payload = "sell,#{market_id},#{price},#{size},#{unix_ns}\n"
+    # nano second time
+    # use market id as kafka message key
+    unix_ts_ns = DateTime.to_unix(timestamp, :nanosecond)
+    market_id_str = Integer.to_string(market.market_id)
 
-    # send string to timesalesump
-    :ok = :gen_tcp.send(timesalesump, payload)
-    {:noreply, {market, bidasksump, timesalesump}}
+    # make json string message content
+    {:ok, json_str} =
+      Jason.encode(%{
+        "side" => "sell",
+        "price" => price,
+        "size" => size,
+        "unix_ts_ns" => unix_ts_ns
+      })
+
+    # send to message queue topic
+    :ok =
+      Kaffe.Producer.produce_sync(
+        "level4.timesale",
+        market_id_str,
+        json_str
+      )
+
+    {:noreply, market}
   end
 
   @doc """
