@@ -158,11 +158,6 @@ defmodule Level4.Server.ControlPanel.Markets do
           "quote_symbol_id" => quote_symbol_id,
           "market_type" => market_type
         } ->
-          IO.puts(exchange_id)
-          IO.puts(base_symbol_id)
-          IO.puts(quote_symbol_id)
-          IO.puts(market_type)
-
           Query.Markets.new(
             exchange_id,
             base_symbol_id,
