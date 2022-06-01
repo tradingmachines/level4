@@ -1,13 +1,26 @@
+defmodule Exchanges.Bybit do
+  @moduledoc """
+  Translation scheme for the Bybit websocket API.
+  """
+
+  defmacro __using__(_opts) do
+    quote do
+    end
+  end
+end
+
 defmodule Exchanges.Bybit.Spot do
   @moduledoc """
-  Translation scheme for the Bybit spot websocket API.
+  Spot markets.
 
-  Change log and websocket docs:
+  Relevant documentation:
   - https://bybit-exchange.github.io/docs/spot/#t-changelog
   - https://bybit-exchange.github.io/docs/spot/#t-websocket
   """
 
   @behaviour TranslationScheme
+
+  use Exchanges.Bybit
 
   @impl TranslationScheme
   def initial_state(base_symbol, quote_symbol) do
@@ -117,21 +130,22 @@ defmodule Exchanges.Bybit.Spot do
   end
 end
 
-defmodule Exchanges.Bybit.Perp.USDT do
+defmodule Exchanges.Bybit.Futures do
   @moduledoc """
-  Translation scheme for the Bybit perpetual USDT futures
-  websocket API.
+  Futures markets.
 
-  Change log and websocket docs:
+  Relevant documentation:
   - https://bybit-exchange.github.io/docs/linear/#t-changelog
   - https://bybit-exchange.github.io/docs/linear/#t-websocket
   """
 
   @behaviour TranslationScheme
 
+  use Exchanges.Bybit
+
   @impl TranslationScheme
   def initial_state(base_symbol, quote_symbol) do
-    %{"something" => nil}
+    %{}
   end
 
   @impl TranslationScheme
@@ -281,21 +295,22 @@ defmodule Exchanges.Bybit.Perp.USDT do
   end
 end
 
-defmodule Exchanges.Bybit.Perp.Inverse do
+defmodule Exchanges.Bybit.Inverse do
   @moduledoc """
-  Translation scheme for the Bybit inverse perpetual futures
-  websocket API.
+  Inverse futures markets.
 
-  Change log and websocket docs:
+  Relevant documentation:
   - https://bybit-exchange.github.io/docs/inverse_futures/#t-changelog
   - https://bybit-exchange.github.io/docs/inverse_futures/#t-websocket
   """
 
   @behaviour TranslationScheme
 
+  use Exchanges.Bybit
+
   @impl TranslationScheme
   def initial_state(base_symbol, quote_symbol) do
-    %{"something" => nil}
+    %{}
   end
 
   @impl TranslationScheme

@@ -6,6 +6,9 @@ config :level4, ecto_repos: [Storage.Repo]
 # exchange translation scheme map
 config :level4,
   exchanges: %{
+    #
+    # binance.com
+    #
     "BINANCE" => %{
       "SPOT" => %{
         translation_scheme: Exchanges.Binance.Spot,
@@ -13,17 +16,44 @@ config :level4,
         path: "/ws",
         port: 443,
         ping?: false
+      },
+      "PERP-FUTURES" => %{
+        translation_scheme: Exchanges.Binance.Futures,
+        url: "fstream.binance.com",
+        path: "/stream",
+        port: 443,
+        ping?: false
+      },
+      "PERP-FUTURE-INVERSE" => %{
+        translation_scheme: Exchanges.Binance.Inverse,
+        url: "fstream.binance.com",
+        path: "/stream",
+        port: 443,
+        ping?: false
       }
     },
+    #
+    # bitfinex.com
+    #
     "BITFINEX" => %{
       "SPOT" => %{
-        translation_scheme: Exchanges.Bitfinex.Trading,
+        translation_scheme: Exchanges.Bitfinex.Spot,
+        url: "api-pub.bitfinex.com",
+        path: "/ws/2",
+        port: 443,
+        ping?: true
+      },
+      "PERP-FUTURES" => %{
+        translation_scheme: Exchanges.Bitfinex.Futures,
         url: "api-pub.bitfinex.com",
         path: "/ws/2",
         port: 443,
         ping?: true
       }
     },
+    #
+    # bitflyer.com
+    #
     "BITFLYER" => %{
       "SPOT" => %{
         translation_scheme: Exchanges.Bitflyer.Spot,
@@ -33,24 +63,40 @@ config :level4,
         ping?: true
       }
     },
+    #
+    # bitmex.com
+    #
     "BITMEX" => %{
-      "SPOT" => %{
-        translation_scheme: Exchanges.Bitmex,
+      "PERP-FUTURES" => %{
+        translation_scheme: Exchanges.Bitmex.Futures,
+        url: "ws.bitmex.com",
+        path: "/realtime",
+        port: 443,
+        ping?: true
+      },
+      "PERP-FUTURE-INVERSE" => %{
+        translation_scheme: Exchanges.Bitmex.Inverse,
         url: "ws.bitmex.com",
         path: "/realtime",
         port: 443,
         ping?: true
       }
     },
+    #
+    # bitstamp.com
+    #
     "BITSTAMP" => %{
       "SPOT" => %{
-        translation_scheme: Exchanges.Bitstamp,
+        translation_scheme: Exchanges.Bitstamp.Spot,
         url: "ws.bitstamp.net",
         path: "/",
         port: 443,
         ping?: true
       }
     },
+    #
+    # bybit.com
+    #
     "BYBIT" => %{
       "SPOT" => %{
         translation_scheme: Exchanges.Bybit.Spot,
@@ -59,69 +105,115 @@ config :level4,
         port: 443,
         ping?: true
       },
-      "PERP[USDT]" => %{
-        translation_scheme: Exchanges.Bybit.Perp.USDT,
+      "PERP-FUTURES" => %{
+        translation_scheme: Exchanges.Bybit.Futures,
         url: "stream.bybit.com",
         path: "/realtime_public",
         port: 443,
         ping?: true
       },
-      "PERP[INVERSE]" => %{
-        translation_scheme: Exchanges.Bybit.Perp.Inverse,
+      "PERP-FUTURE-INVERSE" => %{
+        translation_scheme: Exchanges.Bybit.Inverse,
         url: "stream.bybit.com",
         path: "/realtime",
         port: 443,
         ping?: true
       }
     },
+    #
+    # coinbase.com
+    #
     "COINBASE-PRO" => %{
       "SPOT" => %{
-        translation_scheme: Exchanges.Coinbase,
+        translation_scheme: Exchanges.Coinbase.Spot,
         url: "ws-feed.exchange.coinbase.com",
         path: "/",
         port: 443,
         ping?: false
       }
     },
+    #
+    # ftx.com
+    #
     "FTX" => %{
       "SPOT" => %{
-        translation_scheme: Exchanges.FTX,
+        translation_scheme: Exchanges.FTX.Spot,
+        url: "ftx.com",
+        path: "/ws",
+        port: 443,
+        ping?: true
+      },
+      "PERP-FUTURES" => %{
+        translation_scheme: Exchanges.FTX.Futures,
         url: "ftx.com",
         path: "/ws",
         port: 443,
         ping?: true
       }
     },
+    #
+    # gemini.com
+    #
     "GEMINI" => %{
       "SPOT" => %{
-        translation_scheme: Exchanges.Gemini,
+        translation_scheme: Exchanges.Gemini.Spot,
         url: "api.gemini.com",
         path: "/v2/marketdata",
         port: 443,
         ping?: false
       }
     },
+    #
+    # hitbtc.com
+    #
     "HITBTC" => %{
       "SPOT" => %{
-        translation_scheme: Exchanges.HitBTC,
+        translation_scheme: Exchanges.HitBTC.Spot,
+        url: "api.hitbtc.com",
+        path: "/api/3/ws/public",
+        port: 443,
+        ping?: false
+      },
+      "PERP-FUTURES" => %{
+        translation_scheme: Exchanges.HitBTC.Futures,
         url: "api.hitbtc.com",
         path: "/api/3/ws/public",
         port: 443,
         ping?: false
       }
     },
+    #
+    # kraken.com
+    #
     "KRAKEN" => %{
       "SPOT" => %{
-        translation_scheme: Exchanges.Kraken,
+        translation_scheme: Exchanges.Kraken.Spot,
         url: "ws.kraken.com",
         path: "/",
         port: 443,
         ping?: false
+      },
+      "PERP-FUTURES" => %{
+        translation_scheme: Exchanges.Kraken.Futures,
+        url: "futures.kraken.com",
+        path: "/ws/v1",
+        port: 443,
+        ping?: false
+      },
+      "PERP-FUTURE-INVERSE" => %{
+        translation_scheme: Exchanges.Kraken.Inverse,
+        url: "futures.kraken.com",
+        path: "/ws/v1",
+        port: 443,
+        ping?: false
       }
     },
+    #
+    # poloniex.com
+    #
     "POLONIEX" => %{
       "SPOT" => %{
-        translation_scheme: Exchanges.Poloniex,
+        translation_scheme: Exchanges.Poloniex.Spot,
         url: "api2.poloniex.com",
         path: "/",
         port: 443,
