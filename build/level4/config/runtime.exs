@@ -30,6 +30,4 @@ config :level4,
   http_server: %{
     iface: {0, 0, 0, 0},
     port: 5000
-    # add stream handlers?
-    # ...
   }

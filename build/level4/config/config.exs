@@ -10,6 +10,8 @@ config :level4,
     # binance.com
     #
     "BINANCE" => %{
+      # status: working
+      # correctness: unchecked
       "SPOT" => %{
         translation_scheme: Exchanges.Binance.Spot,
         url: "stream.binance.com",
@@ -17,6 +19,8 @@ config :level4,
         port: 443,
         ping?: false
       },
+      # status: not working
+      # correctness: unchecked
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.Binance.Futures,
         url: "fstream.binance.com",
@@ -24,6 +28,8 @@ config :level4,
         port: 443,
         ping?: false
       },
+      # status: not working
+      # correctness: unchecked
       "PERP-FUTURE-INVERSE" => %{
         translation_scheme: Exchanges.Binance.Inverse,
         url: "fstream.binance.com",
@@ -36,6 +42,8 @@ config :level4,
     # bitfinex.com
     #
     "BITFINEX" => %{
+      # status: not working
+      # correctness: unchecked
       "SPOT" => %{
         translation_scheme: Exchanges.Bitfinex.Spot,
         url: "api-pub.bitfinex.com",
@@ -43,6 +51,8 @@ config :level4,
         port: 443,
         ping?: true
       },
+      # status: not working
+      # correctness: unchecked
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.Bitfinex.Futures,
         url: "api-pub.bitfinex.com",
@@ -55,6 +65,8 @@ config :level4,
     # bitflyer.com
     #
     "BITFLYER" => %{
+      # status: not working
+      # correctness: unchecked
       "SPOT" => %{
         translation_scheme: Exchanges.Bitflyer.Spot,
         url: "ws.lightstream.bitflyer.com",
@@ -67,6 +79,8 @@ config :level4,
     # bitmex.com
     #
     "BITMEX" => %{
+      # status: working
+      # correctness: correct
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.Bitmex.Futures,
         url: "ws.bitmex.com",
@@ -74,6 +88,8 @@ config :level4,
         port: 443,
         ping?: true
       },
+      # status: not working
+      # correctness: unchecked
       "PERP-FUTURE-INVERSE" => %{
         translation_scheme: Exchanges.Bitmex.Inverse,
         url: "ws.bitmex.com",
@@ -86,6 +102,8 @@ config :level4,
     # bitstamp.com
     #
     "BITSTAMP" => %{
+      # status: not working
+      # correctness: incorrect
       "SPOT" => %{
         translation_scheme: Exchanges.Bitstamp.Spot,
         url: "ws.bitstamp.net",
@@ -98,6 +116,8 @@ config :level4,
     # bybit.com
     #
     "BYBIT" => %{
+      # status: working
+      # correctness: incorrect
       "SPOT" => %{
         translation_scheme: Exchanges.Bybit.Spot,
         url: "stream.bybit.com",
@@ -105,6 +125,8 @@ config :level4,
         port: 443,
         ping?: true
       },
+      # status: working
+      # correctness: correct
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.Bybit.Futures,
         url: "stream.bybit.com",
@@ -112,6 +134,8 @@ config :level4,
         port: 443,
         ping?: true
       },
+      # status: working
+      # correctness: correct
       "PERP-FUTURE-INVERSE" => %{
         translation_scheme: Exchanges.Bybit.Inverse,
         url: "stream.bybit.com",
@@ -124,6 +148,8 @@ config :level4,
     # coinbase.com
     #
     "COINBASE-PRO" => %{
+      # status: working
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.Coinbase.Spot,
         url: "ws-feed.exchange.coinbase.com",
@@ -136,6 +162,8 @@ config :level4,
     # ftx.com
     #
     "FTX" => %{
+      # status: working
+      # correctness: incorrect
       "SPOT" => %{
         translation_scheme: Exchanges.FTX.Spot,
         url: "ftx.com",
@@ -143,6 +171,8 @@ config :level4,
         port: 443,
         ping?: true
       },
+      # status: working
+      # correctness: incorrect
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.FTX.Futures,
         url: "ftx.com",
@@ -155,6 +185,8 @@ config :level4,
     # gemini.com
     #
     "GEMINI" => %{
+      # status: working
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.Gemini.Spot,
         url: "api.gemini.com",
@@ -167,6 +199,8 @@ config :level4,
     # hitbtc.com
     #
     "HITBTC" => %{
+      # status: working
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.HitBTC.Spot,
         url: "api.hitbtc.com",
@@ -174,6 +208,8 @@ config :level4,
         port: 443,
         ping?: false
       },
+      # status: not working
+      # correctness: unchecked
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.HitBTC.Futures,
         url: "api.hitbtc.com",
@@ -186,6 +222,8 @@ config :level4,
     # kraken.com
     #
     "KRAKEN" => %{
+      # status: working
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.Kraken.Spot,
         url: "ws.kraken.com",
@@ -193,6 +231,8 @@ config :level4,
         port: 443,
         ping?: false
       },
+      # status: not working
+      # correctness: unchecked
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.Kraken.Futures,
         url: "futures.kraken.com",
@@ -200,6 +240,8 @@ config :level4,
         port: 443,
         ping?: false
       },
+      # status: not working
+      # correctness: unchecked
       "PERP-FUTURE-INVERSE" => %{
         translation_scheme: Exchanges.Kraken.Inverse,
         url: "futures.kraken.com",
@@ -212,6 +254,8 @@ config :level4,
     # poloniex.com
     #
     "POLONIEX" => %{
+      # status: working
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.Poloniex.Spot,
         url: "api2.poloniex.com",
