@@ -11,7 +11,7 @@ config :level4,
     #
     "BINANCE" => %{
       # status: working
-      # correctness: unchecked
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.Binance.Spot,
         url: "stream.binance.com",
@@ -19,21 +19,21 @@ config :level4,
         port: 443,
         ping?: false
       },
-      # status: not working
-      # correctness: unchecked
+      # status: working
+      # correctness: correct
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.Binance.Futures,
         url: "fstream.binance.com",
-        path: "/stream",
+        path: "/ws",
         port: 443,
         ping?: false
       },
-      # status: not working
-      # correctness: unchecked
+      # status: working
+      # correctness: correct
       "PERP-FUTURE-INVERSE" => %{
         translation_scheme: Exchanges.Binance.Inverse,
-        url: "fstream.binance.com",
-        path: "/stream",
+        url: "dstream.binance.com",
+        path: "/ws",
         port: 443,
         ping?: false
       }

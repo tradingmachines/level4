@@ -33,6 +33,12 @@ defmodule Exchanges.Binance do
               "fapi.binance.com",
               "/fapi/v1/depth?symbol=#{pair}&limit=1000"
             }
+
+          :inverse ->
+            {
+              "dapi.binance.com",
+              "/dapi/v1/depth?symbol=#{pair}_PERP&limit=1000"
+            }
         end
       end
 
@@ -77,24 +83,6 @@ defmodule Exchanges.Binance do
       @impl TranslationScheme
       def ping_msg(current_state) do
         {:ok, json_str} = Jason.encode(%{"op" => "ping"})
-        {:ok, [json_str]}
-      end
-
-      @impl TranslationScheme
-      def subscribe_msg(base_symbol, quote_symbol) do
-        base_symbol_lower = String.downcase(base_symbol)
-        quote_symbol_lower = String.downcase(quote_symbol)
-
-        {:ok, json_str} =
-          Jason.encode(%{
-            "id" => 1,
-            "method" => "SUBSCRIBE",
-            "params" => [
-              "#{base_symbol_lower}#{quote_symbol_lower}@depth@100ms",
-              "#{base_symbol_lower}#{quote_symbol_lower}@trade"
-            ]
-          })
-
         {:ok, [json_str]}
       end
 
@@ -275,6 +263,24 @@ defmodule Exchanges.Binance.Spot do
   @behaviour TranslationScheme
 
   use Exchanges.Binance, snapshot_endpoint: :spot
+
+  @impl TranslationScheme
+  def subscribe_msg(base_symbol, quote_symbol) do
+    base_symbol_lower = String.downcase(base_symbol)
+    quote_symbol_lower = String.downcase(quote_symbol)
+
+    {:ok, json_str} =
+      Jason.encode(%{
+        "id" => 1,
+        "method" => "SUBSCRIBE",
+        "params" => [
+          "#{base_symbol_lower}#{quote_symbol_lower}@depth@100ms",
+          "#{base_symbol_lower}#{quote_symbol_lower}@trade"
+        ]
+      })
+
+    {:ok, [json_str]}
+  end
 end
 
 defmodule Exchanges.Binance.Futures do
@@ -289,6 +295,24 @@ defmodule Exchanges.Binance.Futures do
   @behaviour TranslationScheme
 
   use Exchanges.Binance, snapshot_endpoint: :futures
+
+  @impl TranslationScheme
+  def subscribe_msg(base_symbol, quote_symbol) do
+    base_symbol_lower = String.downcase(base_symbol)
+    quote_symbol_lower = String.downcase(quote_symbol)
+
+    {:ok, json_str} =
+      Jason.encode(%{
+        "id" => 1,
+        "method" => "SUBSCRIBE",
+        "params" => [
+          "#{base_symbol_lower}#{quote_symbol_lower}@depth@100ms",
+          "#{base_symbol_lower}#{quote_symbol_lower}@trade"
+        ]
+      })
+
+    {:ok, [json_str]}
+  end
 end
 
 defmodule Exchanges.Binance.Inverse do
@@ -296,11 +320,29 @@ defmodule Exchanges.Binance.Inverse do
   Inverse futures markets.
 
   Relevant documentation:
-  - https://binance-docs.github.io/apidocs/futures/en/#general-info
-  - https://binance-docs.github.io/apidocs/futures/en/#websocket-market-streams
+  - https://binance-docs.github.io/delivery/futures/en/#general-info
+  - https://binance-docs.github.io/delivery/futures/en/#websocket-market-streams
   """
 
   @behaviour TranslationScheme
 
-  use Exchanges.Binance, snapshot_endpoint: :futures
+  use Exchanges.Binance, snapshot_endpoint: :inverse
+
+  @impl TranslationScheme
+  def subscribe_msg(base_symbol, quote_symbol) do
+    base_symbol_lower = String.downcase(base_symbol)
+    quote_symbol_lower = String.downcase(quote_symbol)
+
+    {:ok, json_str} =
+      Jason.encode(%{
+        "id" => 1,
+        "method" => "SUBSCRIBE",
+        "params" => [
+          "#{base_symbol_lower}#{quote_symbol_lower}_perp@depth@100ms",
+          "#{base_symbol_lower}#{quote_symbol_lower}_perp@trade"
+        ]
+      })
+
+    {:ok, [json_str]}
+  end
 end
