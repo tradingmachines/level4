@@ -16,20 +16,6 @@ defmodule Exchanges.Bitmex do
       end
 
       @impl TranslationScheme
-      def subscribe_msg(base_symbol, quote_symbol) do
-        {:ok, json_str} =
-          Jason.encode(%{
-            "op" => "subscribe",
-            "args" => [
-              "orderBookL2:#{base_symbol}#{quote_symbol}",
-              "trade:#{base_symbol}#{quote_symbol}"
-            ]
-          })
-
-        {:ok, [json_str]}
-      end
-
-      @impl TranslationScheme
       def synchronised?(current_state) do
         # TODO
         true
@@ -51,6 +37,7 @@ defmodule Exchanges.Bitmex do
             } ->
               {[:noop], current_state}
 
+            # handle snapshots
             %{
               "table" => "orderBookL2",
               "action" => "partial",
@@ -90,6 +77,7 @@ defmodule Exchanges.Bitmex do
                 %{current_state | "id_to_price" => id_to_price}
               }
 
+            # handle deltas
             %{
               "table" => "orderBookL2",
               "action" => action,
@@ -142,6 +130,7 @@ defmodule Exchanges.Bitmex do
                   end
                 )
 
+              # handle trades
               {
                 [{:deltas, deltas}],
                 %{current_state | "id_to_price" => new_id_to_price}
@@ -208,6 +197,46 @@ defmodule Exchanges.Bitmex do
   end
 end
 
+defmodule Exchanges.Bitmex.Spot do
+  @moduledoc """
+  Spot markets.
+
+  Relevant documentation:
+  - https://www.bitmex.com/app/apiChangelog
+  - https://www.bitmex.com/app/wsAPI
+  """
+
+  @behaviour TranslationScheme
+
+  use Exchanges.Bitmex
+
+  @impl TranslationScheme
+  def subscribe_msg(base_symbol, quote_symbol) do
+    internal_base =
+      case base_symbol do
+        "BTC" -> "XBT"
+        any_b -> any_b
+      end
+
+    internal_quote =
+      case quote_symbol do
+        "BTC" -> "XBT"
+        any_q -> any_q
+      end
+
+    {:ok, json_str} =
+      Jason.encode(%{
+        "op" => "subscribe",
+        "args" => [
+          "orderBookL2:#{internal_base}_#{internal_quote}",
+          "trade:#{internal_base}_#{internal_quote}"
+        ]
+      })
+
+    {:ok, [json_str]}
+  end
+end
+
 defmodule Exchanges.Bitmex.Futures do
   @moduledoc """
   Futures markets.
@@ -220,18 +249,30 @@ defmodule Exchanges.Bitmex.Futures do
   @behaviour TranslationScheme
 
   use Exchanges.Bitmex
-end
 
-defmodule Exchanges.Bitmex.Inverse do
-  @moduledoc """
-  Inverse futures markets.
+  @impl TranslationScheme
+  def subscribe_msg(base_symbol, quote_symbol) do
+    internal_base =
+      case base_symbol do
+        "BTC" -> "XBT"
+        any_b -> any_b
+      end
 
-  Relevant documentation:
-  - https://www.bitmex.com/app/apiChangelog
-  - https://www.bitmex.com/app/wsAPI
-  """
+    internal_quote =
+      case quote_symbol do
+        "BTC" -> "XBT"
+        any_q -> any_q
+      end
 
-  @behaviour TranslationScheme
+    {:ok, json_str} =
+      Jason.encode(%{
+        "op" => "subscribe",
+        "args" => [
+          "orderBookL2:#{internal_base}#{internal_quote}",
+          "trade:#{internal_base}#{internal_quote}"
+        ]
+      })
 
-  use Exchanges.Bitmex
+    {:ok, [json_str]}
+  end
 end

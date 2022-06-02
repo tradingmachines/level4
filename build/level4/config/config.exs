@@ -65,8 +65,8 @@ config :level4,
     # bitflyer.com
     #
     "BITFLYER" => %{
-      # status: not working
-      # correctness: unchecked
+      # status: working
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.Bitflyer.Spot,
         url: "ws.lightstream.bitflyer.com",
@@ -81,17 +81,17 @@ config :level4,
     "BITMEX" => %{
       # status: working
       # correctness: correct
-      "PERP-FUTURES" => %{
-        translation_scheme: Exchanges.Bitmex.Futures,
+      "SPOT" => %{
+        translation_scheme: Exchanges.Bitmex.Spot,
         url: "ws.bitmex.com",
         path: "/realtime",
         port: 443,
         ping?: true
       },
-      # status: not working
-      # correctness: unchecked
-      "PERP-FUTURE-INVERSE" => %{
-        translation_scheme: Exchanges.Bitmex.Inverse,
+      # status: working
+      # correctness: correct
+      "PERP-FUTURES" => %{
+        translation_scheme: Exchanges.Bitmex.Futures,
         url: "ws.bitmex.com",
         path: "/realtime",
         port: 443,
