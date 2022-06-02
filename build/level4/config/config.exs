@@ -42,8 +42,8 @@ config :level4,
     # bitfinex.com
     #
     "BITFINEX" => %{
-      # status: not working
-      # correctness: unchecked
+      # status: working
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.Bitfinex.Spot,
         url: "api-pub.bitfinex.com",
@@ -51,8 +51,8 @@ config :level4,
         port: 443,
         ping?: true
       },
-      # status: not working
-      # correctness: unchecked
+      # status: working
+      # correctness: correct
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.Bitfinex.Futures,
         url: "api-pub.bitfinex.com",

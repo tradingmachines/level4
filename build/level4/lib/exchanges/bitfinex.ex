@@ -94,33 +94,39 @@ defmodule Exchanges.Bitfinex do
                   {[:noop], current_state}
               end
 
-            [chan_id, _, data] ->
-              cond do
-                chan_id == current_state["trades_cid"] ->
-                  [_, epoch_ms, amount_int, price_int] = data
+            [chan_id, type, data] ->
+              case type do
+                "te" ->
+                  cond do
+                    chan_id == current_state["trades_cid"] ->
+                      [_, epoch_ms, amount_int, price_int] = data
 
-                  price = price_int / 1
-                  amount = amount_int / 1
+                      price = price_int / 1
+                      amount = amount_int / 1
 
-                  epoch_micro = epoch_ms * 1000
+                      epoch_micro = epoch_ms * 1000
 
-                  {:ok, timestamp} =
-                    DateTime.from_unix(
-                      epoch_micro,
-                      :microsecond
-                    )
+                      {:ok, timestamp} =
+                        DateTime.from_unix(
+                          epoch_micro,
+                          :microsecond
+                        )
 
-                  if amount > 0 do
-                    {
-                      [{:buys, [{price, amount, timestamp}]}],
-                      current_state
-                    }
-                  else
-                    {
-                      [{:sells, [{price, -amount, timestamp}]}],
-                      current_state
-                    }
+                      if amount > 0 do
+                        {
+                          [{:buys, [{price, amount, timestamp}]}],
+                          current_state
+                        }
+                      else
+                        {
+                          [{:sells, [{price, -amount, timestamp}]}],
+                          current_state
+                        }
+                      end
                   end
+
+                "tu" ->
+                  {[:noop], current_state}
               end
           end
 
@@ -181,18 +187,37 @@ defmodule Exchanges.Bitfinex.Spot do
 
   @impl TranslationScheme
   def subscribe_msg(base_symbol, quote_symbol) do
+    {internal_base, internal_quote} =
+      case {base_symbol, quote_symbol} do
+        {any_b, "USDT"} -> {any_b, "UST"}
+        {any_b, any_q} -> {any_b, any_q}
+      end
+
+    symbol =
+      cond do
+        String.length(internal_base) > 3 or
+            String.length(internal_quote) > 3 ->
+          # delimit with :
+          "t#{internal_base}:#{internal_quote}"
+
+        String.length(internal_base) <= 3 and
+            String.length(internal_quote) <= 3 ->
+          # no : needed
+          "t#{internal_base}#{internal_quote}"
+      end
+
     {:ok, json_str_book} =
       Jason.encode(%{
         "event" => "subscribe",
         "channel" => "book",
-        "symbol" => "t#{base_symbol}#{quote_symbol}"
+        "symbol" => symbol
       })
 
     {:ok, json_str_trade} =
       Jason.encode(%{
         "event" => "subscribe",
         "channel" => "trades",
-        "symbol" => "t#{base_symbol}#{quote_symbol}"
+        "symbol" => symbol
       })
 
     {:ok, [json_str_book, json_str_trade]}
@@ -214,18 +239,24 @@ defmodule Exchanges.Bitfinex.Futures do
 
   @impl TranslationScheme
   def subscribe_msg(base_symbol, quote_symbol) do
+    symbol =
+      case {base_symbol, quote_symbol} do
+        {any_b, "USDT"} -> "t#{any_b}F0:USTF0"
+        {any_b, any_q} -> "t#{any_b}F0:#{any_q}F0"
+      end
+
     {:ok, json_str_book} =
       Jason.encode(%{
         "event" => "subscribe",
         "channel" => "book",
-        "symbol" => "t#{base_symbol}f#{quote_symbol}"
+        "symbol" => symbol
       })
 
     {:ok, json_str_trade} =
       Jason.encode(%{
         "event" => "subscribe",
         "channel" => "trades",
-        "symbol" => "t#{base_symbol}f#{quote_symbol}"
+        "symbol" => symbol
       })
 
     {:ok, [json_str_book, json_str_trade]}
