@@ -103,19 +103,19 @@ defmodule Exchanges.Binance do
               {[:noop], current_state}
 
             %{
-              "lastUpdateId" => last_update_id,
-              "bids" => bid_deltas,
-              "asks" => ask_deltas
+              "lastUpdateId" => snapshot_timestamp,
+              "bids" => bid_strs,
+              "asks" => ask_strs
             } ->
               snapshot_bids =
-                for [price_str, size_str] <- bid_deltas do
+                for [price_str, size_str] <- bid_strs do
                   {price, _} = Float.parse(price_str)
                   {size, _} = Float.parse(size_str)
                   {price, size}
                 end
 
               snapshot_asks =
-                for [price_str, size_str] <- ask_deltas do
+                for [price_str, size_str] <- ask_strs do
                   {price, _} = Float.parse(price_str)
                   {size, _} = Float.parse(size_str)
                   {price, size}
@@ -123,8 +123,8 @@ defmodule Exchanges.Binance do
 
               buffered_bids =
                 current_state["bids_buffer"]
-                |> Enum.filter(fn {_, _, timestamp} ->
-                  timestamp > last_update_id
+                |> Enum.filter(fn {_, _, delta_timestamp} ->
+                  delta_timestamp > snapshot_timestamp
                 end)
                 |> Enum.map(fn {price, size, _} ->
                   {:bid, price, size}
@@ -132,8 +132,8 @@ defmodule Exchanges.Binance do
 
               buffered_asks =
                 current_state["asks_buffer"]
-                |> Enum.filter(fn {_, _, timestamp} ->
-                  timestamp > last_update_id
+                |> Enum.filter(fn {_, _, delta_timestamp} ->
+                  delta_timestamp > snapshot_timestamp
                 end)
                 |> Enum.map(fn {price, size, _} ->
                   {:ask, price, size}
@@ -152,22 +152,22 @@ defmodule Exchanges.Binance do
 
             %{
               "e" => "depthUpdate",
-              "b" => bid_deltas,
-              "a" => ask_deltas,
-              "u" => final_update_id
+              "b" => bid_strs,
+              "a" => ask_strs,
+              "u" => delta_timestamp
             } ->
               bids =
-                for [price_str, size_str] <- bid_deltas do
+                for [price_str, size_str] <- bid_strs do
                   {price, _} = Float.parse(price_str)
                   {size, _} = Float.parse(size_str)
-                  {price, size, final_update_id}
+                  {price, size, delta_timestamp}
                 end
 
               asks =
-                for [price_str, size_str] <- ask_deltas do
+                for [price_str, size_str] <- ask_strs do
                   {price, _} = Float.parse(price_str)
                   {size, _} = Float.parse(size_str)
-                  {price, size, final_update_id}
+                  {price, size, delta_timestamp}
                 end
 
               cond do
@@ -203,21 +203,17 @@ defmodule Exchanges.Binance do
                 # the snapshot is ready for deltas
                 current_state["requested_snapshot"] == true and
                     current_state["buffer_deltas"] == false ->
-                  bids =
-                    for [price_str, size_str] <- bid_deltas do
-                      {price, _} = Float.parse(price_str)
-                      {size, _} = Float.parse(size_str)
+                  bid_deltas =
+                    for {price, size, _} <- bids do
                       {:bid, price, size}
                     end
 
-                  asks =
-                    for [price_str, size_str] <- ask_deltas do
-                      {price, _} = Float.parse(price_str)
-                      {size, _} = Float.parse(size_str)
+                  ask_deltas =
+                    for {price, size, _} <- asks do
                       {:ask, price, size}
                     end
 
-                  {[{:deltas, bids ++ asks}], current_state}
+                  {[{:deltas, bid_deltas ++ ask_deltas}], current_state}
               end
 
             %{

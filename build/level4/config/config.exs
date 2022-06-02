@@ -102,8 +102,8 @@ config :level4,
     # bitstamp.com
     #
     "BITSTAMP" => %{
-      # status: not working
-      # correctness: incorrect
+      # status: working
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.Bitstamp.Spot,
         url: "ws.bitstamp.net",
