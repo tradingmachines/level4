@@ -8,8 +8,9 @@ defmodule Exchanges.Bitflyer do
       @impl TranslationScheme
       def initial_state(base_symbol, quote_symbol) do
         %{
-          "base_symbol" => base_symbol,
-          "quote_symbol" => quote_symbol
+          "snapshot_chan" => "lightning_board_snapshot_#{base_symbol}_#{quote_symbol}",
+          "deltas_chan" => "lightning_board_#{base_symbol}_#{quote_symbol}",
+          "trades_chan" => "lightning_executions_#{base_symbol}_#{quote_symbol}"
         }
       end
 
@@ -21,13 +22,15 @@ defmodule Exchanges.Bitflyer do
 
       @impl TranslationScheme
       def subscribe_msg(base_symbol, quote_symbol) do
+        pair = "#{base_symbol}_#{quote_symbol}"
+
         {:ok, json_str_snapshot} =
           Jason.encode(%{
             "id" => "json_str_snapshot",
             "jsonrpc" => "2.0",
             "method" => "subscribe",
             "params" => %{
-              "channel" => "lightning_board_snapshot_#{base_symbol}_#{quote_symbol}"
+              "channel" => "lightning_board_snapshot_#{pair}"
             }
           })
 
@@ -37,7 +40,7 @@ defmodule Exchanges.Bitflyer do
             "jsonrpc" => "2.0",
             "method" => "subscribe",
             "params" => %{
-              "channel" => "lightning_board_#{base_symbol}_#{quote_symbol}"
+              "channel" => "lightning_board_#{pair}"
             }
           })
 
@@ -47,7 +50,7 @@ defmodule Exchanges.Bitflyer do
             "jsonrpc" => "2.0",
             "method" => "subscribe",
             "params" => %{
-              "channel" => "lightning_executions_#{base_symbol}_#{quote_symbol}"
+              "channel" => "lightning_executions_#{pair}"
             }
           })
 
@@ -62,9 +65,6 @@ defmodule Exchanges.Bitflyer do
 
       @impl TranslationScheme
       def translate(json, current_state) do
-        base_symbol = current_state["base_symbol"]
-        quote_symbol = current_state["quote_symbol"]
-
         instructions =
           case json do
             %{"id" => "json_str_snapshot", "result" => true} ->
@@ -77,13 +77,15 @@ defmodule Exchanges.Bitflyer do
               [:noop]
 
             %{
+              "method" => "channelMessage",
               "params" => %{
                 "channel" => channel,
                 "message" => message
               }
             } ->
               cond do
-                channel == "lightning_board_snapshot_#{base_symbol}_#{quote_symbol}" ->
+                # handle snapshot message
+                channel == current_state["snapshot_chan"] ->
                   %{
                     "bids" => bid_updates,
                     "asks" => ask_updates
@@ -111,7 +113,8 @@ defmodule Exchanges.Bitflyer do
 
                   [{:snapshot, bids, asks}]
 
-                channel == "lightning_board_#{base_symbol}_#{quote_symbol}" ->
+                # handle deltas message
+                channel == current_state["deltas_chan"] ->
                   %{
                     "bids" => bid_updates,
                     "asks" => ask_updates
@@ -139,7 +142,8 @@ defmodule Exchanges.Bitflyer do
 
                   [{:deltas, bids ++ asks}]
 
-                channel == "lightning_executions_#{base_symbol}_#{quote_symbol}" ->
+                # handle trades message
+                channel == current_state["trades_chan"] ->
                   buys =
                     message
                     |> Enum.filter(fn %{"side" => side} -> side == "BUY" end)

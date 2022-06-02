@@ -72,7 +72,7 @@ config :level4,
         url: "ws.lightstream.bitflyer.com",
         path: "/json-rpc",
         port: 443,
-        ping?: true
+        ping?: false
       }
     },
     #
