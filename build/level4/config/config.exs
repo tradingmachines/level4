@@ -208,8 +208,8 @@ config :level4,
         port: 443,
         ping?: false
       },
-      # status: not working
-      # correctness: unchecked
+      # status: working
+      # correctness: correct
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.HitBTC.Futures,
         url: "api.hitbtc.com",

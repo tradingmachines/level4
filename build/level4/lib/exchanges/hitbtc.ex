@@ -6,11 +6,6 @@ defmodule Exchanges.HitBTC do
   defmacro __using__(_opts) do
     quote do
       @impl TranslationScheme
-      def initial_state(base_symbol, quote_symbol) do
-        %{"symbol" => "#{base_symbol}#{quote_symbol}"}
-      end
-
-      @impl TranslationScheme
       def ping_msg(current_state) do
         {:ok, json_str} = Jason.encode(%{"op" => "ping"})
         {:ok, [json_str]}
@@ -116,6 +111,11 @@ defmodule Exchanges.HitBTC.Spot do
   use Exchanges.HitBTC
 
   @impl TranslationScheme
+  def initial_state(base_symbol, quote_symbol) do
+    %{"symbol" => "#{base_symbol}#{quote_symbol}"}
+  end
+
+  @impl TranslationScheme
   def subscribe_msg(base_symbol, quote_symbol) do
     {:ok, json_str_book} =
       Jason.encode(%{
@@ -152,6 +152,11 @@ defmodule Exchanges.HitBTC.Futures do
   @behaviour TranslationScheme
 
   use Exchanges.HitBTC
+
+  @impl TranslationScheme
+  def initial_state(base_symbol, quote_symbol) do
+    %{"symbol" => "#{base_symbol}#{quote_symbol}_PERP"}
+  end
 
   @impl TranslationScheme
   def subscribe_msg(base_symbol, quote_symbol) do
