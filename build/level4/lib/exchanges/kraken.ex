@@ -17,29 +17,6 @@ defmodule Exchanges.Kraken do
       end
 
       @impl TranslationScheme
-      def subscribe_msg(base_symbol, quote_symbol) do
-        {:ok, json_str_book} =
-          Jason.encode(%{
-            "event" => "subscribe",
-            "feed" => "book",
-            "product_ids" => [
-              "PI_#{base_symbol}#{quote_symbol}"
-            ]
-          })
-
-        {:ok, json_str_trade} =
-          Jason.encode(%{
-            "event" => "subscribe",
-            "feed" => "trade",
-            "product_ids" => [
-              "PI_#{base_symbol}#{quote_symbol}"
-            ]
-          })
-
-        {:ok, [json_str_book, json_str_trade]}
-      end
-
-      @impl TranslationScheme
       def synchronised?(current_state) do
         # TODO
         true
@@ -49,6 +26,9 @@ defmodule Exchanges.Kraken do
       def translate(json, current_state) do
         instructions =
           case json do
+            %{"event" => "info", "version" => 1} ->
+              [:noop]
+
             %{"event" => "subscribed", "feed" => "book"} ->
               [:noop]
 
@@ -91,6 +71,9 @@ defmodule Exchanges.Kraken do
                 end
 
               [{:deltas, deltas}]
+
+            %{"feed" => "trade_snapshot"} ->
+              [:noop]
 
             %{
               "feed" => "trade",
@@ -177,6 +160,7 @@ defmodule Exchanges.Kraken.Spot do
             "heartbeat" -> [:noop]
           end
 
+        # handle snapshot
         [_, %{"as" => initial_asks, "bs" => initial_bids}, _, _] ->
           bids =
             for [price_str, size_str, _] <- initial_bids do
@@ -194,6 +178,7 @@ defmodule Exchanges.Kraken.Spot do
 
           [{:snapshot, bids, asks}]
 
+        # handle bid deltas
         [_, %{"b" => bid_updates}, _, _] ->
           deltas =
             for bid_update <- bid_updates do
@@ -204,6 +189,7 @@ defmodule Exchanges.Kraken.Spot do
 
           [{:deltas, deltas}]
 
+        # handle ask deltas
         [_, %{"a" => ask_updates}, _, _] ->
           deltas =
             for ask_update <- ask_updates do
@@ -214,6 +200,7 @@ defmodule Exchanges.Kraken.Spot do
 
           [{:deltas, deltas}]
 
+        # handle bid and ask deltas
         [_, %{"a" => ask_updates}, %{"b" => bid_updates}, _, _] ->
           bid_deltas =
             for bid_update <- bid_updates do
@@ -231,6 +218,7 @@ defmodule Exchanges.Kraken.Spot do
 
           [{:deltas, bid_deltas ++ ask_deltas}]
 
+        # handle trades
         [_, trades, _, _] ->
           for [price_str, size_str, timestamp_str, side, _, _] <- trades do
             {price, _} = Float.parse(price_str)
@@ -263,6 +251,29 @@ defmodule Exchanges.Kraken.Futures do
   @behaviour TranslationScheme
 
   use Exchanges.Kraken
+
+  @impl TranslationScheme
+  def subscribe_msg(base_symbol, quote_symbol) do
+    {:ok, json_str_book} =
+      Jason.encode(%{
+        "event" => "subscribe",
+        "feed" => "book",
+        "product_ids" => [
+          "PF_#{base_symbol}#{quote_symbol}"
+        ]
+      })
+
+    {:ok, json_str_trade} =
+      Jason.encode(%{
+        "event" => "subscribe",
+        "feed" => "trade",
+        "product_ids" => [
+          "PF_#{base_symbol}#{quote_symbol}"
+        ]
+      })
+
+    {:ok, [json_str_book, json_str_trade]}
+  end
 end
 
 defmodule Exchanges.Kraken.Inverse do
@@ -277,4 +288,27 @@ defmodule Exchanges.Kraken.Inverse do
   @behaviour TranslationScheme
 
   use Exchanges.Kraken
+
+  @impl TranslationScheme
+  def subscribe_msg(base_symbol, quote_symbol) do
+    {:ok, json_str_book} =
+      Jason.encode(%{
+        "event" => "subscribe",
+        "feed" => "book",
+        "product_ids" => [
+          "PI_#{base_symbol}#{quote_symbol}"
+        ]
+      })
+
+    {:ok, json_str_trade} =
+      Jason.encode(%{
+        "event" => "subscribe",
+        "feed" => "trade",
+        "product_ids" => [
+          "PI_#{base_symbol}#{quote_symbol}"
+        ]
+      })
+
+    {:ok, [json_str_book, json_str_trade]}
+  end
 end

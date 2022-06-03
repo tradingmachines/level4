@@ -127,9 +127,23 @@ defmodule Exchanges.Poloniex.Spot do
   @moduledoc """
   Spot markets.
 
-  Change log and websocket docs:
+  Relevant documentation:
   - https://docs.poloniex.com/#changelog
   - https://docs.poloniex.com/#websocket-api
+  """
+
+  @behaviour TranslationScheme
+
+  use Exchanges.Poloniex
+end
+
+defmodule Exchanges.Poloniex.Futures do
+  @moduledoc """
+  Futures markets.
+
+  Relevant documentation:
+  - https://futures-docs.poloniex.com/#general
+  - https://futures-docs.poloniex.com/#apply-for-connection-token
   """
 
   @behaviour TranslationScheme

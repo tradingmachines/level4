@@ -175,9 +175,10 @@ defmodule Market.Level2.WebSocket do
   @impl true
   def init(init_arg) do
     # market internal representation
-    # and socket host:port
     market = init_arg[:market]
-    url = to_charlist(market.ws_url)
+
+    # websocket host:port
+    ws_host = to_charlist(market.ws_host)
     port = market.ws_port
 
     # ask translation scheme for initial state
@@ -200,7 +201,7 @@ defmodule Market.Level2.WebSocket do
     }
 
     # attempt connection
-    case :gun.open(url, port, options) do
+    case :gun.open(ws_host, port, options) do
       # started successfully
       {:ok, conn_pid} ->
         context = %{

@@ -114,7 +114,7 @@ defmodule MarketController do
     # walk the map exchange name -> market type -> market parameters
     %{
       translation_scheme: translation_scheme,
-      url: url,
+      ws_host: ws_host,
       path: path,
       port: port,
       ping?: ping?
@@ -129,7 +129,7 @@ defmodule MarketController do
       quote_symbol: market.quote_symbol.symbol,
       market_type: market.market_type,
       market_id: market.id,
-      ws_url: url,
+      ws_host: ws_host,
       ws_path: path,
       ws_port: port,
       ping?: ping?
