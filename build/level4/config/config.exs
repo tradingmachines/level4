@@ -117,7 +117,7 @@ config :level4,
     #
     "BYBIT" => %{
       # status: working
-      # correctness: incorrect
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.Bybit.Spot,
         url: "stream.bybit.com",

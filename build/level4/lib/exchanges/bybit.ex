@@ -22,9 +22,44 @@ defmodule Exchanges.Bybit.Spot do
 
   use Exchanges.Bybit
 
+  def infer_deltas(side, old, new) do
+    insert =
+      new
+      |> Enum.filter(fn {price, _} ->
+        not Map.has_key?(old, price)
+      end)
+      |> Enum.map(fn {price, size} ->
+        {side, price, size}
+      end)
+
+    update =
+      new
+      |> Enum.filter(fn {price, size} ->
+        Map.has_key?(old, price) and old[price] != size
+      end)
+      |> Enum.map(fn {price, size} ->
+        {side, price, size}
+      end)
+
+    delete =
+      old
+      |> Enum.filter(fn {price, _} ->
+        not Map.has_key?(new, price)
+      end)
+      |> Enum.map(fn {price, _} ->
+        {side, price, 0}
+      end)
+
+    insert ++ update ++ delete
+  end
+
   @impl TranslationScheme
   def initial_state(base_symbol, quote_symbol) do
-    %{"did_snapshot" => false}
+    %{
+      "did_snapshot" => false,
+      "bids" => %{},
+      "asks" => %{}
+    }
   end
 
   @impl TranslationScheme
@@ -77,52 +112,91 @@ defmodule Exchanges.Bybit.Spot do
         %{"pong" => _} ->
           {[:noop], current_state}
 
-        %{"topic" => "depth", "data" => data} ->
+        %{
+          "topic" => "depth",
+          "data" => %{
+            "b" => bid_strs,
+            "a" => ask_strs
+          }
+        } ->
+          bids =
+            for [price_str, size_str] <- bid_strs do
+              {price, _} = Float.parse(price_str)
+              {size, _} = Float.parse(size_str)
+              {price, size}
+            end
+            |> Enum.into(%{})
+
+          asks =
+            for [price_str, size_str] <- ask_strs do
+              {price, _} = Float.parse(price_str)
+              {size, _} = Float.parse(size_str)
+              {price, size}
+            end
+            |> Enum.into(%{})
+
           if current_state["did_snapshot"] do
-            bids =
-              for [price_str, size_str] <- data["b"] do
-                {price, _} = Float.parse(price_str)
-                {size, _} = Float.parse(size_str)
-                {:bid, price, size}
-              end
+            bid_deltas =
+              infer_deltas(
+                :bid,
+                current_state["bids"],
+                bids
+              )
 
-            asks =
-              for [price_str, size_str] <- data["a"] do
-                {price, _} = Float.parse(price_str)
-                {size, _} = Float.parse(size_str)
-                {:ask, price, size}
-              end
+            ask_deltas =
+              infer_deltas(
+                :ask,
+                current_state["asks"],
+                asks
+              )
 
-            {[{:deltas, bids ++ asks}], current_state}
+            {
+              [{:deltas, bid_deltas ++ ask_deltas}],
+              %{
+                current_state
+                | "bids" => bids,
+                  "asks" => asks
+              }
+            }
           else
-            bids =
-              for [price_str, size_str] <- data["b"] do
-                {price, _} = Float.parse(price_str)
-                {size, _} = Float.parse(size_str)
-                {price, size}
-              end
-
-            asks =
-              for [price_str, size_str] <- data["a"] do
-                {price, _} = Float.parse(price_str)
-                {size, _} = Float.parse(size_str)
-                {price, size}
-              end
-
-            {[{:snapshot, bids, asks}], %{current_state | "did_snapshot" => true}}
+            {
+              [{:snapshot, bids, asks}],
+              %{
+                current_state
+                | "did_snapshot" => true,
+                  "bids" => bids,
+                  "asks" => asks
+              }
+            }
           end
 
-        %{"topic" => "trade", "data" => data} ->
-          {price, _} = Float.parse(data["p"])
-          {size, _} = Float.parse(data["q"])
+        %{
+          "topic" => "trade",
+          "data" => %{
+            "t" => epoch_ms,
+            "p" => price_str,
+            "q" => size_str,
+            "m" => buy_side_is_taker
+          }
+        } ->
+          {price, _} = Float.parse(price_str)
+          {size, _} = Float.parse(size_str)
 
-          epoch_ms = data["t"]
           epoch_micro = epoch_ms * 1000
           {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
 
-          case data["m"] do
-            true -> {[{:buys, [{price, size, timestamp}]}], current_state}
-            false -> {[{:sells, [{price, size, timestamp}]}], current_state}
+          case buy_side_is_taker do
+            true ->
+              {
+                [{:buys, [{price, size, timestamp}]}],
+                current_state
+              }
+
+            false ->
+              {
+                [{:sells, [{price, size, timestamp}]}],
+                current_state
+              }
           end
       end
 
@@ -184,7 +258,10 @@ defmodule Exchanges.Bybit.Futures do
         %{"success" => true} ->
           [:noop]
 
-        %{"type" => "snapshot", "data" => %{"order_book" => levels}} ->
+        %{
+          "type" => "snapshot",
+          "data" => %{"order_book" => levels}
+        } ->
           bids =
             levels
             |> Enum.filter(fn %{"side" => side} -> side == "Buy" end)
@@ -205,7 +282,10 @@ defmodule Exchanges.Bybit.Futures do
 
           [{:snapshot, bids, asks}]
 
-        %{"type" => "delta", "data" => data} ->
+        %{
+          "type" => "delta",
+          "data" => data
+        } ->
           inserts =
             for %{
                   "price" => price_str,
@@ -349,7 +429,10 @@ defmodule Exchanges.Bybit.Inverse do
         %{"success" => true} ->
           [:noop]
 
-        %{"type" => "snapshot", "data" => levels} ->
+        %{
+          "type" => "snapshot",
+          "data" => levels
+        } ->
           bids =
             levels
             |> Enum.filter(fn %{"side" => side} -> side == "Buy" end)
@@ -370,7 +453,10 @@ defmodule Exchanges.Bybit.Inverse do
 
           [{:snapshot, bids, asks}]
 
-        %{"type" => "delta", "data" => data} ->
+        %{
+          "type" => "delta",
+          "data" => data
+        } ->
           inserts =
             for %{
                   "price" => price_str,
