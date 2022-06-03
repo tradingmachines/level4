@@ -163,7 +163,7 @@ config :level4,
     #
     "FTX" => %{
       # status: working
-      # correctness: incorrect
+      # correctness: correct
       "SPOT" => %{
         translation_scheme: Exchanges.FTX.Spot,
         url: "ftx.com",
@@ -172,7 +172,7 @@ config :level4,
         ping?: true
       },
       # status: working
-      # correctness: incorrect
+      # correctness: correct
       "PERP-FUTURES" => %{
         translation_scheme: Exchanges.FTX.Futures,
         url: "ftx.com",

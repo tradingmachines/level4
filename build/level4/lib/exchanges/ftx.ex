@@ -38,9 +38,6 @@ defmodule Exchanges.FTX do
             %{"type" => "pong"} ->
               [:noop]
 
-            %{"type" => "error"} ->
-              [:noop]
-
             %{
               "type" => "partial",
               "data" => %{
@@ -78,7 +75,7 @@ defmodule Exchanges.FTX do
 
               asks =
                 Enum.map(
-                  bid_updates,
+                  ask_updates,
                   fn [price, size] -> {:ask, price, size} end
                 )
 
