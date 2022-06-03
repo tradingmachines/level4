@@ -136,17 +136,3 @@ defmodule Exchanges.Poloniex.Spot do
 
   use Exchanges.Poloniex
 end
-
-defmodule Exchanges.Poloniex.Futures do
-  @moduledoc """
-  Futures markets.
-
-  Relevant documentation:
-  - https://futures-docs.poloniex.com/#general
-  - https://futures-docs.poloniex.com/#apply-for-connection-token
-  """
-
-  @behaviour TranslationScheme
-
-  use Exchanges.Poloniex
-end

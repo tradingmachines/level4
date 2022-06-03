@@ -262,15 +262,6 @@ config :level4,
         path: "/",
         port: 443,
         ping?: false
-      },
-      # status: not implemented
-      # correctness: unchecked
-      "PERP-FUTURES" => %{
-        translation_scheme: Exchanges.Poloniex.Futures,
-        ws_host: "futures-apiws.poloniex.com",
-        path: "/endpoint",
-        port: 443,
-        ping?: true
       }
     }
   }
