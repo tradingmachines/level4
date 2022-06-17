@@ -143,7 +143,11 @@ defmodule MarketController do
   not need to pass a PID to the `start_market` helper function.
   """
   def start_link(init_arg) do
-    DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+    DynamicSupervisor.start_link(
+      __MODULE__,
+      init_arg,
+      name: __MODULE__
+    )
   end
 
   @doc """
@@ -212,7 +216,8 @@ defmodule MarketController do
           %{
             id: Market.Supervisor,
             start: {Market.Supervisor, :start_link, [[market: market]]},
-            type: :supervisor
+            type: :supervisor,
+            restart: :temporary
           }
         )
 

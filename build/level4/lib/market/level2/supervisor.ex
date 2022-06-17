@@ -44,12 +44,12 @@ defmodule Market.Level2.Supervisor do
         %{
           id: Market.Level2.WebSocket,
           start: {Market.Level2.WebSocket, :start_link, [init_arg]},
-          type: :worker,
-          max_restarts: 1,
-          max_seconds: 2
+          type: :worker
         }
       ],
-      strategy: :rest_for_one
+      strategy: :rest_for_one,
+      max_restarts: 3,
+      max_seconds: 5
     )
   end
 end

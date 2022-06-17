@@ -50,7 +50,8 @@ defmodule Market.Supervisor do
           type: :supervisor
         }
       ],
-      strategy: :one_for_all
+      strategy: :one_for_all,
+      max_restarts: 1
     )
   end
 end
