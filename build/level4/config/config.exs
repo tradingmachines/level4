@@ -1,5 +1,8 @@
 import Config
 
+# set log level
+config :logger, level: :info
+
 # ecto storage repo
 config :level4, ecto_repos: [Storage.Repo]
 
