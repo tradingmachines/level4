@@ -168,32 +168,8 @@ defmodule MarketController do
   the market if it doesn't already exist, obviously, so you must have
   already created the symbol, exchange, and market records in the ecto
   repo beforehand. See the queries package for more info on how to do
-  this.
-
-  start(:all) will start market data feeds for all inactive markets.
-  A websocket connection will be established for each data feed. The
-  order in which data feeds are started depends on the order of the
-  results returned by the Query.Markets.are_disabled query. By
-  default there is a five second delay between starts. A delay lambda
-  function can be provided by calling start(:all, fn -> <ms to wait> end).
+  this. A websocket connection will be established for each data feed.
   """
-  def start(:all) do
-    start(:all, fn -> 5000 end)
-  end
-
-  def start(:all, delay) do
-    {:ok, stopped} = Query.Markets.are_disabled()
-
-    results =
-      for %{id: id} <- stopped do
-        {:ok, result} = start(id)
-        Process.sleep(delay.())
-        result
-      end
-
-    {:ok, results}
-  end
-
   def start(id) do
     # get the market from database
     # and convert into internal representation
@@ -231,31 +207,7 @@ defmodule MarketController do
   market exists. Refer to queries package. The market is not removed
   from the repo database. The data feed is simply switched off. This
   is a clean way of disconnecting from a specific websocket feed.
-
-  stop(:all) will disconnect from all active websoket connections
-  and shut down live market data feeds. The order in which markets
-  are stopped depends on the order of the results returned by the
-  Query.Markets.are_enabled query. By default there is no delay
-  between shutdowns. A delay lambda function can be provided by
-  calling stop(:all, fn -> <ms to wait> end).
   """
-  def stop(:all) do
-    stop(:all, fn -> 0 end)
-  end
-
-  def stop(:all, delay) do
-    {:ok, started} = Query.Markets.are_enabled()
-
-    results =
-      for %{id: id} <- started do
-        {:ok, result} = stop(id)
-        Process.sleep(delay.())
-        result
-      end
-
-    {:ok, results}
-  end
-
   def stop(id) do
     # get the market from database
     # and convert into internal representation
@@ -273,17 +225,26 @@ defmodule MarketController do
         {:ok, new_result} = Query.Markets.set_enabled(result, false)
 
         # consult Market.Supervisor.Registry to find child's pid
-        [{pid, _}] =
+        children =
           Registry.lookup(
             Market.Supervisor.Registry,
             Market.tag(market)
           )
 
-        # terminate the child
-        # this will trigger shutdown process down the subtree
-        :ok = DynamicSupervisor.terminate_child(__MODULE__, pid)
+        cond do
+          # child does not exist
+          # it must have crashed
+          length(children) == 0 ->
+            Logger.info("#{market}: data feed does not exist")
 
-        Logger.info("#{market}: stopped market")
+          # terminate the child
+          # this will trigger shutdown process in the subtree
+          length(children) == 1 ->
+            [{pid, _}] = children
+            :ok = DynamicSupervisor.terminate_child(__MODULE__, pid)
+            Logger.info("#{market}: successfully stopped market")
+        end
+
         {:ok, new_result}
     end
   end
