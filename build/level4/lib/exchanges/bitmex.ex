@@ -130,12 +130,12 @@ defmodule Exchanges.Bitmex do
                   end
                 )
 
-              # handle trades
               {
                 [{:deltas, deltas}],
                 %{current_state | "id_to_price" => new_id_to_price}
               }
 
+            # handle trades
             %{
               "table" => "trade",
               "action" => "insert",
