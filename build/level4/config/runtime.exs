@@ -13,10 +13,7 @@ config :level4, Storage.Repo,
 config :kaffe,
   producer: [
     endpoints: [
-      kafka1: 9092
-      #      kafka2: 9092,
-      #      kafka3: 9092,
-      #      kafka4: 9092
+      kafka: 9092
     ],
     topics: [
       "level4.spread",

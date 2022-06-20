@@ -3,7 +3,7 @@ version: "3.9"
 networks:
   traefik_public:
     external: true
-  light_wsantos_net_streaming:
+  light_wsantos_net_kafka:
     external: true
   database:
     driver: "overlay"
@@ -12,25 +12,6 @@ volumes:
   database:
     driver: "local"
 
-x-deploy-default: &deploy_default
-  replicas: 1
-  restart_policy:
-    condition: "any"
-    delay: "5s"
-
-x-deploy-manager: &manager_default
-  placement:
-    constraints:
-      - "node.role==manager"
-
-x-deploy-manager-vip: &to_manager_with_vip
-  <<: *manager_default
-  endpoint_mode: "vip"
-
-x-deploy-manager-dnsrr: &to_manager_with_dnsrr
-  <<: *manager_default
-  endpoint_mode: "dnsrr"
-
 services:
   level4:
     image: "registry.wsantos.net/tradingmachines/level4:latest"
@@ -38,15 +19,15 @@ services:
       - "database"
     networks:
       - "traefik_public"
-      - "light_wsantos_net_streaming"
+      - "light_wsantos_net_kafka"
       - "database"
+    # remember to remove this
     ports:
       - target: 5000
         published: 5000
         protocol: "tcp"
         mode: "host"
     deploy:
-      <<: *to_manager_with_dnsrr
       labels:
         # traefik
         - "traefik.enable=true"
@@ -71,5 +52,3 @@ services:
       - "POSTGRES_USER=level4"
       - "POSTGRES_PASSWORD=level4"
       - "POSTGRES_HOST_AUTH_METHOD=password"
-    deploy:
-      <<: *to_manager_with_dnsrr
