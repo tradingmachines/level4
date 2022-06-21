@@ -39,16 +39,17 @@ defmodule Market.Exchange do
   @doc """
   GenServer cast functions for async API calls.
   """
+  # {price, initial liquidity}
   # :best_bid_change -> the best bid price changed -> log it
-  # {price, initial liquidity, utc timestamp nano seconds}
+  # by sending to kafka topic
   @impl true
   def handle_cast(
-        {:best_bid_change, {price, liquidity, timestamp}},
+        {:best_bid_change, {price, liquidity}},
         market
       ) do
     # nano second time
     # use market id as kafka message key
-    unix_ts_ns = DateTime.to_unix(timestamp, :nanosecond)
+    unix_ts_ns = :erlang.system_time(:nanosecond)
     market_id_str = Integer.to_string(market.market_id)
 
     # make json string message content
@@ -71,15 +72,16 @@ defmodule Market.Exchange do
     {:noreply, market}
   end
 
+  # {price, initial liquidity}
   # :best_ask_change -> the best ask price changed -> log it
-  # {price, initial liquidity, utc timestamp nano seconds}
+  # by sending to kafka topic
   def handle_cast(
-        {:best_ask_change, {price, liquidity, timestamp}},
+        {:best_ask_change, {price, liquidity}},
         market
       ) do
     # nano second time
     # use market id as kafka message key
-    unix_ts_ns = DateTime.to_unix(timestamp, :nanosecond)
+    unix_ts_ns = :erlang.system_time(:nanosecond)
     market_id_str = Integer.to_string(market.market_id)
 
     # make json string message content
@@ -102,15 +104,13 @@ defmodule Market.Exchange do
     {:noreply, market}
   end
 
-  # :new_buy -> there was a new market buy -> log it
-  # {price, size, utc timestamp nano seconds}
-  def handle_cast(
-        {:new_buy, {price, size, timestamp}},
-        market
-      ) do
+  # {price, size}
+  # :new_buy -> there was a new market buy -> log it by sending
+  # to kafka topic
+  def handle_cast({:new_buy, {price, size}}, market) do
     # nano second time
     # use market id as kafka message key
-    unix_ts_ns = DateTime.to_unix(timestamp, :nanosecond)
+    unix_ts_ns = :erlang.system_time(:nanosecond)
     market_id_str = Integer.to_string(market.market_id)
 
     # make json string message content
@@ -133,15 +133,13 @@ defmodule Market.Exchange do
     {:noreply, market}
   end
 
-  # :new_sell -> there was a new market buy -> log it
-  # {price, size, utc timestamp nano seconds}
-  def handle_cast(
-        {:new_sell, {price, size, timestamp}},
-        market
-      ) do
+  # {price, size}
+  # :new_sell -> there was a new market buy -> log it by sending
+  # to kafka topic
+  def handle_cast({:new_sell, {price, size}}, market) do
     # nano second time
     # use market id as kafka message key
-    unix_ts_ns = DateTime.to_unix(timestamp, :nanosecond)
+    unix_ts_ns = :erlang.system_time(:nanosecond)
     market_id_str = Integer.to_string(market.market_id)
 
     # make json string message content
@@ -169,10 +167,10 @@ defmodule Market.Exchange do
   :best_bid_change to the GenServer. Note: casts are asynchronous
   requests.
   """
-  def best_bid_change(exchange, {new_price, new_size, timestamp}) do
+  def best_bid_change(exchange, {new_price, new_size}) do
     GenServer.cast(
       exchange,
-      {:best_bid_change, {new_price, new_size, timestamp}}
+      {:best_bid_change, {new_price, new_size}}
     )
   end
 
@@ -181,10 +179,10 @@ defmodule Market.Exchange do
   :best_ask_change to the GenServer. Note: casts are asynchronous
   requests.
   """
-  def best_ask_change(exchange, {new_price, new_size, timestamp}) do
+  def best_ask_change(exchange, {new_price, new_size}) do
     GenServer.cast(
       exchange,
-      {:best_ask_change, {new_price, new_size, timestamp}}
+      {:best_ask_change, {new_price, new_size}}
     )
   end
 
@@ -193,10 +191,10 @@ defmodule Market.Exchange do
   :new_buy to the GenServer. Note: casts are asynchronous
   requests.
   """
-  def new_buy(exchange, {price, size, timestamp}) do
+  def new_buy(exchange, {price, size}) do
     GenServer.cast(
       exchange,
-      {:new_buy, {price, size, timestamp}}
+      {:new_buy, {price, size}}
     )
   end
 
@@ -205,10 +203,10 @@ defmodule Market.Exchange do
   :new_sell to the GenServer. Note: casts are asynchronous
   requests.
   """
-  def new_sell(exchange, {price, size, timestamp}) do
+  def new_sell(exchange, {price, size}) do
     GenServer.cast(
       exchange,
-      {:new_sell, {price, size, timestamp}}
+      {:new_sell, {price, size}}
     )
   end
 end

@@ -79,15 +79,11 @@ defmodule Exchanges.Kraken do
               "feed" => "trade",
               "side" => side,
               "price" => price,
-              "qty" => size,
-              "time" => epoch_ms
+              "qty" => size
             } ->
-              epoch_micro = epoch_ms * 1000
-              {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
               case side do
-                "buy" -> {:buys, [{price, size, timestamp}]}
-                "sell" -> {:sells, [{price, size, timestamp}]}
+                "buy" -> {:buys, [{price, size}]}
+                "sell" -> {:sells, [{price, size}]}
               end
           end
 
@@ -220,17 +216,13 @@ defmodule Exchanges.Kraken.Spot do
 
         # handle trades
         [_, trades, _, _] ->
-          for [price_str, size_str, timestamp_str, side, _, _] <- trades do
+          for [price_str, size_str, _, side, _, _] <- trades do
             {price, _} = Float.parse(price_str)
             {size, _} = Float.parse(size_str)
-            {epoch, _} = Float.parse(timestamp_str)
-
-            epoch_micro = trunc(epoch * 1_000_000)
-            {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
 
             case side do
-              "b" -> {:buys, [{price, size, timestamp}]}
-              "s" -> {:sells, [{price, size, timestamp}]}
+              "b" -> {:buys, [{price, size}]}
+              "s" -> {:sells, [{price, size}]}
             end
           end
       end

@@ -173,7 +173,6 @@ defmodule Exchanges.Bybit.Spot do
         %{
           "topic" => "trade",
           "data" => %{
-            "t" => epoch_ms,
             "p" => price_str,
             "q" => size_str,
             "m" => buy_side_is_taker
@@ -182,19 +181,16 @@ defmodule Exchanges.Bybit.Spot do
           {price, _} = Float.parse(price_str)
           {size, _} = Float.parse(size_str)
 
-          epoch_micro = epoch_ms * 1000
-          {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
           case buy_side_is_taker do
             true ->
               {
-                [{:buys, [{price, size, timestamp}]}],
+                [{:buys, [{price, size}]}],
                 current_state
               }
 
             false ->
               {
-                [{:sells, [{price, size, timestamp}]}],
+                [{:sells, [{price, size}]}],
                 current_state
               }
           end
@@ -343,11 +339,7 @@ defmodule Exchanges.Bybit.Futures do
               {price, _} = Float.parse(price_str)
               size = size_int / 1
 
-              {epoch_ms, _} = Integer.parse(trade_time_ms_str)
-              epoch_micro = epoch_ms * 1000
-              {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
-              {price, size, timestamp}
+              {price, size}
             end)
 
           sells =
@@ -361,11 +353,7 @@ defmodule Exchanges.Bybit.Futures do
               {price, _} = Float.parse(price_str)
               size = size_int / 1
 
-              {epoch_ms, _} = Integer.parse(trade_time_ms_str)
-              epoch_micro = epoch_ms * 1000
-              {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
-              {price, size, timestamp}
+              {price, size}
             end)
 
           [{:buys, buys}, {:sells, sells}]
@@ -506,35 +494,21 @@ defmodule Exchanges.Bybit.Inverse do
           buys =
             data
             |> Enum.filter(fn %{"side" => side} -> side == "Buy" end)
-            |> Enum.map(fn %{
-                             "price" => price_int,
-                             "size" => size_int,
-                             "trade_time_ms" => epoch_ms
-                           } ->
+            |> Enum.map(fn %{"price" => price_int, "size" => size_int} ->
               price = price_int / 1
               size = size_int / 1
 
-              epoch_micro = epoch_ms * 1000
-              {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
-              {price, size, timestamp}
+              {price, size}
             end)
 
           sells =
             data
             |> Enum.filter(fn %{"side" => side} -> side == "Sell" end)
-            |> Enum.map(fn %{
-                             "price" => price_int,
-                             "size" => size_int,
-                             "trade_time_ms" => epoch_ms
-                           } ->
+            |> Enum.map(fn %{"price" => price_int, "size" => size_int} ->
               price = price_int / 1
               size = size_int / 1
 
-              epoch_micro = epoch_ms * 1000
-              {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
-              {price, size, timestamp}
+              {price, size}
             end)
 
           [{:buys, buys}, {:sells, sells}]

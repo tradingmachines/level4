@@ -233,28 +233,22 @@ defmodule Exchanges.Bitstamp do
               "data" => %{
                 "price" => price_int,
                 "amount" => size_int,
-                "timestamp" => epoch_sec_str,
                 "type" => side
               }
             } ->
               price = price_int / 1
               size = size_int / 1
 
-              {epoch_sec, _} = Integer.parse(epoch_sec_str)
-              epoch_ms = epoch_sec * 1000
-              epoch_micro = epoch_ms * 1000
-              {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
               case side do
                 0 ->
                   {
-                    [{:buys, [{price, size, timestamp}]}],
+                    [{:buys, [{price, size}]}],
                     current_state
                   }
 
                 1 ->
                   {
-                    [{:sells, [{price, size, timestamp}]}],
+                    [{:sells, [{price, size}]}],
                     current_state
                   }
               end

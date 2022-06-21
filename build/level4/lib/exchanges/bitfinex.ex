@@ -99,27 +99,19 @@ defmodule Exchanges.Bitfinex do
                 "te" ->
                   cond do
                     chan_id == current_state["trades_cid"] ->
-                      [_, epoch_ms, amount_int, price_int] = data
+                      [_, _, amount_int, price_int] = data
 
                       price = price_int / 1
                       amount = amount_int / 1
 
-                      epoch_micro = epoch_ms * 1000
-
-                      {:ok, timestamp} =
-                        DateTime.from_unix(
-                          epoch_micro,
-                          :microsecond
-                        )
-
                       if amount > 0 do
                         {
-                          [{:buys, [{price, amount, timestamp}]}],
+                          [{:buys, [{price, amount}]}],
                           current_state
                         }
                       else
                         {
-                          [{:sells, [{price, -amount, timestamp}]}],
+                          [{:sells, [{price, -amount}]}],
                           current_state
                         }
                       end

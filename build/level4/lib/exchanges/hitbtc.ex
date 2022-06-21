@@ -54,7 +54,6 @@ defmodule Exchanges.HitBTC do
                 "trades" ->
                   for update <- update[symbol] do
                     %{
-                      "t" => epoch_ms,
                       "p" => price_str,
                       "q" => size_str,
                       "s" => side
@@ -63,12 +62,9 @@ defmodule Exchanges.HitBTC do
                     {price, _} = Float.parse(price_str)
                     {size, _} = Float.parse(size_str)
 
-                    epoch_micro = epoch_ms * 1000
-                    {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
                     case side do
-                      "buy" -> {:buys, [{price, size, timestamp}]}
-                      "sell" -> {:sells, [{price, size, timestamp}]}
+                      "buy" -> {:buys, [{price, size}]}
+                      "sell" -> {:sells, [{price, size}]}
                     end
                   end
 

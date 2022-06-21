@@ -218,7 +218,6 @@ defmodule Exchanges.Binance do
 
             %{
               "e" => "trade",
-              "T" => epoch_ms,
               "p" => price_str,
               "q" => size_str,
               "m" => buyer_is_market_maker
@@ -226,18 +225,10 @@ defmodule Exchanges.Binance do
               {price, _} = Float.parse(price_str)
               {size, _} = Float.parse(size_str)
 
-              epoch_micro = epoch_ms * 1000
-
-              {:ok, timestamp} =
-                DateTime.from_unix(
-                  epoch_micro,
-                  :microsecond
-                )
-
               if buyer_is_market_maker do
-                {[{:sells, [{price, size, timestamp}]}], current_state}
+                {[{:sells, [{price, size}]}], current_state}
               else
-                {[{:buys, [{price, size, timestamp}]}], current_state}
+                {[{:buys, [{price, size}]}], current_state}
               end
           end
 

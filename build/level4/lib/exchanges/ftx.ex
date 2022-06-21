@@ -89,14 +89,11 @@ defmodule Exchanges.FTX do
               for %{
                     "price" => price,
                     "size" => size,
-                    "side" => side,
-                    "time" => timestamp_str
+                    "side" => side
                   } <- data do
-                {:ok, timestamp, 0} = DateTime.from_iso8601(timestamp_str)
-
                 case side do
-                  "buy" -> {:buys, [{price, size, timestamp}]}
-                  "sell" -> {:sells, [{price, size, timestamp}]}
+                  "buy" -> {:buys, [{price, size}]}
+                  "sell" -> {:sells, [{price, size}]}
                 end
               end
           end

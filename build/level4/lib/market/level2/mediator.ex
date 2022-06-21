@@ -61,9 +61,6 @@ defmodule Market.Level2.Mediator do
 
   # handle book bid/ask delta
   def handle_call({:delta, {side, price, liquidity}}, _, state) do
-    # record the current timestamp
-    timestamp = DateTime.utc_now()
-
     # get orderbook pid
     orderbook =
       {:via, Registry,
@@ -96,7 +93,7 @@ defmodule Market.Level2.Mediator do
               # tell exchange -> the best bid price changed
               Market.Exchange.best_bid_change(
                 exchange,
-                {new_best_bid_price, new_best_bid_size, timestamp}
+                {new_best_bid_price, new_best_bid_size}
               )
 
               # update the state
@@ -126,7 +123,7 @@ defmodule Market.Level2.Mediator do
               # tell exchange -> the best ask price changed
               Market.Exchange.best_ask_change(
                 exchange,
-                {new_best_ask_price, new_best_ask_size, timestamp}
+                {new_best_ask_price, new_best_ask_size}
               )
 
               # update the state
@@ -151,7 +148,7 @@ defmodule Market.Level2.Mediator do
   end
 
   # handle market buys and sells
-  def handle_call({side, {price, size, timestamp}}, _, state) do
+  def handle_call({side, {price, size}}, _, state) do
     # get exchange pid
     exchange =
       {:via, Registry,
@@ -165,14 +162,14 @@ defmodule Market.Level2.Mediator do
       :buy ->
         Market.Exchange.new_buy(
           exchange,
-          {price, size, timestamp}
+          {price, size}
         )
 
       # tell exchange -> there was a market sell
       :sell ->
         Market.Exchange.new_sell(
           exchange,
-          {price, size, timestamp}
+          {price, size}
         )
     end
 

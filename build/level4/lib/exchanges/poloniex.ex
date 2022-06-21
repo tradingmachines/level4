@@ -84,17 +84,13 @@ defmodule Exchanges.Poloniex do
                     1,
                     price_str,
                     size_str,
-                    timestamp,
-                    epoch_str
+                    _,
+                    _
                   ] ->
                     {price, _} = Float.parse(price_str)
                     {size, _} = Float.parse(size_str)
-                    {epoch, _} = Integer.parse(epoch_str)
 
-                    epoch_micro = epoch * 1000
-                    {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
-                    {:buys, [{price, size, timestamp}]}
+                    {:buys, [{price, size}]}
 
                   [
                     "t",
@@ -102,17 +98,13 @@ defmodule Exchanges.Poloniex do
                     0,
                     price_str,
                     size_str,
-                    timestamp,
-                    epoch_str
+                    _,
+                    _
                   ] ->
                     {price, _} = Float.parse(price_str)
                     {size, _} = Float.parse(size_str)
-                    {epoch, _} = Integer.parse(epoch_str)
 
-                    epoch_micro = epoch * 1000
-                    {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
-                    {:sells, [{price, size, timestamp}]}
+                    {:sells, [{price, size}]}
                 end
               end
           end

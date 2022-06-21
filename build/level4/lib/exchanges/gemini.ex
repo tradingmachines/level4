@@ -102,7 +102,6 @@ defmodule Exchanges.Gemini do
 
             %{
               "type" => "trade",
-              "timestamp" => epoch_ms,
               "price" => price_str,
               "quantity" => size_str,
               "side" => side
@@ -110,12 +109,9 @@ defmodule Exchanges.Gemini do
               {price, _} = Float.parse(price_str)
               {size, _} = Float.parse(size_str)
 
-              epoch_micro = epoch_ms * 1000
-              {:ok, timestamp} = DateTime.from_unix(epoch_micro, :microsecond)
-
               case side do
-                "buy" -> [{:buys, [{price, size, timestamp}]}]
-                "sell" -> [{:sells, [{price, size, timestamp}]}]
+                "buy" -> [{:buys, [{price, size}]}]
+                "sell" -> [{:sells, [{price, size}]}]
               end
           end
 

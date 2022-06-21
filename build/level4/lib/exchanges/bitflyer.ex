@@ -147,43 +147,21 @@ defmodule Exchanges.Bitflyer do
                   buys =
                     message
                     |> Enum.filter(fn %{"side" => side} -> side == "BUY" end)
-                    |> Enum.map(fn %{
-                                     "price" => price_int,
-                                     "size" => size_int,
-                                     "exec_date" => timestamp_str
-                                   } ->
+                    |> Enum.map(fn %{"price" => price_int, "size" => size_int} ->
                       price = price_int / 1
                       size = size_int / 1
 
-                      {:ok, timestamp_ms, 0} = DateTime.from_iso8601(timestamp_str)
-
-                      {:ok, timestamp_micro} =
-                        timestamp_ms
-                        |> DateTime.to_unix(:microsecond)
-                        |> DateTime.from_unix(:microsecond)
-
-                      {price, size, timestamp_micro}
+                      {price, size}
                     end)
 
                   sells =
                     message
                     |> Enum.filter(fn %{"side" => side} -> side == "SELL" end)
-                    |> Enum.map(fn %{
-                                     "price" => price_int,
-                                     "size" => size_int,
-                                     "exec_date" => timestamp_str
-                                   } ->
+                    |> Enum.map(fn %{"price" => price_int, "size" => size_int} ->
                       price = price_int / 1
                       size = size_int / 1
 
-                      {:ok, timestamp_ms, 0} = DateTime.from_iso8601(timestamp_str)
-
-                      {:ok, timestamp_micro} =
-                        timestamp_ms
-                        |> DateTime.to_unix(:microsecond)
-                        |> DateTime.from_unix(:microsecond)
-
-                      {price, size, timestamp_micro}
+                      {price, size}
                     end)
 
                   [{:buys, buys}, {:sells, sells}]
