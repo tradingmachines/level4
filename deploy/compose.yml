@@ -22,11 +22,12 @@ services:
       - "light_wsantos_net_kafka"
       - "database"
     # remember to remove this
-    ports:
-      - target: 5000
-        published: 5000
-        protocol: "tcp"
-        mode: "host"
+#    ports:
+#      - target: 5000
+#        published: 5000
+#        protocol: "tcp"
+#        mode: "host"
+    # /remember to remove this
     deploy:
       labels:
         # traefik
