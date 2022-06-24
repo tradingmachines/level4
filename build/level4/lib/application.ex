@@ -29,6 +29,7 @@ defmodule Level4 do
   @impl true
   def start(_type, _args) do
     {:ok, http_server} = Application.fetch_env(:level4, :http_server)
+
     Logger.info("starting level4")
 
     Supervisor.start_link(
