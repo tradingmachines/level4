@@ -49,7 +49,8 @@ defmodule Market.DataFeed do
   ...
   """
   @impl true
-  def handle_call({:market}, _, state), do: state[:market]
+  def handle_call(:metadata, _, state),
+    do: {:reply, state[:market], state}
 
   @doc """
   Best bid/ask price update event and buy/sell events.
@@ -102,7 +103,7 @@ defmodule Market.DataFeed do
   ...
   """
   def metadata(data_feed),
-    do: GenServer.call(data_feed, :market)
+    do: GenServer.call(data_feed, :metadata)
 
   @doc """
   Record a new best bid price change event.
@@ -189,19 +190,6 @@ defmodule Market.DataFeed.Supervisor do
         strategy: :one_for_all,
         max_restarts: 1
       )
-
-  @doc """
-  ...
-  """
-  def get_market_metadata(supervisor) do
-    # ...
-    data_feed =
-      Supervisor.which_children()
-      |> Enum.find(fn x -> match?() end)
-
-    # ...
-    Market.DataFeed.metadata(data_feed)
-  end
 end
 
 defmodule Market.DataFeed.Level2 do

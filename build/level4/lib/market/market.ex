@@ -64,12 +64,13 @@ defmodule Market.DynamicSupervisor do
   @doc """
   List all market data feeds under the dynamic supervisor.
   """
-  def list_active_markets(:all),
-    do:
-      DynamicSupervisor.which_children(__MODULE__)
-      |> Enum.map(fn {_id, pid, _type, _modules} ->
-        Market.DataFeed.Supervisor.get_market_metadata(pid)
-      end)
+  def list_active_markets(:all) do
+    Registry.select(
+      Market.DataFeed.Registry,
+      [{{:_, :"$2", :_}, [], [:"$2"]}]
+    )
+    |> Enum.map(fn x -> Market.DataFeed.metadata(x) end)
+  end
 
   @doc """
   Start a new market data feed: adds a new data feed process to the dynamic
@@ -102,11 +103,7 @@ defmodule Market.DynamicSupervisor do
   """
   def stop_data_feed(market) do
     # get the pid for the data feed's supervisor
-    [{pid, _}] =
-      Registry.lookup(
-        Market.DataFeed.Registry,
-        market.id
-      )
+    [{pid, _}] = Registry.lookup(Market.Registry, market.id)
 
     # terminating the supervisor will trigger the
     # websoket shutdown process

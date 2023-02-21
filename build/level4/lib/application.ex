@@ -157,6 +157,12 @@ defmodule Level4 do
       |> Enum.random()
 
   @doc """
+  ...
+  """
+  def which_node(market) do
+  end
+
+  @doc """
   Get and return the config / translation scheme for the given exchange
   and market type.
   """
@@ -188,7 +194,7 @@ defmodule Level4 do
       on_node(
         node,
         Market.DynamicSupervisor,
-        :start_data_feed,
+        :stop_data_feed,
         [market]
       )
 
@@ -255,7 +261,7 @@ defmodule Level4 do
       # stop the data feed process
       true ->
         # get the node the feed is running on
-        node = nil
+        node = which_node(market)
 
         # remove the child process from the node's dynamic supervisor
         :ok = stop_data_feed(node, market)
