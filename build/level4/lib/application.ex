@@ -1,252 +1,266 @@
-require Logger
+defmodule TranslationScheme do
+  @moduledoc """
+  ...
+  """
+
+  # ...
+end
 
 defmodule Level4 do
   @moduledoc """
-  Mix application. Spawns a root supervisor that monitors
-  1) multiple registries and 2) one main dynamic supervisor.
-
-  Henceforth "market" refers to:
-  1. a supervision tree for an exchange genserver and level2 data
-     feed supervision tree;
-  2. a pair of symbols, an exchange, and a market "type" (e.g. PERP).
+  Level4 node: runs a libcluster supervisor and participates in a cluster.
+  The Market.DynamicSupervisor maintains market data feed processes.
   """
 
   use Application
 
-  @doc """
-  Starts the root supervisor, four registries, and the main
-  dynamic supervisor.
-
-  The registries maintain:
-  1. market -> market supervisor process Ids;
-  2. market -> exchange Ids;
-  3. market -> level2 mediator process Ids;
-  4. market -> level2 orderbook Ids.
-
-  The supervisor dynamically creates and destroys market
-  supervision trees as-and-when they are needed.
-  """
   @impl true
   def start(_type, _args) do
-    {:ok, http_server} = Application.fetch_env(:level4, :http_server)
+    # get the libcluster topologies, node hostname,
+    # and concurrent max data feeds per node
+    topologies = Application.get_env(:level4, :topologies)
+    hostname = Application.get_env(:level4, :hostname)
+    max_data_feeds = Application.get_env(:level4, :max_data_feeds)
 
-    Logger.info("starting level4")
+    # turn on distributed mode / assign a hostname
+    {:ok, _pid} = Node.start(hostname, :shortnames, 15000)
 
+    # start the root supervisor
     Supervisor.start_link(
       [
-        # map market id -> market supervisor pid
-        {Registry, keys: :unique, name: Market.Supervisor.Registry},
+        # libcluster supervisor
+        {Cluster.Supervisor, [topologies, [name: Level4.ClusterSupervisor]]},
 
-        # map market id -> exchange genserver pid
-        {Registry, keys: :unique, name: Market.Exchange.Registry},
+        # registry mapping market id -> market data feed supervisor
+        {Registry, keys: :unique, name: Market.Registry},
 
-        # map market id -> mediator genserver pid
-        {Registry, keys: :unique, name: Market.Level2.Mediator.Registry},
+        # registry mapping market id -> data feed process
+        {Registry, keys: :unique, name: Market.DataFeed.Registry},
 
-        # map market id -> orderbook supervisor pid
-        {Registry, keys: :unique, name: Market.Level2.OrderBook.Registry},
+        # registry mapping market id -> level2 mediator process
+        {Registry, keys: :unique, name: Market.Level2.Registry},
 
-        # plug http server
-        {Plug.Cowboy,
-         scheme: :http,
-         plug: Level4.Server,
-         options: [ip: http_server[:iface], port: http_server[:port]]},
+        # registry mapping market id -> orderbook process
+        {Registry, keys: :unique, name: Market.OrderBook.Registry},
 
-        # ecto repo
-        Storage.Repo,
-
-        # dynamic supervisor for market supervisors
-        MarketController
+        # dynamic supervisor for market data feeds
+        {Market.DynamicSupervisor, max_data_feeds: max_data_feeds}
       ],
-      # if any the root supervisor's children crash
-      # then restart everything because that shouldn't have happened
-      strategy: :one_for_all
-    )
-  end
-end
-
-defmodule Level4.Release do
-  @moduledoc """
-  Contains helper functions for handling ecto schema migrations in
-  production releases.
-  See https://hexdocs.pm/ecto_sql/Ecto.Migrator.html
-
-  note: bin/ can be omitted when added to path:
-  - bin/level4 eval "Level4.Release.migrate"
-  - bin/level4 start
-  """
-
-  @app :level4
-
-  # return the list of ecto repos
-  defp repos do
-    :ok = Application.load(@app)
-    {:ok, repos} = Application.fetch_env(@app, :ecto_repos)
-    repos
-  end
-
-  @doc """
-  Run all of the migrations for each repo.
-  """
-  def migrate do
-    for repo <- repos() do
-      {:ok, _, _} =
-        Ecto.Migrator.with_repo(
-          repo,
-          &Ecto.Migrator.run(&1, :up, all: true)
-        )
-    end
-  end
-end
-
-defmodule MarketController do
-  @moduledoc """
-  Spanws and destroys market sub-trees using Market.Supervisor, which
-  is responsible for building and maintaining processes in its tree.
-  """
-
-  use DynamicSupervisor
-
-  # turn market model into internal representation
-  defp to_internal_representation(market) do
-    # get exchange map from config/config.exs
-    {:ok, exchanges} = Application.fetch_env(:level4, :exchanges)
-
-    # walk the map exchange name -> market type -> market parameters
-    %{
-      translation_scheme: translation_scheme,
-      ws_host: ws_host,
-      path: path,
-      port: port,
-      ping?: ping?
-    } = exchanges[market.exchange.name][market.market_type]
-
-    # make market struct using above parameters
-    # this is the "internal representation" used throughout level4
-    %Market{
-      translation_scheme: translation_scheme,
-      exchange_name: market.exchange.name,
-      base_symbol: market.base_symbol.symbol,
-      quote_symbol: market.quote_symbol.symbol,
-      market_type: market.market_type,
-      market_id: market.id,
-      ws_host: ws_host,
-      ws_path: path,
-      ws_port: port,
-      ping?: ping?
-    }
-  end
-
-  @doc """
-  Starts and links a new DynamicSupervisor named Level4.DynamicSupervisor.
-  Three is only ever one of these processes in the application's supervision
-  tree, so it is possible to refer to it using this name. This is why you do
-  not need to pass a PID to the `start_market` helper function.
-  """
-  def start_link(init_arg) do
-    DynamicSupervisor.start_link(
-      __MODULE__,
-      init_arg,
-      name: __MODULE__
-    )
-  end
-
-  @doc """
-  Initialises the dynamic supervisor and passes `init_args` to down the
-  process tree. The strategy is always `one_for_one` for dynamic
-  supervisors.
-  """
-  @impl true
-  def init(init_arg) do
-    DynamicSupervisor.init(
       strategy: :one_for_one,
-      extra_arguments: [init_arg]
+      name: Level4.Supervisor
     )
   end
 
   @doc """
-  Starts a new market data feed for a given market id. Does not create
-  the market if it doesn't already exist, obviously, so you must have
-  already created the symbol, exchange, and market records in the ecto
-  repo beforehand. See the queries package for more info on how to do
-  this. A websocket connection will be established for each data feed.
+  Helper function for calling a module function with args on a given node.
+  The calling node will wait for the result indefinitely - there is no timeout.
   """
-  def start(id) do
-    # get the market from database
-    # and convert into internal representation
-    {:ok, result} = Query.Markets.by_id(id)
-    market = to_internal_representation(result)
+  def on_node(node, module, fun, args) do
+    # who to send the result to
+    me = self()
 
-    cond do
-      # according to the repo the market is already running
-      result.level4_feed_enabled == true ->
-        {:error, "market already in started state"}
+    # spawn the function
+    _pid =
+      Node.spawn_link(
+        node,
+        fn -> send(me, apply(module, fun, args)) end
+      )
 
-      # market is not running
-      result.level4_feed_enabled == false ->
-        # update market's state in the repo
-        {:ok, new_result} = Query.Markets.set_enabled(result, true)
-
-        # create a new child in the dynamic supervisor
-        DynamicSupervisor.start_child(
-          __MODULE__,
-          %{
-            id: Market.Supervisor,
-            start: {Market.Supervisor, :start_link, [[market: market]]},
-            type: :supervisor,
-            restart: :temporary
-          }
-        )
-
-        Logger.info("#{market}: started market")
-        {:ok, new_result}
+    # wait for result
+    receive do
+      result -> result
     end
   end
 
   @doc """
-  Stops a market data feed by its repo market id. Also assumes the
-  market exists. Refer to queries package. The market is not removed
-  from the repo database. The data feed is simply switched off. This
-  is a clean way of disconnecting from a specific websocket feed.
+  Returns true if all nodes / a given node in the cluster is at maximum capacity.
   """
-  def stop(id) do
-    # get the market from database
-    # and convert into internal representation
-    {:ok, result} = Query.Markets.by_id(id)
-    market = to_internal_representation(result)
+  def at_max_capacity?(:cluster),
+    do:
+      list_nodes(:all)
+      |> Enum.map(fn x -> at_max_capacity?(x) end)
+      |> Enum.all?()
+
+  def at_max_capacity?(node) do
+    # get the maximum and actual running data feeds for node
+    max = Application.get_env(:level4, :max_data_feeds)
+    count = list_active_markets(node) |> Enum.count()
+
+    # do check
+    count >= max
+  end
+
+  @doc """
+  Returns true if there is a data feed associated with the given market id
+  running somewhere in the cluster. Else returns false.
+  """
+  def market_id_taken?(id),
+    do:
+      list_active_markets(:all)
+      |> Enum.map(fn x -> x.id end)
+      |> Enum.member?(id)
+
+  @doc """
+  Returns true if there is an entry in config for the given exchange name
+  and market type. Else returns false.
+  """
+  def have_config?(exchange_name, market_type) do
+    # get exchange exchanges from the configuration
+    exchanges = Application.get_env(:level4, :exchanges)
 
     cond do
-      # according to the repo the market is already stopped
-      result.level4_feed_enabled == false ->
-        {:error, "market already stopped"}
+      # the exchange name is invalid
+      not Map.has_key?(exchanges, exchange_name) ->
+        {false, false}
 
-      # market is running
-      result.level4_feed_enabled == true ->
-        # update market's state in the repo
-        {:ok, new_result} = Query.Markets.set_enabled(result, false)
+      # exchange name is valid but market type is invalid
+      not Map.has_key?(exchanges[exchange_name], market_type) ->
+        {true, false}
 
-        # consult Market.Supervisor.Registry to find child's pid
-        children =
-          Registry.lookup(
-            Market.Supervisor.Registry,
-            Market.tag(market)
-          )
+      # both exchange name and market type are valid
+      true ->
+        {true, true}
+    end
+  end
 
-        cond do
-          # child does not exist
-          # it must have crashed
-          length(children) == 0 ->
-            Logger.info("#{market}: data feed does not exist")
+  @doc """
+  List active market data feeds for node / on all nodes.
+  """
+  def list_active_markets(:all),
+    do:
+      list_nodes(:all)
+      |> Enum.map(fn x -> list_active_markets(x) end)
+      |> List.flatten()
 
-          # terminate the child
-          # this will trigger shutdown process in the subtree
-          length(children) == 1 ->
-            [{pid, _}] = children
-            :ok = DynamicSupervisor.terminate_child(__MODULE__, pid)
-            Logger.info("#{market}: successfully stopped market")
-        end
+  def list_active_markets(node),
+    do:
+      on_node(
+        node,
+        Market.DynamicSupervisor,
+        :list_active_markets,
+        [:all]
+      )
 
-        {:ok, new_result}
+  @doc """
+  List all connected nodes in the cluster, plus the current node.
+  """
+  def list_nodes(:all), do: Node.list(:this) ++ Node.list(:connected)
+
+  @doc """
+  Randomly pick a node from the set of online nodes, ignoring those that are at
+  maximum capacity already.
+  """
+  def pick_available_node(:randomly),
+    do:
+      list_nodes(:all)
+      |> Enum.filter(fn x -> not at_max_capacity?(x) end)
+      |> Enum.random()
+
+  @doc """
+  Get and return the config / translation scheme for the given exchange
+  and market type.
+  """
+  def get_config(exchange_name, market_type) do
+    # get exchange exchanges from the configuration
+    exchanges = Application.get_env(:level4, :exchanges)
+
+    # exchange name -> market type
+    exchanges[exchange_name][market_type]
+  end
+
+  @doc """
+  Spawn a new data feed process on the given node.
+  """
+  def start_data_feed(node, market, config),
+    do:
+      on_node(
+        node,
+        Market.DynamicSupervisor,
+        :start_data_feed,
+        [market, config]
+      )
+
+  @doc """
+  Stop a data feed process on the given node.
+  """
+  def stop_data_feed(node, market),
+    do:
+      on_node(
+        node,
+        Market.DynamicSupervisor,
+        :start_data_feed,
+        [market]
+      )
+
+  @doc """
+  Start a new market data feed.
+  """
+  def start_market(market) do
+    # check if the cluster is at max capacity
+    is_full = at_max_capacity?(:cluster)
+
+    # make sure it is not already running
+    already_running = market_id_taken?(market.id)
+
+    # make sure exchange name and market type are valid
+    {valid_exchange, valid_market_type} =
+      have_config?(
+        market.exchange_name,
+        market.type
+      )
+
+    cond do
+      # cannot start more data feed processes anywhere in the cluster
+      is_full == true ->
+        {:error, "cluster is at maximum capacity"}
+
+      # the market id is already in use / feed is active
+      already_running == true ->
+        {:error, "market id already associated with data feed"}
+
+      # bad exchange name
+      valid_exchange == false ->
+        {:error, "no translation scheme for exchange"}
+
+      # base market type
+      valid_market_type == false ->
+        {:error, "no translation scheme for market type"}
+
+      # start the feed
+      true ->
+        # pick a node to start the feed on
+        # and get the relevant config / translation scheme
+        node = pick_available_node(:randomly)
+        config = get_config(market.exchange_name, market.type)
+
+        # add a new child to the target node's dynamic supervisor
+        :ok = start_data_feed(node, market, config)
+
+        {:ok, node}
+    end
+  end
+
+  @doc """
+  Stop an active market data feed.
+  """
+  def stop_market(market) do
+    # make sure it is currently running
+    already_running = market_id_taken?(market.id)
+
+    cond do
+      # no data feed associated with the given market id
+      already_running == false ->
+        {:error, "no data feed associated with market id"}
+
+      # stop the data feed process
+      true ->
+        # get the node the feed is running on
+        node = nil
+
+        # remove the child process from the node's dynamic supervisor
+        :ok = stop_data_feed(node, market)
+
+        {:ok, node}
     end
   end
 end

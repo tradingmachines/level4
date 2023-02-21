@@ -5,7 +5,7 @@ defmodule Level4.MixProject do
     [
       app: :level4,
       version: "0.1.0",
-      elixir: "~> 1.10",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -13,24 +13,18 @@ defmodule Level4.MixProject do
 
   def application do
     [
-      mod: {Level4, []},
-      extra_applications: [
-        :logger,
-        :inets,
-        :kaffe
-      ]
+      extra_applications: [:logger, :kaffe],
+      mod: {Level4, []}
     ]
   end
 
   defp deps do
     [
-      {:gun, "~> 2.0.0-rc.2"},
-      {:cowboy, "~> 2.9"},
-      {:plug_cowboy, "~> 2.0"},
-      {:jason, "~> 1.2"},
-      {:ecto_sql, "~> 3.0"},
+      {:libcluster, "~> 3.3"},
       {:kaffe, "~> 1.0"},
-      {:postgrex, ">= 0.0.0"}
+      {:grpc, "~> 0.5.0"},
+      {:protobuf, "~> 0.11"},
+      {:jason, "~> 1.4"}
     ]
   end
 end
