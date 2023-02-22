@@ -18,11 +18,14 @@ defmodule Level4 do
 
   @impl true
   def start(_type, _args) do
-    # get the libcluster topologies, node hostname,
-    # and concurrent max data feeds per node
+    # max concurrent data feeds per node
+    # libcluster topologies
+    # node hostname
+    # RPC server port
+    max_data_feeds = Application.get_env(:level4, :max_data_feeds)
     topologies = Application.get_env(:level4, :topologies)
     hostname = Application.get_env(:level4, :hostname)
-    max_data_feeds = Application.get_env(:level4, :max_data_feeds)
+    rpc_port = Application.get_env(:level4, :rpc_port)
 
     # turn on distributed mode / assign a hostname
     {:ok, _pid} = Node.start(hostname, :shortnames, 15000)
@@ -32,6 +35,9 @@ defmodule Level4 do
       [
         # libcluster supervisor
         {Cluster.Supervisor, [topologies, [name: Level4.ClusterSupervisor]]},
+
+        # RPC server
+        {GRPC.Server.Supervisor, endpoint: Level4.RPC.Endpoint, port: rpc_port},
 
         # registry mapping market id -> market data feed supervisor
         {Registry, keys: :unique, name: Market.Registry},
@@ -275,4 +281,26 @@ defmodule Level4 do
         {:ok, node}
     end
   end
+end
+
+defmodule Level4.RPC.Endpoint do
+  @doc """
+  ...
+  """
+
+  use GRPC.Endpoint
+
+  intercept(GRPC.Server.Interceptors.Logger)
+  run(Level4.RPC.Server)
+end
+
+defmodule Level4.RPC.Server do
+  @doc """
+  ...
+  """
+
+  use GRPC.Server, service: Level4.Service
+
+  # add functions here
+  # ...
 end

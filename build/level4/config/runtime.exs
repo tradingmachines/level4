@@ -8,6 +8,10 @@ config :level4,
 config :level4,
   max_data_feeds: 25
 
+# define the RPC server port
+config :level4,
+  rpc_port: 50051
+
 # define the libcluster topologies
 config :level4,
   topologies: [
