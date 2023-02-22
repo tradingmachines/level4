@@ -282,25 +282,3 @@ defmodule Level4 do
     end
   end
 end
-
-defmodule Level4.RPC.Endpoint do
-  @doc """
-  ...
-  """
-
-  use GRPC.Endpoint
-
-  intercept(GRPC.Server.Interceptors.Logger)
-  run(Level4.RPC.Server)
-end
-
-defmodule Level4.RPC.Server do
-  @doc """
-  ...
-  """
-
-  use GRPC.Server, service: Level4.Service
-
-  # add functions here
-  # ...
-end

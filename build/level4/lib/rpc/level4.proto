@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package level4.rpc;
+
+option (elixirpb.file).module_prefix = "Level4.RPC";
+
+import "elixirpb.proto";
+
+service Level4 {
+  rpc StartMarket (MarketRequest) returns (MarketReply);
+  rpc StopMarket (MarketRequest) returns (MarketReply);
+  rpc ListNodes () returns (NodesReply);
+  rpc ListActiveMarkets () returns (ActiveMarketsReply);
+}
+
+message MarketRequest {
+  int marketId;
+}
+
+message MarketReply {
+  int marketId;
+}
+
+message NodesReply {}
+
+message ActiveMarketsReply {}
