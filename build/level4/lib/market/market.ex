@@ -62,15 +62,27 @@ defmodule Market.DynamicSupervisor do
       )
 
   @doc """
+  Returns true if a data feed for the given market is running under the
+  dynamic supervisor.
+  """
+  def have_market?(market),
+    do:
+      Registry.select(
+        Market.DataFeed.Registry,
+        [{{:"$1", :_, :_}, [], [:"$1"]}]
+      )
+      |> Enum.member?(market.id)
+
+  @doc """
   List all market data feeds under the dynamic supervisor.
   """
-  def list_active_markets(:all) do
-    Registry.select(
-      Market.DataFeed.Registry,
-      [{{:_, :"$2", :_}, [], [:"$2"]}]
-    )
-    |> Enum.map(fn x -> Market.DataFeed.metadata(x) end)
-  end
+  def list_active_markets(:all),
+    do:
+      Registry.select(
+        Market.DataFeed.Registry,
+        [{{:_, :"$2", :_}, [], [:"$2"]}]
+      )
+      |> Enum.map(fn x -> Market.DataFeed.metadata(x) end)
 
   @doc """
   Start a new market data feed: adds a new data feed process to the dynamic

@@ -1,8 +1,10 @@
 defmodule TranslationScheme do
   @moduledoc """
-  ...
+  Translation scheme defines the behaviours that an exchange translation
+  scheme must implement in order to be comparable with the level2 data feed.
   """
 
+  # still need to define stuff here
   # ...
 end
 
@@ -157,9 +159,13 @@ defmodule Level4 do
       |> Enum.random()
 
   @doc """
-  ...
+  Find and return the node a market data feed is running on.
   """
   def which_node(market) do
+    list_nodes(:all)
+    |> Enum.find(fn node ->
+      on_node(node, Market.DynamicSupervisor, :have_market?, [market])
+    end)
   end
 
   @doc """
