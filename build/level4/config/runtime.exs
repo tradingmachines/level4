@@ -1,19 +1,34 @@
 import Config
 
-# ecto repo backend (postgres)
-config :level4, Storage.Repo,
-  database: "level4",
-  username: "level4",
-  password: "level4",
-  hostname: "database",
-  port: 5432,
-  pool_size: 10
+# define the node hostname
+config :level4,
+  hostname: System.get_env("HOSTNAME", "node1") |> String.to_atom()
 
-# kafka producer
+# define the maximum concurrent data feed processes per node
+config :level4,
+  max_data_feeds: 25
+
+# define the RPC server port
+config :level4,
+  rpc_port: 50051
+
+# define the libcluster topologies
+config :level4,
+  topologies: [
+    level4: [
+      strategy: Cluster.Strategy.Gossip,
+      config: [
+        port: 45892,
+        multicast_ttl: 1
+      ]
+    ]
+  ]
+
+# define the kafka producer
 config :kaffe,
   producer: [
     endpoints: [
-      kafka: 9092
+      "127.0.0.1": 9092
     ],
     topics: [
       "level4.spread",
@@ -21,10 +36,3 @@ config :kaffe,
     ],
     partition_strategy: :random
   ]
-
-# http server host and port
-config :level4,
-  http_server: %{
-    iface: {0, 0, 0, 0},
-    port: 5000
-  }

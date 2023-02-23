@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package level4.rpc;
+
+import "elixirpb.proto";
+
+option (elixirpb.file).module_prefix = "Level4.RPC.Server";
+
+//////////////////////////////////////////////////////////////////////////////
+// the service
+
+service Control {
+  rpc StartMarket (StartMarketRequest) returns (StopMarketReply);
+  rpc StopMarket (StartMarketRequest) returns (StopMarketReply);
+  rpc ListNodes (ListNodesRequest) returns (ListNodesReply);
+  rpc ListActiveMarkets (ListMarketsRequest) returns (ListMarketsReply);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// types
+
+message Node {
+  string name = 1;
+  int32 active_market_count = 2;
+}
+
+message Market {
+  int32 id = 1;
+  string base_symbol = 2;
+  string quote_symbol = 3;
+  string exchange_name = 4;
+  string type = 5;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// requests
+
+message StartMarketRequest {
+  Market market = 1;
+}
+
+message StopMarketRequest {
+  Market market = 1;
+}
+
+message ListNodesRequest {}
+
+message ListMarketsRequest {}
+
+//////////////////////////////////////////////////////////////////////////////
+// replies
+
+message StartMarketReply {
+  Market market = 1;
+  Node node = 2;
+}
+
+message StopMarketReply {
+  Market market = 1;
+  Node node = 2;
+}
+
+message ListNodesReply {
+  repeated Node nodes = 1;
+}
+
+message ListMarketsReply {
+  repeated Market markets = 1;
+}
+
+//////////////////////////////////////////////////////////////////////////////
