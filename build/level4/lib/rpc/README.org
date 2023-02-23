@@ -2,6 +2,11 @@
 :STARTUP: showall
 :END:
 
+* test rpc client
+#+BEGIN_SRC elixir
+  {:ok, channel} = GRPC.Stub.connect("localhost:50051")
+#+END_SRC
+
 * start market
 #+BEGIN_SRC elixir
   {:ok, reply} = channel |> Level4.RPC.Server.Control.Stub.start_market(Level4.RPC.Server.StartMarketRequest.new(market: Level4.RPC.Server.Market.new(id: 1, base_symbol: "BTC", quote_symbol: "GBP", type: "SPOT", exchange_name: "COINBASE-PRO")))

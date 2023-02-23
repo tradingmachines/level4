@@ -33,7 +33,7 @@ defmodule Level4.RPC.Server do
     case Level4.start_market(market) do
       {:error, reason} ->
         # ...
-        nil
+        raise GRPC.RPCError, status: GRPC.Status.unknown(), message: reason
 
       {:ok, node} ->
         # ...
@@ -72,7 +72,7 @@ defmodule Level4.RPC.Server do
     case Level4.stop_market(market) do
       {:error, reason} ->
         # ...
-        nil
+        raise GRPC.RPCError, status: GRPC.Status.unknown(), message: reason
 
       {:ok, node} ->
         # ...
