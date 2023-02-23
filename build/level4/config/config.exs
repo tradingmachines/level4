@@ -4,6 +4,10 @@ import Config
 config :logger,
   level: :info
 
+# ...
+config :grpc,
+  start_server: true
+
 # define the exchange -> market type translation schemes
 config :level4,
   exchanges: %{

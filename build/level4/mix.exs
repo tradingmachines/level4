@@ -24,6 +24,7 @@ defmodule Level4.MixProject do
       {:kaffe, "~> 1.0"},
       {:grpc, "~> 0.5.0"},
       {:protobuf, "~> 0.11"},
+      {:google_protos, "~> 0.1"},
       {:jason, "~> 1.4"}
     ]
   end

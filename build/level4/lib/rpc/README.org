@@ -1,0 +1,23 @@
+:PROPERTIES:
+:STARTUP: showall
+:END:
+
+* start market
+#+BEGIN_SRC elixir
+  {:ok, reply} = channel |> Level4.RPC.Server.Control.Stub.start_market(Level4.RPC.Server.StartMarketRequest.new(market: Level4.RPC.Server.Market.new(id: 1, base_symbol: "BTC", quote_symbol: "GBP", type: "SPOT", exchange_name: "COINBASE-PRO")))
+#+END_SRC
+
+* stop market
+#+BEGIN_SRC elixir
+  {:ok, reply} = channel |> Level4.RPC.Server.Control.Stub.stop_market(Level4.RPC.Server.StopMarketRequest.new(market: Level4.RPC.Server.Market.new(id: 1, base_symbol: "BTC", quote_symbol: "GBP", type: "SPOT", exchange_name: "COINBASE-PRO")))
+#+END_SRC
+
+* list active markets
+#+BEGIN_SRC elixir
+  {:ok, reply} = channel |> Level4.RPC.Server.Control.Stub.list_active_markets(Level4.RPC.Server.ListMarketsRequest.new())
+#+END_SRC
+
+* list nodes
+#+BEGIN_SRC elixir
+  {:ok, reply} = channel |> Level4.RPC.Server.Control.Stub.list_nodes(Level4.RPC.Server.ListNodesRequest.new())
+#+END_SRC

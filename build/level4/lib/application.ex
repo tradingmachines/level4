@@ -37,7 +37,7 @@ defmodule Level4 do
         {Cluster.Supervisor, [topologies, [name: Level4.ClusterSupervisor]]},
 
         # RPC server
-        {GRPC.Server.Supervisor, endpoint: Level4.RPC.Endpoint, port: rpc_port},
+        {GRPC.Server.Supervisor, {Level4.RPC.Endpoint, rpc_port}},
 
         # registry mapping market id -> market data feed supervisor
         {Registry, keys: :unique, name: Market.Registry},

@@ -2,7 +2,7 @@ import Config
 
 # define the node hostname
 config :level4,
-  hostname: System.get_env("HOSTNAME", "node2") |> String.to_atom()
+  hostname: System.get_env("HOSTNAME", "node1") |> String.to_atom()
 
 # define the maximum concurrent data feed processes per node
 config :level4,
