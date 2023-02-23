@@ -4,7 +4,7 @@
 
 * test rpc client
 #+BEGIN_SRC elixir
-  {:ok, channel} = GRPC.Stub.connect("localhost:50051")
+  {:ok, channel} = GRPC.Stub.connect("127.0.0.1:50051")
 #+END_SRC
 
 * start market
