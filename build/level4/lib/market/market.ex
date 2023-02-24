@@ -74,6 +74,12 @@ defmodule Market.DynamicSupervisor do
       |> Enum.member?(market.id)
 
   @doc """
+  ...
+  """
+  def get_max_capacity(),
+    do: Application.get_env(:level4, :max_data_feeds)
+
+  @doc """
   List all market data feeds under the dynamic supervisor.
   """
   def list_active_markets(:all),

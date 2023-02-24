@@ -44,9 +44,9 @@ defmodule Level4.RPC.Server do
   2. error, reason
   """
   @spec start_market(
-          Level4.StartMarketRequest.t(),
+          Level4.RPC.Server.StartMarketRequest.t(),
           GRPC.Server.Stream.t()
-        ) :: Level4.StartMarketReply.t()
+        ) :: Level4.RPC.Server.StartMarketReply.t()
   def start_market(request, _stream) do
     case(Level4.start_market(request.market)) do
       {:error, reason} ->
@@ -90,9 +90,9 @@ defmodule Level4.RPC.Server do
   2. error, reason
   """
   @spec stop_market(
-          Level4.StopMarketRequest.t(),
+          Level4.RPC.Server.StopMarketRequest.t(),
           GRPC.Server.Stream.t()
-        ) :: Level4.StopMarketReply.t()
+        ) :: Level4.RPC.Server.StopMarketReply.t()
   def stop_market(request, _stream) do
     case(Level4.stop_market(request.market)) do
       {:error, reason} ->
@@ -116,34 +116,8 @@ defmodule Level4.RPC.Server do
   end
 
   @doc """
-  RPC call :: list nodes in the cluster. There is no input. The output
-  is always a list of one or more node host hostnames.
-
-  node = {
-    string name
-    int32 active_market_count
-  }
-  """
-  @spec list_nodes(
-          Level4.ListNodesRequest.t(),
-          GRPC.Server.Stream.t()
-        ) :: Level4.ListNodesReply.t()
-  def list_nodes(_request, _stream),
-    do:
-      Level4.RPC.Server.ListNodesReply.new(
-        nodes:
-          Level4.list_nodes(:all)
-          |> Enum.map(fn x ->
-            Level4.RPC.Server.Node.new(
-              name: "#{x}",
-              active_market_count: Level4.list_active_markets(x) |> Enum.count()
-            )
-          end)
-      )
-
-  @doc """
-  RPC call :: list all active nodes. There is no input. The output
-  is always a list of zero or more market structs.
+  RPC call :: returns true if a given market is online somewhere in the cluster.
+  Else returns false.
 
   market = {
     int32 id
@@ -153,17 +127,40 @@ defmodule Level4.RPC.Server do
     string type
   }
   """
-  @spec list_active_markets(
-          ListMarketsRequest.t(),
+  @spec is_market_online(
+          Level4.RPC.Server.MarketOnlineRequest.t(),
           GRPC.Server.Stream.t()
-        ) :: Level4.ListMarketsReply.t()
-  def list_active_markets(_request, _stream),
+        ) :: Level4.RPC.Server.MarketOnlineReply.t()
+  def is_market_online(request, _stream),
     do:
-      Level4.RPC.Server.ListMarketsReply.new(
-        markets:
-          Level4.list_active_markets(:all)
+      Level4.RPC.Server.MarketOnlineReply.new(
+        is_online: Level4.market_id_taken?(request.market.id)
+      )
+
+  @doc """
+  RPC call :: list nodes in the cluster. There is no input. The output
+  is always a list of one or more node host hostnames.
+
+  node = {
+    string name
+    int32 active_market_count
+  }
+  """
+  @spec list_nodes(
+          Level4.RPC.Server.ListNodesRequest.t(),
+          GRPC.Server.Stream.t()
+        ) :: Level4.RPC.Server.ListNodesReply.t()
+  def list_nodes(_request, _stream),
+    do:
+      Level4.RPC.Server.ListNodesReply.new(
+        nodes:
+          Level4.list_nodes(:all)
           |> Enum.map(fn x ->
-            x |> Map.to_list() |> Level4.RPC.Server.Market.new()
+            Level4.RPC.Server.Node.new(
+              name: "#{x}",
+              active_market_count: Level4.list_active_markets(x) |> Enum.count(),
+              max_active_markets: Level4.get_max_capacity(x)
+            )
           end)
       )
 end

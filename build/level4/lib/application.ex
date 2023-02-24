@@ -132,6 +132,18 @@ defmodule Level4 do
   end
 
   @doc """
+  Returns a node's max capacity.
+  """
+  def get_max_capacity(node),
+    do:
+      on_node(
+        node,
+        Market.DynamicSupervisor,
+        :get_max_capacity,
+        []
+      )
+
+  @doc """
   List active market data feeds for node / on all nodes.
   """
   def list_active_markets(:all),

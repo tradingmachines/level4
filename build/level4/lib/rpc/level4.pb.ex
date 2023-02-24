@@ -4,6 +4,7 @@ defmodule Level4.RPC.Server.Node do
 
   field :name, 1, type: :string
   field :active_market_count, 2, type: :int64, json_name: "activeMarketCount"
+  field :max_active_markets, 3, type: :int64, json_name: "maxActiveMarkets"
 end
 
 defmodule Level4.RPC.Server.Market do
@@ -31,12 +32,14 @@ defmodule Level4.RPC.Server.StopMarketRequest do
   field :market, 1, type: Level4.RPC.Server.Market
 end
 
-defmodule Level4.RPC.Server.ListNodesRequest do
+defmodule Level4.RPC.Server.MarketOnlineRequest do
   @moduledoc false
   use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
+
+  field :market, 1, type: Level4.RPC.Server.Market
 end
 
-defmodule Level4.RPC.Server.ListMarketsRequest do
+defmodule Level4.RPC.Server.ListNodesRequest do
   @moduledoc false
   use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
 end
@@ -57,18 +60,18 @@ defmodule Level4.RPC.Server.StopMarketReply do
   field :node, 2, type: Level4.RPC.Server.Node
 end
 
+defmodule Level4.RPC.Server.MarketOnlineReply do
+  @moduledoc false
+  use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
+
+  field :is_online, 1, type: :bool, json_name: "isOnline"
+end
+
 defmodule Level4.RPC.Server.ListNodesReply do
   @moduledoc false
   use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
 
   field :nodes, 1, repeated: true, type: Level4.RPC.Server.Node
-end
-
-defmodule Level4.RPC.Server.ListMarketsReply do
-  @moduledoc false
-  use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
-
-  field :markets, 1, repeated: true, type: Level4.RPC.Server.Market
 end
 
 defmodule Level4.RPC.Server.Control.Service do
@@ -81,7 +84,7 @@ defmodule Level4.RPC.Server.Control.Service do
 
   rpc :ListNodes, Level4.RPC.Server.ListNodesRequest, Level4.RPC.Server.ListNodesReply
 
-  rpc :ListActiveMarkets, Level4.RPC.Server.ListMarketsRequest, Level4.RPC.Server.ListMarketsReply
+  rpc :IsMarketOnline, Level4.RPC.Server.MarketOnlineRequest, Level4.RPC.Server.MarketOnlineReply
 end
 
 defmodule Level4.RPC.Server.Control.Stub do
