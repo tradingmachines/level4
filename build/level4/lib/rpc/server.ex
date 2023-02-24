@@ -128,7 +128,7 @@ defmodule Level4.RPC.Server do
           Level4.ListNodesRequest.t(),
           GRPC.Server.Stream.t()
         ) :: Level4.ListNodesReply.t()
-  def list_nodes(request, _stream),
+  def list_nodes(_request, _stream),
     do:
       Level4.RPC.Server.ListNodesReply.new(
         nodes:
@@ -157,7 +157,7 @@ defmodule Level4.RPC.Server do
           ListMarketsRequest.t(),
           GRPC.Server.Stream.t()
         ) :: Level4.ListMarketsReply.t()
-  def list_active_markets(request, _stream),
+  def list_active_markets(_request, _stream),
     do:
       Level4.RPC.Server.ListMarketsReply.new(
         markets:

@@ -11,7 +11,7 @@ option (elixirpb.file).module_prefix = "Level4.RPC.Server";
 
 service Control {
   rpc StartMarket (StartMarketRequest) returns (StopMarketReply);
-  rpc StopMarket (StartMarketRequest) returns (StopMarketReply);
+  rpc StopMarket (StopMarketRequest) returns (StopMarketReply);
   rpc ListNodes (ListNodesRequest) returns (ListNodesReply);
   rpc ListActiveMarkets (ListMarketsRequest) returns (ListMarketsReply);
 }
@@ -21,11 +21,11 @@ service Control {
 
 message Node {
   string name = 1;
-  int32 active_market_count = 2;
+  int64 active_market_count = 2;
 }
 
 message Market {
-  int32 id = 1;
+  int64 id = 1;
   string base_symbol = 2;
   string quote_symbol = 3;
   string exchange_name = 4;

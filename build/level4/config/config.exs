@@ -159,7 +159,7 @@ config :level4,
     #
     # coinbase.com
     #
-    "COINBASE-PRO" => %{
+    "COINBASE" => %{
       # status: working
       # correctness: correct
       "SPOT" => %{

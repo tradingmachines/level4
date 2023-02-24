@@ -3,14 +3,14 @@ defmodule Level4.RPC.Server.Node do
   use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
 
   field :name, 1, type: :string
-  field :active_market_count, 2, type: :int32, json_name: "activeMarketCount"
+  field :active_market_count, 2, type: :int64, json_name: "activeMarketCount"
 end
 
 defmodule Level4.RPC.Server.Market do
   @moduledoc false
   use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
 
-  field :id, 1, type: :int32
+  field :id, 1, type: :int64
   field :base_symbol, 2, type: :string, json_name: "baseSymbol"
   field :quote_symbol, 3, type: :string, json_name: "quoteSymbol"
   field :exchange_name, 4, type: :string, json_name: "exchangeName"
@@ -77,7 +77,7 @@ defmodule Level4.RPC.Server.Control.Service do
 
   rpc :StartMarket, Level4.RPC.Server.StartMarketRequest, Level4.RPC.Server.StopMarketReply
 
-  rpc :StopMarket, Level4.RPC.Server.StartMarketRequest, Level4.RPC.Server.StopMarketReply
+  rpc :StopMarket, Level4.RPC.Server.StopMarketRequest, Level4.RPC.Server.StopMarketReply
 
   rpc :ListNodes, Level4.RPC.Server.ListNodesRequest, Level4.RPC.Server.ListNodesReply
 
