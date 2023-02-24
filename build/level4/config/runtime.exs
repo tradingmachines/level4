@@ -34,5 +34,10 @@ config :kaffe,
       "level4.spread",
       "level4.timesale"
     ],
-    partition_strategy: :random
+    partition_strategy: fn _topic, _partitions_count, key, _value ->
+      {market_id, ""} = Integer.parse(key)
+
+      # subtract 1 because topics start at zero
+      market_id - 1
+    end
   ]

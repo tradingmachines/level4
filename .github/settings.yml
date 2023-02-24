@@ -1,6 +1,6 @@
 repository:
   name: "level4"
-  description: "Aggregated and normalised level2 market data feeds for 23 cryptocurrency exchanges"
+  description: "Aggregated level2 market data feeds for multiple cryptocurrency exchanges"
   private: true
   has_issues: true
   has_projects: false

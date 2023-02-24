@@ -4,7 +4,7 @@ import Config
 config :logger,
   level: :info
 
-# ...
+# auto-start the RPC server
 config :grpc,
   start_server: true
 

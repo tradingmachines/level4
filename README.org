@@ -7,13 +7,36 @@
 #+STARTUP:          showall
 #+EXPORT_FILE_NAME: level4
 
+Aggregated level2 market data feeds for multiple cryptocurrency exchanges
 
-Aggregated & normalised level2 market data feeds for 12 different
-cryptocurrency exchanges
+* architecture
+Level4 is designed to run in cluster mode: running nodes in multiple containers
+/ on different machines. They will discover each other via the gossip protocol
+over UDP.
 
+Each node exposes a GRPC server on port =50051= allowing the following procedures
+to be called remotely:
+- start/stop market data feeds
+- list active market data feeds
+- list nodes in the cluster
 
-** building the container image
-...
+Each node is configured such that it can hots a maximum of =25= data feeds
+concurrently. when staring a data feed, a random node in the cluster is chosen
+to be the host. *Other load-balancing strategies might be added in the future*.
 
-** deploy to docker swarm
-...
+If a node fails, the *data feeds are not automatically rescheduled* elsewhere in
+the cluster. They must be manually restarted. This limitation might also be
+addressed in the future.
+
+Best bid/ask price changes are published to the Kafka topic =level4.spread= and
+buys/sells are published to =level4.timesales=. The partition is set to the market's
+numeric identifier (market ID).
+
+* building the container image
+Remember to adjust =build/level4/config/config.exs= and =build/level4/config/runtime.exs=
+before building the container image. Build the image using the Makefile in =deploy/=.
+
+* deploying to docker swarm
+Make sure Kafka is running and is accessible to the Level4 container i.e. they are
+on the same network. Refer to =deploy/docker-compose.yml= for an example compose
+file.

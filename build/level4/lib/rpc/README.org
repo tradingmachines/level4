@@ -2,6 +2,8 @@
 :STARTUP: showall
 :END:
 
+Some commands for testing RPC.
+
 * test rpc client
 #+BEGIN_SRC elixir
   {:ok, channel} = GRPC.Stub.connect("127.0.0.1:50051")
