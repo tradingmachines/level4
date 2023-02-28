@@ -39,6 +39,11 @@ defmodule Level4.RPC.Server.MarketOnlineRequest do
   field :market, 1, type: Level4.RPC.Server.Market
 end
 
+defmodule Level4.RPC.Server.ListMarketsRequest do
+  @moduledoc false
+  use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
+end
+
 defmodule Level4.RPC.Server.ListNodesRequest do
   @moduledoc false
   use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
@@ -67,6 +72,13 @@ defmodule Level4.RPC.Server.MarketOnlineReply do
   field :is_online, 1, type: :bool, json_name: "isOnline"
 end
 
+defmodule Level4.RPC.Server.ListMarketsReply do
+  @moduledoc false
+  use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
+
+  field :markets, 1, repeated: true, type: Level4.RPC.Server.Market
+end
+
 defmodule Level4.RPC.Server.ListNodesReply do
   @moduledoc false
   use Protobuf, protoc_gen_elixir_version: "0.11.0", syntax: :proto3
@@ -83,6 +95,8 @@ defmodule Level4.RPC.Server.Control.Service do
   rpc :StopMarket, Level4.RPC.Server.StopMarketRequest, Level4.RPC.Server.StopMarketReply
 
   rpc :ListNodes, Level4.RPC.Server.ListNodesRequest, Level4.RPC.Server.ListNodesReply
+
+  rpc :ListActiveMarkets, Level4.RPC.Server.ListMarketsRequest, Level4.RPC.Server.ListMarketsReply
 
   rpc :IsMarketOnline, Level4.RPC.Server.MarketOnlineRequest, Level4.RPC.Server.MarketOnlineReply
 end

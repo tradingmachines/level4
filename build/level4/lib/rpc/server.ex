@@ -116,6 +116,34 @@ defmodule Level4.RPC.Server do
   end
 
   @doc """
+  RPC call :: returns the list of zero or more active market data feeds.
+  This is the union of all data feeds running on all nodes in the cluster.
+
+  market = {
+    int32 id
+    string base_symbol
+    string quote_symbol
+    string exchange_name
+    string type
+  }
+  """
+  @spec stop_market(
+          Level4.RPC.Server.ListMarketsRequest.t(),
+          GRPC.Server.Stream.t()
+        ) :: Level4.RPC.Server.ListMarketsReply.t()
+  def list_active_markets(_request, _stream),
+    do:
+      Level4.RPC.Server.ListMarketsReply.new(
+        markets:
+          Level4.list_active_markets(:all)
+          |> Enum.map(fn x ->
+            x
+            |> Map.to_list()
+            |> Level4.RPC.Server.Market.new()
+          end)
+      )
+
+  @doc """
   RPC call :: returns true if a given market is online somewhere in the cluster.
   Else returns false.
 

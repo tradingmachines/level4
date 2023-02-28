@@ -13,6 +13,7 @@ service Control {
   rpc StartMarket (StartMarketRequest) returns (StopMarketReply);
   rpc StopMarket (StopMarketRequest) returns (StopMarketReply);
   rpc ListNodes (ListNodesRequest) returns (ListNodesReply);
+  rpc ListActiveMarkets (ListMarketsRequest) returns (ListMarketsReply);
   rpc IsMarketOnline (MarketOnlineRequest) returns (MarketOnlineReply);
 }
 
@@ -48,6 +49,8 @@ message MarketOnlineRequest {
   Market market = 1;
 }
 
+message ListMarketsRequest {}
+
 message ListNodesRequest {}
 
 //////////////////////////////////////////////////////////////////////////////
@@ -65,6 +68,10 @@ message StopMarketReply {
 
 message MarketOnlineReply {
   bool is_online = 1;
+}
+
+message ListMarketsReply {
+  repeated Market markets = 1;
 }
 
 message ListNodesReply {

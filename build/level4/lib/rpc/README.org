@@ -16,12 +16,12 @@ Just use the makefile:
 
 ** start market
 #+BEGIN_SRC elixir
-  {:ok, reply} = channel |> Level4.RPC.Server.Control.Stub.start_market(Level4.RPC.Server.StartMarketRequest.new(market: Level4.RPC.Server.Market.new(id: 1, base_symbol: "BTC", quote_symbol: "GBP", type: "SPOT", exchange_name: "COINBASE-PRO")))
+  {:ok, reply} = channel |> Level4.RPC.Server.Control.Stub.start_market(Level4.RPC.Server.StartMarketRequest.new(market: Level4.RPC.Server.Market.new(id: 1, base_symbol: "BTC", quote_symbol: "GBP", type: "SPOT", exchange_name: "COINBASE")))
 #+END_SRC
 
 ** stop market
 #+BEGIN_SRC elixir
-  {:ok, reply} = channel |> Level4.RPC.Server.Control.Stub.stop_market(Level4.RPC.Server.StopMarketRequest.new(market: Level4.RPC.Server.Market.new(id: 1, base_symbol: "BTC", quote_symbol: "GBP", type: "SPOT", exchange_name: "COINBASE-PRO")))
+  {:ok, reply} = channel |> Level4.RPC.Server.Control.Stub.stop_market(Level4.RPC.Server.StopMarketRequest.new(market: Level4.RPC.Server.Market.new(id: 1, base_symbol: "BTC", quote_symbol: "GBP", type: "SPOT", exchange_name: "COINBASE")))
 #+END_SRC
 
 ** list active markets
