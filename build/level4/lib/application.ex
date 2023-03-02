@@ -5,7 +5,7 @@ defmodule TranslationScheme do
   """
 
   # still need to define stuff here
-  # ...
+  # ... :-)
 end
 
 defmodule Level4 do
