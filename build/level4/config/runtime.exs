@@ -28,7 +28,7 @@ config :level4,
 config :kaffe,
   producer: [
     endpoints: [
-      "127.0.0.1": 9093
+      kafka: 9093
     ],
     topics: [
       "level4.spread",

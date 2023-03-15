@@ -28,7 +28,7 @@ defmodule Level4 do
     rpc_port = Application.get_env(:level4, :rpc_port)
 
     # turn on distributed mode / assign a hostname
-    {:ok, _pid} = Node.start(hostname, :shortnames, 15000)
+    Node.start(hostname, :shortnames, 15000)
 
     # start the root supervisor
     Supervisor.start_link(
