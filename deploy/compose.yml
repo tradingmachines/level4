@@ -1,0 +1,85 @@
+version: "3.9"
+
+networks:
+  traefik_public:
+    external: true
+  light:
+    external: true
+  level4:
+    driver: "overlay"
+
+services:
+  level4_1:
+    image: "registry.wsantos.net/tradingmachines/level4:latest"
+    networks:
+      - "light"
+      - "level4"
+    environment:
+      - "HOSTNAME=node1"
+    deploy:
+      restart_policy:
+        condition: "on-failure"
+        delay: "5s"
+      placement:
+        constraints:
+          - "node.hostname==1"
+
+  level4_2:
+    image: "registry.wsantos.net/tradingmachines/level4:latest"
+    networks:
+      - "light"
+      - "level4"
+    environment:
+      - "HOSTNAME=node2"
+    deploy:
+      restart_policy:
+        condition: "on-failure"
+        delay: "5s"
+      placement:
+        constraints:
+          - "node.hostname==2"
+
+  level4_3:
+    image: "registry.wsantos.net/tradingmachines/level4:latest"
+    networks:
+      - "light"
+      - "level4"
+    environment:
+      - "HOSTNAME=node3"
+    deploy:
+      restart_policy:
+        condition: "on-failure"
+        delay: "5s"
+      placement:
+        constraints:
+          - "node.hostname==3"
+
+  level4_4:
+    image: "registry.wsantos.net/tradingmachines/level4:latest"
+    networks:
+      - "light"
+      - "level4"
+    environment:
+      - "HOSTNAME=node4"
+    deploy:
+      restart_policy:
+        condition: "on-failure"
+        delay: "5s"
+      placement:
+        constraints:
+          - "node.hostname==4"
+
+  level4_5:
+    image: "registry.wsantos.net/tradingmachines/level4:latest"
+    networks:
+      - "light"
+      - "level4"
+    environment:
+      - "HOSTNAME=node5"
+    deploy:
+      restart_policy:
+        condition: "on-failure"
+        delay: "5s"
+      placement:
+        constraints:
+          - "node.hostname==5"

@@ -1,3 +1,2 @@
 #!/bin/bash
-
-docker-compose up
+docker stack deploy -c compose.yml tradingmachines

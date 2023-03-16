@@ -27,6 +27,9 @@ defmodule Level4 do
     hostname = Application.get_env(:level4, :hostname)
     rpc_port = Application.get_env(:level4, :rpc_port)
 
+    # print the title
+    Application.get_env(:level4, :title) |> IO.puts()
+
     # turn on distributed mode / assign a hostname
     Node.start(hostname, :shortnames, 15000)
 
