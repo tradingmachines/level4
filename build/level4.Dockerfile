@@ -27,4 +27,7 @@ RUN chown -R level4:level4 ${LEVEL4_HOME} && \
 # setup complete, use level4 user
 USER level4
 
+# expose RPC server port
+EXPOSE 50051
+
 ENTRYPOINT ./init.sh
