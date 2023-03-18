@@ -28,11 +28,11 @@ config :level4,
 config :kaffe,
   producer: [
     endpoints: [
-      kafka_1: 9093,
-      kafka_2: 9093,
-      kafka_3: 9093,
-      kafka_4: 9093,
-      kafka_5: 9093
+      kafka_1: 9092,
+      kafka_2: 9092,
+      kafka_3: 9092,
+      kafka_4: 9092,
+      kafka_5: 9092
     ],
     topics: [
       "level4.spread",
