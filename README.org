@@ -70,6 +70,9 @@ If a node fails, the *data feeds are not automatically rescheduled*
 elsewhere in the cluster. They must be manually restarted. This
 limitation might also be addressed in the future.
 
+** Websockets
+...
+
 ** Orderbooks
 The orderbook is stored in-memory using a general balanced tree data
 structure. This allows logarithmic inserts, updates, and deletions,
@@ -90,10 +93,27 @@ side. A delta is a single message of the form ={price, size}= which
 updates the available liquidity for a given price level. If =size= is
 zero then the price level is removed.
 
+** Partitioning strategy
+...
+
 * Deploy
 Make sure Kafka is running and is accessible to the Level4 container
-i.e. they are on the same network. Refer to
-=deploy/docker-compose.yml= for an example compose file.
+i.e. they are on the same network. Refer to =compose.yml= for an
+example compose file.
+
+The following environment variables are available. Note: the variables
+must be set for each level4 instance in a cluster, hence it is best to
+use the Docker image and a compose file.
+
+| Variable        | Description                                |  Default value |
+|-----------------+--------------------------------------------+----------------|
+| HOSTNAME        | The instance's hostname - each participant |          node1 |
+|                 | in the cluster must have a unique name     |                |
+|-----------------+--------------------------------------------+----------------|
+| RPC_PORT        | gRPC server will listen on this port       |          50051 |
+|-----------------+--------------------------------------------+----------------|
+| KAFKA_ENDPOINTS | One or more Kafka brokers                  | 127.0.0.1:9093 |
+|-----------------+--------------------------------------------+----------------|
 
 ** Interactive
 ...
@@ -103,15 +123,24 @@ i.e. they are on the same network. Refer to
 #+END_SRC
 
 ** Docker
-...
+Docker images are available at
+=registry.wsantos.net/tradingmachines/level4=.
+
+#+BEGIN_SRC bash
+  docker run -p 50051:50051 tradingmachines/level4:latest -d
+#+END_SRC
 
 ** Compose
 ...
+
+#+BEGIN_SRC bash
+  docker compose up
+#+END_SRC
 
 * Develop
 ...
 
 ** building the container image
-Remember to adjust =build/level4/config/config.exs= and
-=build/level4/config/runtime.exs= before building the container
-image. Build the image using the Makefile in =deploy/=.
+Remember to adjust =level4/config/config.exs= and
+=level4/config/runtime.exs= before building the container image. Build
+the image using the Makefile in =deploy/=.
