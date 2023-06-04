@@ -115,25 +115,90 @@ use the Docker image and a compose file.
 |-----------------+------------------------------------------+----------------|
 
 ** Interactive
-...
+You can run a local instance of level4 inside an interactive iex
+session, which is useful for development and testing.
+
+Set the necessary environment variables, or make sure the default
+values work for your setup. Then, change directory into the mix
+project and start iex:
 
 #+BEGIN_SRC bash
   iex -S mix
 #+END_SRC
 
 ** Docker
-Docker images are available at
-=registry.wsantos.net/tradingmachines/level4=.
+Real-world deployments should use the Docker image, which are
+available at =registry.wsantos.net/tradingmachines/level4=. You should
+use the latest tag.
 
 #+BEGIN_SRC bash
-  docker run -p 50051:50051 tradingmachines/level4:latest -d
+  docker run \
+	 --detach \
+	 --publish 50051:50051 \
+	 --env HOSTNAME=example \
+	 --env RPC_PORT=50051 \
+	 --env KAFKA_ENDPOINTS=127.0.0.1:9093 \
+	 tradingmachines/level4:latest
 #+END_SRC
 
 ** Compose
-...
+The recommended way to deploy a level4 cluster is via a compose file.
 
-#+BEGIN_SRC bash
-  docker compose up
+#+BEGIN_SRC yaml
+  version: "3.9"
+
+  networks:
+    level4:
+
+  services:
+    zookeeper:
+      image: "bitnami/zookeeper:latest"
+      networks:
+        - "level4"
+      environment:
+        - "ALLOW_ANONYMOUS_LOGIN=yes"
+
+    kafka:
+      image: "bitnami/kafka:latest"
+      networks:
+        - "level4"
+      ports:
+        - "9093:9093"
+      environment:
+        - "KAFKA_BROKER_ID=1"
+        - "ALLOW_PLAINTEXT_LISTENER=yes"
+        - "KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181"
+        - "KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT"
+        - "KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093"
+        - "KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://127.0.0.1:9093"
+        - "KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT"
+      depends_on:
+        - "zookeeper"
+
+    kafka-ui:
+      image: "provectuslabs/kafka-ui:latest"
+      networks:
+        - "level4"
+      ports:
+        - "8080:8080"
+      environment:
+        - "KAFKA_CLUSTERS_0_NAME=local"
+        - "KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092"
+      depends_on:
+        - "kafka"
+
+    level4:
+      image: "tradingmachines/level4:latest"
+      networks:
+        - "level4"
+      ports:
+        - "50051:50051"
+      environment:
+        - "HOSTNAME=example"
+        - "RPC_PORT=50051"
+        - "KAFKA_ENDPOINTS=kafka:9093"
+      depends_on:
+        - "kafka"
 #+END_SRC
 
 * Develop
