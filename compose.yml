@@ -1,13 +1,20 @@
 version: "3.9"
 
+networks:
+  level4:
+
 services:
   zookeeper:
     image: "bitnami/zookeeper:latest"
+    networks:
+      - "level4"
     environment:
       - "ALLOW_ANONYMOUS_LOGIN=yes"
 
   kafka:
     image: "bitnami/kafka:latest"
+    networks:
+      - "level4"
     ports:
       - "9093:9093"
     environment:
@@ -18,12 +25,30 @@ services:
       - "KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093"
       - "KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://127.0.0.1:9093"
       - "KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT"
-
+    depends_on:
+      - "zookeeper"
 
   kafka-ui:
     image: "provectuslabs/kafka-ui:latest"
+    networks:
+      - "level4"
     ports:
       - "8080:8080"
     environment:
       - "KAFKA_CLUSTERS_0_NAME=local"
       - "KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092"
+    depends_on:
+      - "kafka"
+
+  level4:
+    image: "tradingmachines/level4:latest"
+    networks:
+      - "level4"
+    ports:
+      - "50051:50051"
+    environment:
+      - "HOSTNAME=example"
+      - "RPC_PORT=50051"
+      - "KAFKA_ENDPOINTS=kafka:9093"
+    depends_on:
+      - "kafka"

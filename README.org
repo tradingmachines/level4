@@ -2,41 +2,227 @@
 #+AUTHOR: William Santos
 #+EMAIL:  w@wsantos.net
 
-#+ID:               level4
-#+LANGUAGE:         en
-#+STARTUP:          showall
-#+EXPORT_FILE_NAME: level4
+#+LANGUAGE: en
+#+STARTUP:  showall
+#+OPTIONS:  toc:2
 
-Aggregated level2 market data feeds for multiple cryptocurrency exchanges
+🔥 Aggregated level2 market data feeds for multiple cryptocurrency
+exchanges. Publishes mid-market price change and timesale data to a
+Kafka topic
 
-* architecture
-Level4 is designed to run in cluster mode: running nodes in multiple containers
-/ on different machines. They will discover each other via the gossip protocol
-over UDP.
+* Features
+- 11 exchanges
+- multi-node / load-balancing
+- gRPC server
+- outputs events to kafka topics
 
-Each node exposes a GRPC server on port =50051= allowing the following procedures
-to be called remotely:
+** Supported exchanges
+| Exchange | Spot markets | Futures markets | Inverse futures |
+|----------+--------------+-----------------+-----------------|
+| Binance  | Yes          | Yes             | Yes             |
+|----------+--------------+-----------------+-----------------|
+| Bitfinex | Yes          | Yes             | N/A             |
+|----------+--------------+-----------------+-----------------|
+| Bitflyer | Yes          | N/A             | N/A             |
+|----------+--------------+-----------------+-----------------|
+| Bitmex   | Yes          | Yes             | N/A             |
+|----------+--------------+-----------------+-----------------|
+| Bitstamp | Yes          | N/A             | N/A             |
+|----------+--------------+-----------------+-----------------|
+| Bybit    | Yes          | Yes             | Yes             |
+|----------+--------------+-----------------+-----------------|
+| Coinbase | Yes          | N/A             | N/A             |
+|----------+--------------+-----------------+-----------------|
+| Gemini   | Yes          | N/A             | N/A             |
+|----------+--------------+-----------------+-----------------|
+| HitBTC   | Yes          | Yes             | N/A             |
+|----------+--------------+-----------------+-----------------|
+| Kraken   | Yes          | Yes             | Yes             |
+|----------+--------------+-----------------+-----------------|
+| Poloniex | Yes          | N/A             | N/A             |
+|----------+--------------+-----------------+-----------------|
+
+** Kafka
+Events are published to the following Kafka topics, where the
+partition is set to the market's numeric identifier (market ID).
+
+- =level4.spread=: best bid/ask price changes;
+- =level4.timesales=: order fills i.e. buys/sells;
+- =level4.status=: system status signalling e.g. data feed starts and
+  stops.
+
+** RPC server
+Each level4 instance exposes a gRPC server (on port =50051= by
+default) allowing the following procedures to be called remotely.
+
 - start/stop market data feeds
 - list active market data feeds
 - list nodes in the cluster
 
-Each node is configured such that it can hots a maximum of =25= data feeds
-concurrently. when staring a data feed, a random node in the cluster is chosen
-to be the host. *Other load-balancing strategies might be added in the future*.
+See the =level4.proto= protobuf schema file in =level4/lib/rpc/= if
+you want to build your own client.
 
-If a node fails, the *data feeds are not automatically rescheduled* elsewhere in
-the cluster. They must be manually restarted. This limitation might also be
-addressed in the future.
+* Architecture
+Level4 aggregates multiple level 2 market data feeds i.e. orderbooks,
+and logs best bid and ask price changes as well as order fills. Each
+market is assigned a unique numerical identifier (a market ID). The
+system is designed to run in cluster mode: running nodes in multiple
+containers / on different machines. They will discover each other via
+the gossip protocol over UDP.
 
-Best bid/ask price changes are published to the Kafka topic =level4.spread= and
-buys/sells are published to =level4.timesales=. The partition is set to the market's
-numeric identifier (market ID).
+Each node in a cluster is configured to host a maximum number of data
+feeds concurrently (by default it is 25). This can be changed but it's
+important allocate sufficient memory and CPU. When staring a data
+feed, a random node in the cluster is chosen to be the host. If a node
+fails, the data feeds are not automatically rescheduled elsewhere in
+the cluster. They must be manually restarted.  These limitations will
+be addressed in future releases.
 
-* building the container image
-Remember to adjust =build/level4/config/config.exs= and =build/level4/config/runtime.exs=
-before building the container image. Build the image using the Makefile in =deploy/=.
+** Websockets and translation schemes
+All exchanges have websocket APIs for pushing real-time information
+such as level 2 data feeds - and data is always serialised using
+JSON. However, there is no standardised JSON format / structure, so a
+translation scheme is required to convert incoming and outgoing data
+to a common "internal" format.
 
-* deploying to docker swarm
-Make sure Kafka is running and is accessible to the Level4 container i.e. they are
-on the same network. Refer to =deploy/docker-compose.yml= for an example compose
-file.
+Level4's translation scheme modules can be found in
+=level4/lib/exchanges/=. A scheme is defined for each exchange's
+market type (spot, futures, inverse).
+
+** Orderbooks
+The orderbook is stored in-memory using a general balanced tree data
+structure. This allows logarithmic inserts, updates, and deletions
+(which is important because a market's orderbook can be updated many
+hundreds or thousands of times each second).
+
+Two balanced trees are used: one to store the bids side, and one to
+store the asks side. This means the best bid price and be founded by
+locating the largest price in the bids tree. The best ask price can be
+found by locating the smallest price in the asks tree.
+
+The orderbook is initialised using a snapshot, and then updated by
+applying deltas. The snapshot consists of two lists, both of the form
+=[{price, size}, {price, size}, ...]=, which capture the price levels
+and associated liquidity for the bids side and the asks side. A delta
+is a single message of the form ={price, size}= which updates the
+available liquidity for a given price level. If =size= is zero then
+the price level is removed.
+
+** Partitioning strategy
+In Kafka, a partition is a unit of parallelism within a topic. A topic
+can be divided into multiple partitions, where each partition
+represents a sequence of ordered, immutable records. Each partition
+can be independently produced to and consumed from, allowing for
+increased throughput and fault tolerance.
+
+Level4 sets an event's partition number to its market ID minus 1 -
+because partitions start at zero. This means the topics can scale
+horizontally across multiple brokers.
+
+* Deploy
+Make sure Kafka is running and is accessible to the level4
+container(s) i.e. they are on the same network.
+
+The following environment variables are available. Note: the variables
+must be set for each level4 instance in a cluster, hence it is best to
+use the Docker image and a compose file.
+
+| Variable        | Description                              |  Default value |
+|-----------------+------------------------------------------+----------------|
+| HOSTNAME        | The instance's hostname - must be unique |          node1 |
+|-----------------+------------------------------------------+----------------|
+| RPC_PORT        | gRPC server will listen on this port     |          50051 |
+|-----------------+------------------------------------------+----------------|
+| KAFKA_ENDPOINTS | One or more Kafka brokers                | 127.0.0.1:9093 |
+|-----------------+------------------------------------------+----------------|
+| MAX_DATA_FEEDS  | Max concurrent data feeds per instance   |             25 |
+|-----------------+------------------------------------------+----------------|
+
+** Interactive
+You can run a local instance of level4 inside an interactive iex
+session, which is useful for development and testing.
+
+Set the necessary environment variables, or make sure the default
+values work for your setup. Then, change directory into the mix
+project and start iex:
+
+#+BEGIN_SRC bash
+  iex -S mix
+#+END_SRC
+
+** Docker
+Real-world deployments should use the Docker image, which are
+available at =registry.wsantos.net/tradingmachines/level4=. You should
+use the latest tag.
+
+#+BEGIN_SRC bash
+  docker run \
+	 --detach \
+	 --publish 50051:50051 \
+	 --env HOSTNAME=example \
+	 --env RPC_PORT=50051 \
+	 --env KAFKA_ENDPOINTS=127.0.0.1:9093 \
+	 tradingmachines/level4:latest
+#+END_SRC
+
+** Compose
+The recommended way to deploy a level4 cluster is via a compose
+file. This way, Kafka and related dependencies are defined in a single
+configuration file.
+
+#+BEGIN_SRC yaml
+  version: "3.9"
+
+  networks:
+    level4:
+
+  services:
+    zookeeper:
+      image: "bitnami/zookeeper:latest"
+      networks:
+        - "level4"
+      environment:
+        - "ALLOW_ANONYMOUS_LOGIN=yes"
+
+    kafka:
+      image: "bitnami/kafka:latest"
+      networks:
+        - "level4"
+      ports:
+        - "9093:9093"
+      environment:
+        - "KAFKA_BROKER_ID=1"
+        - "ALLOW_PLAINTEXT_LISTENER=yes"
+        - "KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181"
+        - "KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT"
+        - "KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093"
+        - "KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://127.0.0.1:9093"
+        - "KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT"
+      depends_on:
+        - "zookeeper"
+
+    kafka-ui:
+      image: "provectuslabs/kafka-ui:latest"
+      networks:
+        - "level4"
+      ports:
+        - "8080:8080"
+      environment:
+        - "KAFKA_CLUSTERS_0_NAME=local"
+        - "KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092"
+      depends_on:
+        - "kafka"
+
+    level4:
+      image: "tradingmachines/level4:latest"
+      networks:
+        - "level4"
+      ports:
+        - "50051:50051"
+      environment:
+        - "HOSTNAME=example"
+        - "RPC_PORT=50051"
+        - "KAFKA_ENDPOINTS=kafka:9093"
+      depends_on:
+        - "kafka"
+#+END_SRC
