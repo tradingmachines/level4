@@ -65,51 +65,63 @@ you want to build your own client.
 * Architecture
 Level4 aggregates multiple level 2 market data feeds i.e. orderbooks,
 and logs best bid and ask price changes as well as order fills. Each
-market is assigned a unique numerical identifier (a market ID).
-
-Level4 is designed to run in cluster mode: running nodes in multiple
+market is assigned a unique numerical identifier (a market ID). The
+system is designed to run in cluster mode: running nodes in multiple
 containers / on different machines. They will discover each other via
 the gossip protocol over UDP.
 
-Each node is configured to host a maximum number of data feeds
-concurrently (by default it is 25). This can be changed but it's
-important allocate sufficient memory and CPU.
-
-When staring a data feed, a random node in the cluster is chosen to be
-the host. If a node fails, the data feeds are not automatically
-rescheduled elsewhere in the cluster. They must be manually restarted.
-These limitations will be addressed in future releases.
+Each node in a cluster is configured to host a maximum number of data
+feeds concurrently (by default it is 25). This can be changed but it's
+important allocate sufficient memory and CPU. When staring a data
+feed, a random node in the cluster is chosen to be the host. If a node
+fails, the data feeds are not automatically rescheduled elsewhere in
+the cluster. They must be manually restarted.  These limitations will
+be addressed in future releases.
 
 ** Websockets and translation schemes
-...
+All exchanges have websocket APIs for pushing real-time information
+such as level 2 data feeds - and data is always serialised using
+JSON. However, there is no standardised JSON format / structure, so a
+translation scheme is required to convert incoming and outgoing data
+to a common "internal" format.
+
+Level4's translation scheme modules can be found in
+=level4/lib/exchanges/=. A scheme is defined for each exchange's
+market type (spot, futures, inverse).
 
 ** Orderbooks
 The orderbook is stored in-memory using a general balanced tree data
-structure. This allows logarithmic inserts, updates, and deletions,
-which is important because a market's orderbook can be updated many
-hundreds or thousands of times each second.
+structure. This allows logarithmic inserts, updates, and deletions
+(which is important because a market's orderbook can be updated many
+hundreds or thousands of times each second).
 
 Two balanced trees are used: one to store the bids side, and one to
 store the asks side. This means the best bid price and be founded by
 locating the largest price in the bids tree. The best ask price can be
-found by locating the smallest price in the asks tree. Both of these
-operations are done in logarithmic time.
+found by locating the smallest price in the asks tree.
 
 The orderbook is initialised using a snapshot, and then updated by
-applying individual deltas. The snapshot consists of two lists, both
-of the form =[{price, size}, {price, size}, ...]=, which capture the
-price levels and associated liquidity for the bids side and the asks
-side. A delta is a single message of the form ={price, size}= which
-updates the available liquidity for a given price level. If =size= is
-zero then the price level is removed.
+applying deltas. The snapshot consists of two lists, both of the form
+=[{price, size}, {price, size}, ...]=, which capture the price levels
+and associated liquidity for the bids side and the asks side. A delta
+is a single message of the form ={price, size}= which updates the
+available liquidity for a given price level. If =size= is zero then
+the price level is removed.
 
 ** Partitioning strategy
-...
+In Kafka, a partition is a unit of parallelism within a topic. A topic
+can be divided into multiple partitions, where each partition
+represents a sequence of ordered, immutable records. Each partition
+can be independently produced to and consumed from, allowing for
+increased throughput and fault tolerance.
+
+Level4 sets an event's partition number to its market ID minus 1 -
+because partitions start at zero. This means the topics can scale
+horizontally across multiple brokers.
 
 * Deploy
-Make sure Kafka is running and is accessible to the Level4 container
-i.e. they are on the same network. Refer to =compose.yml= for an
-example compose file.
+Make sure Kafka is running and is accessible to the level4
+container(s) i.e. they are on the same network.
 
 The following environment variables are available. Note: the variables
 must be set for each level4 instance in a cluster, hence it is best to
@@ -122,6 +134,8 @@ use the Docker image and a compose file.
 | RPC_PORT        | gRPC server will listen on this port     |          50051 |
 |-----------------+------------------------------------------+----------------|
 | KAFKA_ENDPOINTS | One or more Kafka brokers                | 127.0.0.1:9093 |
+|-----------------+------------------------------------------+----------------|
+| MAX_DATA_FEEDS  | Max concurrent data feeds per instance   |             25 |
 |-----------------+------------------------------------------+----------------|
 
 ** Interactive
@@ -152,7 +166,9 @@ use the latest tag.
 #+END_SRC
 
 ** Compose
-The recommended way to deploy a level4 cluster is via a compose file.
+The recommended way to deploy a level4 cluster is via a compose
+file. This way, Kafka and related dependencies are defined in a single
+configuration file.
 
 #+BEGIN_SRC yaml
   version: "3.9"
@@ -210,11 +226,3 @@ The recommended way to deploy a level4 cluster is via a compose file.
       depends_on:
         - "kafka"
 #+END_SRC
-
-* Develop
-...
-
-** Building the container image
-Remember to adjust =level4/config/config.exs= and
-=level4/config/runtime.exs= before building the container image. Build
-the image using the Makefile in =deploy/=.
