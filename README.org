@@ -14,63 +14,73 @@ Kafka topic
 - 11 exchanges
 - multi-node / load-balancing
 - gRPC server
-- outputs kafka
+- outputs events to kafka topics
 
 ** Supported exchanges
 | Exchange | Spot markets | Futures markets | Inverse futures |
 |----------+--------------+-----------------+-----------------|
 | Binance  | Yes          | Yes             | Yes             |
 |----------+--------------+-----------------+-----------------|
-| Bitfinex | Yes          | Yes             | No              |
+| Bitfinex | Yes          | Yes             | N/A             |
 |----------+--------------+-----------------+-----------------|
-| Bitflyer | Yes          | No              | No              |
+| Bitflyer | Yes          | N/A             | N/A             |
 |----------+--------------+-----------------+-----------------|
-| Bitmex   | Yes          | Yes             | No              |
+| Bitmex   | Yes          | Yes             | N/A             |
 |----------+--------------+-----------------+-----------------|
-| Bitstamp | Yes          | No              | No              |
+| Bitstamp | Yes          | N/A             | N/A             |
 |----------+--------------+-----------------+-----------------|
 | Bybit    | Yes          | Yes             | Yes             |
 |----------+--------------+-----------------+-----------------|
-| Coinbase | Yes          | No              | No              |
+| Coinbase | Yes          | N/A             | N/A             |
 |----------+--------------+-----------------+-----------------|
-| Gemini   | Yes          | No              | No              |
+| Gemini   | Yes          | N/A             | N/A             |
 |----------+--------------+-----------------+-----------------|
-| HitBTC   | Yes          | Yes             | No              |
+| HitBTC   | Yes          | Yes             | N/A             |
 |----------+--------------+-----------------+-----------------|
 | Kraken   | Yes          | Yes             | Yes             |
 |----------+--------------+-----------------+-----------------|
-| Poloniex | Yes          | No              | No              |
+| Poloniex | Yes          | N/A             | N/A             |
 |----------+--------------+-----------------+-----------------|
 
 ** Kafka
-Best bid/ask price changes are published to the Kafka topic
-=level4.spread= and buys/sells are published to
-=level4.timesales=. The partition is set to the market's numeric
-identifier (market ID).
+Events are published to the following Kafka topics, where the
+partition is set to the market's numeric identifier (market ID).
+
+- =level4.spread=: best bid/ask price changes;
+- =level4.timesales=: order fills i.e. buys/sells;
+- =level4.status=: system status signalling e.g. data feed starts and
+  stops.
 
 ** RPC server
-Each node exposes a GRPC server on port =50051= allowing the following
-procedures to be called remotely:
+Each level4 instance exposes a gRPC server (on port =50051= by
+default) allowing the following procedures to be called remotely.
 
 - start/stop market data feeds
 - list active market data feeds
 - list nodes in the cluster
 
+See the =level4.proto= protobuf schema file in =level4/lib/rpc/= if
+you want to build your own client.
+
 * Architecture
+Level4 aggregates multiple level 2 market data feeds i.e. orderbooks,
+and logs best bid and ask price changes as well as order fills. Each
+market is assigned a unique numerical identifier (a market ID).
+
 Level4 is designed to run in cluster mode: running nodes in multiple
 containers / on different machines. They will discover each other via
 the gossip protocol over UDP.
 
-Each node is configured such that it can hots a maximum of =25= data
-feeds concurrently. when staring a data feed, a random node in the
-cluster is chosen to be the host. *Other load-balancing strategies
-might be added in the future*.
+Each node is configured to host a maximum number of data feeds
+concurrently (by default it is 25). This can be changed but it's
+important allocate sufficient memory and CPU.
 
-If a node fails, the *data feeds are not automatically rescheduled*
-elsewhere in the cluster. They must be manually restarted. This
-limitation might also be addressed in the future.
+When staring a data feed, a random node in the cluster is chosen to be
+the host. If a node fails, the data feeds are not automatically
+rescheduled elsewhere in the cluster. They must be manually restarted.
+These limitations will be addressed in future releases.
 
-** Websockets
+** Websockets and translation schemes
 ...
 
 ** Orderbooks
@@ -81,9 +91,9 @@ hundreds or thousands of times each second.
 
 Two balanced trees are used: one to store the bids side, and one to
 store the asks side. This means the best bid price and be founded by
-locating the largest price in the bids tree. The best ask price can
-be found by locating the smallest price in the asks tree. Both of
-these operations are done in logarithmic time.
+locating the largest price in the bids tree. The best ask price can be
+found by locating the smallest price in the asks tree. Both of these
+operations are done in logarithmic time.
 
 The orderbook is initialised using a snapshot, and then updated by
 applying individual deltas. The snapshot consists of two lists, both
@@ -204,7 +214,7 @@ The recommended way to deploy a level4 cluster is via a compose file.
 * Develop
 ...
 
-** building the container image
+** Building the container image
 Remember to adjust =level4/config/config.exs= and
 =level4/config/runtime.exs= before building the container image. Build
 the image using the Makefile in =deploy/=.
