@@ -1,5 +1,7 @@
 import Config
 
+# helper functions: wrappers around System.get_env that load an
+# environment variable and do some pre-processing
 def get_env(:atom, name, default) do
   System.get_env(name, default) |> String.to_atom()
 end
@@ -18,35 +20,17 @@ def get_env(:hosts, name, default) do
   end)
 end
 
-# define the node hostname
+################################################################################
+#
+# node hostname
+# RPC server port
+# maximum concurrent data feed processes per node
+# libcluster topology
+#
 config :level4,
-  hostname: get_env(:atom, "HOSTNAME", "node1")
-
-# define the maximum concurrent data feed processes per node
-config :level4,
-  max_data_feeds: get_env(:integer, "MAX_DATA_FEEDS", "25")
-
-# define the RPC server port
-config :level4,
-  rpc_port: get_env(:integer, "RPC_PORT", "50051")
-
-# define the kafka producer
-config :kaffe,
-  producer: [
-    endpoints: get_env(:hosts, "KAFKA_ENDPOINTS", ["127.0.0.1:9093"]),
-    topics: [
-      "level4.spread",
-      "level4.timesale"
-    ],
-    partition_strategy: fn _topic, _partitions_count, key, _value ->
-      # subtract 1 because topics start at zero
-      {market_id, ""} = Integer.parse(key)
-      market_id - 1
-    end
-  ]
-
-# define the libcluster topologies
-config :level4,
+  hostname: get_env(:atom, "HOSTNAME", "node1"),
+  rpc_port: get_env(:integer, "RPC_PORT", "50051"),
+  max_data_feeds: get_env(:integer, "MAX_DATA_FEEDS", "25"),
   topologies: [
     level4: [
       strategy: Cluster.Strategy.Gossip,
@@ -56,3 +40,24 @@ config :level4,
       ]
     ]
   ]
+
+################################################################################
+#
+# kafka producer config
+#
+config :kaffe,
+  producer: [
+    endpoints: get_env(:hosts, "KAFKA_ENDPOINTS", ["127.0.0.1:9093"]),
+    topics: [
+      "level4.spread",
+      "level4.timesale",
+      "level4.status"
+    ],
+    partition_strategy: fn _topic, _partitions_count, key, _value ->
+      # subtract 1 because topics start at zero
+      {market_id, ""} = Integer.parse(key)
+      market_id - 1
+    end
+  ]
+
+################################################################################
