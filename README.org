@@ -127,16 +127,16 @@ The following environment variables are available. Note: the variables
 must be set for each level4 instance in a cluster, hence it is best to
 use the Docker image and a compose file.
 
-| Variable        | Description                              |  Default value |
-|-----------------+------------------------------------------+----------------|
-| HOSTNAME        | The instance's hostname - must be unique |          node1 |
-|-----------------+------------------------------------------+----------------|
-| RPC_PORT        | gRPC server will listen on this port     |          50051 |
-|-----------------+------------------------------------------+----------------|
-| KAFKA_ENDPOINTS | One or more Kafka brokers                | 127.0.0.1:9093 |
-|-----------------+------------------------------------------+----------------|
-| MAX_DATA_FEEDS  | Max concurrent data feeds per instance   |             25 |
-|-----------------+------------------------------------------+----------------|
+| Variable        | Description                              |   Default value |
+|-----------------+------------------------------------------+-----------------|
+| HOSTNAME        | The instance's hostname - must be unique |           node1 |
+|-----------------+------------------------------------------+-----------------|
+| RPC_PORT        | gRPC server will listen on this port     |           50051 |
+|-----------------+------------------------------------------+-----------------|
+| KAFKA_ENDPOINTS | One or more Kafka brokers                | 127.0.0.1:29092 |
+|-----------------+------------------------------------------+-----------------|
+| MAX_DATA_FEEDS  | Max concurrent data feeds per instance   |              25 |
+|-----------------+------------------------------------------+-----------------|
 
 ** Interactive
 You can run a local instance of level4 inside an interactive iex

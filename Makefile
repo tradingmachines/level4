@@ -3,17 +3,16 @@ LEVEL4_RPC_PORT="50051"
 
 release:
 	cd ./level4 && \
-	mix release
+	mix release --overwrite
 
 image:
 	docker build \
 		--build-arg LEVEL4_RELEASE_PATH=${LEVEL4_RELEASE_PATH} \
-		--build-arg LEVEL4_RELEASE_PATH=${LEVEL4_RELEASE_PATH} \
-		-f ./level4.Dockerfile \
-		-t wsantos.net/tradingmachines/level4:latest .
+		--build-arg LEVEL4_RPC_PORT=${LEVEL4_RPC_PORT} \
+		-t tradingmachines/level4:latest .
 
 tag:
-	docker tag wsantos.net/tradingmachines/level4:latest \
+	docker tag tradingmachines/level4:latest \
 	registry.wsantos.net/tradingmachines/level4:latest
 
 login:
@@ -22,4 +21,6 @@ login:
 push:
 	docker push registry.wsantos.net/tradingmachines/level4:latest
 
-level4: release image tag login push
+level4: release image
+
+publish: tag level4 login push

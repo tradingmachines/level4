@@ -94,7 +94,7 @@ defmodule Market.DynamicSupervisor do
   Start a new market data feed: adds a new data feed process to the dynamic
   supervisor.
   """
-  def start_data_feed(market, config) do
+  def start_data_feed(market, config, node) do
     {:ok, _pid} =
       DynamicSupervisor.start_child(
         __MODULE__,
@@ -104,7 +104,11 @@ defmodule Market.DynamicSupervisor do
             Market.DataFeed.Supervisor,
             :start_link,
             [
-              [market: market, config: config]
+              [
+                market: market,
+                config: config,
+                node: node
+              ]
             ]
           },
           type: :supervisor,
