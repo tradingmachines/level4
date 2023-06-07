@@ -4,29 +4,22 @@ networks:
   level4:
 
 services:
-  zookeeper:
-    image: "bitnami/zookeeper:latest"
-    networks:
-      - "level4"
-    environment:
-      - "ALLOW_ANONYMOUS_LOGIN=yes"
-
-  kafka:
-    image: "bitnami/kafka:latest"
+  kafka-1:
+    image: "confluentinc/cp-kafka:latest"
     networks:
       - "level4"
     ports:
       - "9093:9093"
     environment:
-      - "KAFKA_BROKER_ID=1"
-      - "ALLOW_PLAINTEXT_LISTENER=yes"
-      - "KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181"
-      - "KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT"
-      - "KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093"
-      - "KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://127.0.0.1:9093"
-      - "KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT"
-    depends_on:
-      - "zookeeper"
+      - "CLUSTER_ID=n6QfYZQpEEOcvNUDutu0TQ"
+      - "KAFKA_NODE_ID=1"
+      - "KAFKA_PROCESS_ROLES=broker,controller"
+      - "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      - "KAFKA_LISTENERS=PLAINTEXT://kafka-1:9092"
+      - "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka-1:9092"
+      - "KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-1:9093"
+      - "KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER"
+      - "KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT"
 
   kafka-ui:
     image: "provectuslabs/kafka-ui:latest"
@@ -36,19 +29,20 @@ services:
       - "8080:8080"
     environment:
       - "KAFKA_CLUSTERS_0_NAME=local"
-      - "KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092"
+      - "KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-1:9092"
     depends_on:
-      - "kafka"
+      - "kafka-1"
 
-  level4:
-    image: "tradingmachines/level4:latest"
-    networks:
-      - "level4"
-    ports:
-      - "50051:50051"
-    environment:
-      - "HOSTNAME=example"
-      - "RPC_PORT=50051"
-      - "KAFKA_ENDPOINTS=kafka:9093"
-    depends_on:
-      - "kafka"
+        #  level4-1:
+        #    image: "tradingmachines/level4:latest"
+        #    networks:
+        #      - "level4"
+        #    ports:
+        #      - "50051:50051"
+        #    environment:
+        #      - "HOSTNAME=1"
+        #      - "RPC_PORT=50051"
+        #      - "KAFKA_ENDPOINTS=kafka-1:9093"
+        #      - "MAX_DATA_FEEDS=25"
+        #    depends_on:
+        #      - "kafka-1"

@@ -1,19 +1,53 @@
 import Config
 
-# define the node hostname
-config :level4,
-  hostname: System.get_env("HOSTNAME", "node1") |> String.to_atom()
+defmodule Level4.Runtime do
+  # helper functions: wrappers around System.get_env that load an
+  # environment variable and do some pre-processing
+  def get_env(:atom, name, default) do
+    System.get_env(name, default) |> String.to_atom()
+  end
 
-# define the maximum concurrent data feed processes per node
-config :level4,
-  max_data_feeds: 25
+  def get_env(:integer, name, default) do
+    {x, ""} = System.get_env(name, default) |> Integer.parse()
+    x
+  end
 
-# define the RPC server port
-config :level4,
-  rpc_port: 50051
+  def get_env(:hosts, name, default) do
+    System.get_env(name, default)
+    |> String.split(",")
+    |> Enum.flat_map(fn addr ->
+      [ip, port] = String.split(addr, ":")
+      Keyword.put([], String.to_atom(ip), String.to_integer(port))
+    end)
+  end
+end
 
-# define the libcluster topologies
+################################################################################
+#
+# node hostname
+# RPC server port
+# maximum concurrent data feed processes per node
+# libcluster topology
+#
 config :level4,
+  hostname:
+    Level4.Runtime.get_env(
+      :atom,
+      "HOSTNAME",
+      "node1"
+    ),
+  rpc_port:
+    Level4.Runtime.get_env(
+      :integer,
+      "RPC_PORT",
+      "50051"
+    ),
+  max_data_feeds:
+    Level4.Runtime.get_env(
+      :integer,
+      "MAX_DATA_FEEDS",
+      "25"
+    ),
   topologies: [
     level4: [
       strategy: Cluster.Strategy.Gossip,
@@ -24,20 +58,28 @@ config :level4,
     ]
   ]
 
-# define the kafka producer
+################################################################################
+#
+# kafka producer config
+#
 config :kaffe,
   producer: [
-    endpoints: [
-      "127.0.0.1": 9093
-    ],
+    endpoints:
+      Level4.Runtime.get_env(
+        :hosts,
+        "KAFKA_ENDPOINTS",
+        "127.0.0.1:9092"
+      ),
     topics: [
       "level4.spread",
-      "level4.timesale"
+      "level4.timesale",
+      "level4.status"
     ],
     partition_strategy: fn _topic, _partitions_count, key, _value ->
-      {market_id, ""} = Integer.parse(key)
-
       # subtract 1 because topics start at zero
+      {market_id, ""} = Integer.parse(key)
       market_id - 1
     end
   ]
+
+################################################################################

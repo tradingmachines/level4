@@ -32,7 +32,7 @@ RUN chown -R level4:level4 ${LEVEL4_HOME} && \
 USER level4
 
 # expose RPC server port
-EXPOSE LEVEL4_RPC_PORT
+EXPOSE ${LEVEL4_RPC_PORT}
 
 # image's entrypoint it the init script
 ENTRYPOINT ./init.sh

@@ -24,6 +24,9 @@ defmodule Market.DataFeed.Level2.WebSocket do
 
   @impl true
   def init(init_arg) do
+    # trap exits
+    Process.flag(:trap_exit, true)
+
     # market internal representation
     market = init_arg[:market]
     config = init_arg[:config]
@@ -77,6 +80,7 @@ defmodule Market.DataFeed.Level2.WebSocket do
   """
   @impl true
   def terminate(_, state) do
+    # ...
     :ok = :gun.shutdown(state[:conn_pid])
   end
 
@@ -134,7 +138,12 @@ defmodule Market.DataFeed.Level2.WebSocket do
        }}
 
     # ...
-    :ok = Market.DataFeed.Level2.snapshot(level2, bids, asks)
+    :ok =
+      Market.DataFeed.Level2.Mediator.snapshot(
+        level2,
+        bids,
+        asks
+      )
 
     :ok
   end
@@ -153,11 +162,21 @@ defmodule Market.DataFeed.Level2.WebSocket do
       case side do
         :bid ->
           # ...
-          :ok = Market.DataFeed.Level2.bids_delta(level2, price, liquidity)
+          :ok =
+            Market.DataFeed.Level2.Mediator.bids_delta(
+              level2,
+              price,
+              liquidity
+            )
 
         :ask ->
           # ...
-          :ok = Market.DataFeed.Level2.asks_delta(level2, price, liquidity)
+          :ok =
+            Market.DataFeed.Level2.Mediator.asks_delta(
+              level2,
+              price,
+              liquidity
+            )
       end
     end
 
@@ -176,7 +195,12 @@ defmodule Market.DataFeed.Level2.WebSocket do
 
     for {price, size} <- buys do
       # ...
-      :ok = Market.DataFeed.Level2.buy(level2, price, size)
+      :ok =
+        Market.DataFeed.Level2.Mediator.buy(
+          level2,
+          price,
+          size
+        )
     end
 
     :ok
@@ -194,7 +218,12 @@ defmodule Market.DataFeed.Level2.WebSocket do
 
     for {price, size} <- sells do
       # ...
-      :ok = Market.DataFeed.Level2.sell(level2, price, size)
+      :ok =
+        Market.DataFeed.Level2.Mediator.sell(
+          level2,
+          price,
+          size
+        )
     end
 
     :ok
@@ -278,22 +307,6 @@ defmodule Market.DataFeed.Level2.WebSocket do
     {:noreply, state}
   end
 
-  # the connection is up
-  def handle_info({:gun_up, _, _}, state) do
-    %{
-      :config => config,
-      :conn_pid => conn_pid
-    } = state
-
-    # request a connection upgrade to websocket
-    stream_ref = :gun.ws_upgrade(conn_pid, config.path)
-
-    # schedule pings?
-    if config.ping?, do: schedule_ping()
-
-    {:noreply, %{state | :stream_ref => stream_ref}}
-  end
-
   # the HTTP connection upgrade was successful
   def handle_info({:gun_upgrade, _, _, _, _}, state) do
     %{
@@ -328,6 +341,22 @@ defmodule Market.DataFeed.Level2.WebSocket do
   def handle_info({:gun_ws, _, _, {:close, _}}, state) do
     # stop the GenServer and reconnect later
     {:stop, "server closed the websocket", state}
+  end
+
+  # the connection is up
+  def handle_info({:gun_up, _, _}, state) do
+    %{
+      :config => config,
+      :conn_pid => conn_pid
+    } = state
+
+    # request a connection upgrade to websocket
+    stream_ref = :gun.ws_upgrade(conn_pid, config.path)
+
+    # schedule pings?
+    if config.ping?, do: schedule_ping()
+
+    {:noreply, %{state | :stream_ref => stream_ref}}
   end
 
   # the connection has gone down
