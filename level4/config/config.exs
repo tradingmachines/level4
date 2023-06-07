@@ -21,7 +21,6 @@ config :level4,
   ---
   version 2.0 (february 2023)
   by william santos
-
   """
 
 # define the exchange -> market type translation schemes

@@ -22,13 +22,17 @@ defmodule Level4 do
     # libcluster topologies
     # node hostname
     # RPC server port
+    title_text = Application.get_env(:level4, :title)
     max_data_feeds = Application.get_env(:level4, :max_data_feeds)
     topologies = Application.get_env(:level4, :topologies)
     hostname = Application.get_env(:level4, :hostname)
     rpc_port = Application.get_env(:level4, :rpc_port)
 
-    # print the title
-    Application.get_env(:level4, :title) |> IO.puts()
+    # print system info
+    IO.puts(title_text)
+    IO.puts("> instance hostname: #{hostname}")
+    IO.puts("> max concurrent data feeds: #{max_data_feeds}")
+    IO.puts("> gRPC server listening on port: #{rpc_port}")
 
     # turn on distributed mode / assign a hostname
     Node.start(hostname, :shortnames, 15000)
@@ -210,7 +214,7 @@ defmodule Level4 do
         node,
         Market.DynamicSupervisor,
         :start_data_feed,
-        [market, config]
+        [market, config, node]
       )
 
   @doc """

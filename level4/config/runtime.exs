@@ -1,23 +1,25 @@
 import Config
 
-# helper functions: wrappers around System.get_env that load an
-# environment variable and do some pre-processing
-def get_env(:atom, name, default) do
-  System.get_env(name, default) |> String.to_atom()
-end
+defmodule Level4.Runtime do
+  # helper functions: wrappers around System.get_env that load an
+  # environment variable and do some pre-processing
+  def get_env(:atom, name, default) do
+    System.get_env(name, default) |> String.to_atom()
+  end
 
-def get_env(:integer, name, default) do
-  {x, ""} = System.get_env(name, default) |> Integer.parse()
-  x
-end
+  def get_env(:integer, name, default) do
+    {x, ""} = System.get_env(name, default) |> Integer.parse()
+    x
+  end
 
-def get_env(:hosts, name, default) do
-  System.get_env(name, default)
-  |> String.split(",")
-  |> Enum.map(fn addr ->
-    [ip_address, port] = String.split(addr, ":")
-    %{ip_address => String.to_integer(port)}
-  end)
+  def get_env(:hosts, name, default) do
+    System.get_env(name, default)
+    |> String.split(",")
+    |> Enum.flat_map(fn addr ->
+      [ip, port] = String.split(addr, ":")
+      Keyword.put([], String.to_atom(ip), String.to_integer(port))
+    end)
+  end
 end
 
 ################################################################################
@@ -28,9 +30,24 @@ end
 # libcluster topology
 #
 config :level4,
-  hostname: get_env(:atom, "HOSTNAME", "node1"),
-  rpc_port: get_env(:integer, "RPC_PORT", "50051"),
-  max_data_feeds: get_env(:integer, "MAX_DATA_FEEDS", "25"),
+  hostname:
+    Level4.Runtime.get_env(
+      :atom,
+      "HOSTNAME",
+      "node1"
+    ),
+  rpc_port:
+    Level4.Runtime.get_env(
+      :integer,
+      "RPC_PORT",
+      "50051"
+    ),
+  max_data_feeds:
+    Level4.Runtime.get_env(
+      :integer,
+      "MAX_DATA_FEEDS",
+      "25"
+    ),
   topologies: [
     level4: [
       strategy: Cluster.Strategy.Gossip,
@@ -47,7 +64,12 @@ config :level4,
 #
 config :kaffe,
   producer: [
-    endpoints: get_env(:hosts, "KAFKA_ENDPOINTS", ["127.0.0.1:9093"]),
+    endpoints:
+      Level4.Runtime.get_env(
+        :hosts,
+        "KAFKA_ENDPOINTS",
+        "127.0.0.1:9092"
+      ),
     topics: [
       "level4.spread",
       "level4.timesale",
