@@ -1,7 +1,7 @@
 repository:
   name: "level4"
   description: "🔥 Aggregated level2 market data feeds for multiple cryptocurrency exchanges. Publishes mid-market price change and timesale data to a Kafka topic"
-  private: true
+  private: false
   has_issues: true
   has_projects: false
   has_wiki: false
