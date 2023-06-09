@@ -53,6 +53,20 @@ defmodule Market.DataFeed do
 
   use GenServer
 
+  # ...
+  defp produce_event(topic, key, payload, schema_name) do
+    # tag events with microsecond timestamp
+    ts = :erlang.system_time(:microsecond)
+    message = payload |> Map.put("unix_timestamp_microseconds", ts)
+
+    # encode using avro schema
+    {:ok, encoded} = Avrora.encode(message, schema_name: schema_name)
+
+    # publish event to kafka topic
+    :ok = Kaffe.Producer.produce_sync(topic, key, encoded)
+    :ok
+  end
+
   def start_link(init_arg),
     do:
       GenServer.start_link(
@@ -67,43 +81,40 @@ defmodule Market.DataFeed do
       )
 
   @impl true
-  def init(init_arg),
-    do:
-      {:ok,
-       %{
-         :market => init_arg[:market]
-       }}
+  def init(init_arg) do
+    # trap exits
+    Process.flag(:trap_exit, true)
 
-  @doc """
-  Insert unix timestamp (nanoseconds) into event payload and send json payload
-  to kafka topic.
-  """
-  def produce_event(topic, key, payload) do
-    # tag events with nanosecond timestamp
-    ts = :erlang.system_time(:nanosecond)
+    # get topic schemas registry
+    # ...
 
-    # insert timestamp into payload and encode as json
-    {:ok, json_str} = Jason.encode(payload |> Map.put("unix_ts_ns", ts))
+    # setup encoders
+    # ...
 
-    # publish event to kafka topic
-    :ok = Kaffe.Producer.produce_sync(topic, key, json_str)
+    # the data feed is starting
+    # notify level4.status topic
+    # ...
 
-    :ok
+    {:ok, %{:market => init_arg[:market]}}
   end
 
-  @doc """
-  ...
-  """
   @impl true
-  def handle_call(:metadata, _, state),
-    do: {:reply, state[:market], state}
+  def terminate(_, state) do
+    # the data feed is stopping
+    # notify level4.status topic
+    # ...
+  end
 
-  @doc """
-  Best bid/ask price update event and buy/sell events.
-  """
+  @impl true
+  def handle_call(:get_info, _, state) do
+    {:reply, state[:market], state}
+  end
+
   @impl true
   def handle_cast({:best_price, side, price, liquidity}, state) do
-    # event key is the string version of the market id
+    # ...
+    topic = "level4.spread"
+    schema_name = "level4.spread-value"
     key = Integer.to_string(state[:market].id)
 
     # construct the event payload
@@ -118,14 +129,16 @@ defmodule Market.DataFeed do
     }
 
     # send event to kafka
-    :ok = produce_event("level4.spread", key, payload)
+    :ok = produce_event(topic, key, payload, schema_name)
 
     {:noreply, state}
   end
 
   @impl true
   def handle_cast({:fill, side, price, size}, state) do
-    # event key is the string version of the market id
+    # ...
+    topic = "level4.timesale"
+    schema_name = "level4.timesale-value"
     key = Integer.to_string(state[:market].id)
 
     # construct the event payload
@@ -140,84 +153,65 @@ defmodule Market.DataFeed do
     }
 
     # send event to kafka
-    :ok = produce_event("level4.timesale", key, payload)
+    :ok = produce_event(topic, key, payload, schema_name)
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_cast({:status, event, node}, state) do
-    # event key is the string version of the market id
+  def handle_cast({:status_update, event, node}, state) do
+    # ...
+    topic = "level4.status"
+    schema_name = "level4.status-value"
     key = Integer.to_string(state[:market].id)
 
     # construct the event payload
     payload = %{
       "event" => event,
-      "node" => node,
-      "market_id" => state[:market].id
+      "node" => node
     }
 
     # send event to kafka
-    :ok = produce_event("level4.status", key, payload)
+    :ok = produce_event(topic, key, payload, schema_name)
 
     {:noreply, state}
   end
 
   @doc """
-  ...
-  """
-  def metadata(data_feed),
-    do: GenServer.call(data_feed, :metadata)
-
-  @doc """
   Record a new best bid price change event.
   """
   def best_bid_change(data_feed, price, liquidity),
-    do:
-      GenServer.cast(
-        data_feed,
-        {:best_price, :bids, price, liquidity}
-      )
+    do: GenServer.cast(data_feed, {:best_price, :bids, price, liquidity})
 
   @doc """
   Record a new best ask price change event.
   """
   def best_ask_change(data_feed, price, liquidity),
-    do:
-      GenServer.cast(
-        data_feed,
-        {:best_price, :asks, price, liquidity}
-      )
+    do: GenServer.cast(data_feed, {:best_price, :asks, price, liquidity})
 
   @doc """
   Record a new buy event.
   """
   def buy(data_feed, price, size),
-    do:
-      GenServer.cast(
-        data_feed,
-        {:fill, :buy, price, size}
-      )
+    do: GenServer.cast(data_feed, {:fill, :buy, price, size})
 
   @doc """
   Record a new sell event.
   """
   def sell(data_feed, price, size),
-    do:
-      GenServer.cast(
-        data_feed,
-        {:fill, :sell, price, size}
-      )
+    do: GenServer.cast(data_feed, {:fill, :sell, price, size})
 
   @doc """
-  Data feed status change.
+  Data feed status update.
   """
-  def status(data_feed, event, node),
-    do:
-      GenServer.cast(
-        data_feed,
-        {:status, event, node}
-      )
+  def status_update(data_feed, event, node),
+    do: GenServer.cast(data_feed, {:status_update, event, node})
+
+  @doc """
+  ...
+  """
+  def get_info(data_feed),
+    do: GenServer.call(data_feed, :get_info)
 end
 
 defmodule Market.DataFeed.Level2.Supervisor do

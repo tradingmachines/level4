@@ -24,10 +24,11 @@ end
 
 ################################################################################
 #
-# node hostname
-# RPC server port
-# maximum concurrent data feed processes per node
-# libcluster topology
+# level4 config
+# > node hostname
+# > RPC server port
+# > maximum concurrent data feed processes per node
+# > libcluster topology
 #
 config :level4,
   hostname:
@@ -76,10 +77,21 @@ config :kaffe,
       "level4.status"
     ],
     partition_strategy: fn _topic, _partitions_count, key, _value ->
-      # subtract 1 because topics start at zero
       {market_id, ""} = Integer.parse(key)
-      market_id - 1
+      market_id
     end
   ]
+
+################################################################################
+#
+# schema registry config
+#
+
+config :avrora,
+  registry_url: "http://127.0.0.1:8081",
+  schemas_path: "./priv/schemas",
+  registry_schemas_autoreg: false,
+  convert_null_values: false,
+  names_cache_ttl: :timer.minutes(5)
 
 ################################################################################
