@@ -115,9 +115,8 @@ represents a sequence of ordered, immutable records. Each partition
 can be independently produced to and consumed from, allowing for
 increased throughput and fault tolerance.
 
-Level4 sets an event's partition number to its market ID minus 1 -
-because partitions start at zero. This means the topics can scale
-horizontally across multiple brokers.
+Level4 sets an event's partition number to its market ID. This means
+the topics can scale horizontally across multiple brokers.
 
 * Deploy
 Make sure Kafka is running and is accessible to the level4

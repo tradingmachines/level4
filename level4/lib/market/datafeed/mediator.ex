@@ -141,7 +141,7 @@ defmodule Market.DataFeed.Level2.Mediator do
   end
 
   @impl true
-  def handle_call({:status, event}, _, state) do
+  def handle_call({:status_update, event}, _, state) do
     # get the data feed pid
     data_feed =
       {:via, Registry,
@@ -152,7 +152,7 @@ defmodule Market.DataFeed.Level2.Mediator do
 
     # notify the data feed of status change
     :ok =
-      Market.DataFeed.status(
+      Market.DataFeed.status_update(
         data_feed,
         event,
         state[:node]
@@ -166,7 +166,7 @@ defmodule Market.DataFeed.Level2.Mediator do
   """
   def snapshot(level2, bid_levels, ask_levels) do
     :ok = GenServer.call(level2, {:snapshot, bid_levels, ask_levels})
-    :ok = GenServer.call(level2, {:status, "snapshot"})
+    :ok = GenServer.call(level2, {:status_update, "snapshot"})
     :ok
   end
 

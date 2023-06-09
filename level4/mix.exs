@@ -20,12 +20,13 @@ defmodule Level4.MixProject do
 
   defp deps do
     [
+      {:jason, "~> 1.4"},
       {:libcluster, "~> 3.3"},
+      {:avrora, "~> 0.21"},
       {:kaffe, "~> 1.0"},
       {:grpc, "~> 0.5.0"},
       {:protobuf, "~> 0.11"},
-      {:google_protos, "~> 0.1"},
-      {:jason, "~> 1.4"}
+      {:google_protos, "~> 0.1"}
     ]
   end
 end

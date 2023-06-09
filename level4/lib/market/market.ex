@@ -88,7 +88,7 @@ defmodule Market.DynamicSupervisor do
         Market.DataFeed.Registry,
         [{{:_, :"$2", :_}, [], [:"$2"]}]
       )
-      |> Enum.map(fn x -> Market.DataFeed.metadata(x) end)
+      |> Enum.map(fn x -> Market.DataFeed.get_info(x) end)
 
   @doc """
   Start a new market data feed: adds a new data feed process to the dynamic
