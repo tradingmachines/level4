@@ -12,13 +12,12 @@ defmodule Level4.Runtime do
     x
   end
 
-  def get_env(:hosts, name, default) do
+  def get_env(:string, name, default) do
     System.get_env(name, default)
-    |> String.split(",")
-    |> Enum.flat_map(fn addr ->
-      [ip, port] = String.split(addr, ":")
-      Keyword.put([], String.to_atom(ip), String.to_integer(port))
-    end)
+  end
+
+  def get_env(:strings, name, default, delimiter) do
+    System.get_env(name, default) |> String.split(delimiter)
   end
 end
 
@@ -67,10 +66,15 @@ config :kaffe,
   producer: [
     endpoints:
       Level4.Runtime.get_env(
-        :hosts,
+        :strings,
         "KAFKA_ENDPOINTS",
-        "127.0.0.1:9092"
-      ),
+        "127.0.0.1:9092",
+        ","
+      )
+      |> Enum.flat_map(fn addr ->
+        [ip, port] = String.split(addr, ":")
+        Keyword.put([], String.to_atom(ip), String.to_integer(port))
+      end),
     topics: [
       "level4.spread",
       "level4.timesale",
@@ -88,7 +92,12 @@ config :kaffe,
 #
 
 config :avrora,
-  registry_url: "http://127.0.0.1:8081",
+  registry_url:
+    Level4.Runtime.get_env(
+      :string,
+      "SCHEMA_REGISTRY",
+      "http://127.0.0.1:8081"
+    ),
   schemas_path: "./priv/schemas",
   registry_schemas_autoreg: false,
   convert_null_values: false,
